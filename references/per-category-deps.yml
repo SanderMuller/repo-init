@@ -1,0 +1,123 @@
+# Machine-readable parallel of per-category-deps.md.
+# Phase 7 sync check parses this to verify:
+#  (a) no package in both `require` and `require-dev` for the same category
+#  (b) every dep here is referenced by name in the matching audit phase
+#  (c) every dep here is in the matching upgrade phase's composer-require list
+
+shared:
+  always:
+    require-dev:
+      - laravel/pao
+      - laravel/pint
+      - phpstan/extension-installer
+      - phpstan/phpstan-strict-rules
+      - phpstan/phpstan-deprecation-rules
+      - phpstan/phpstan-phpunit
+      - rector/rector
+      - rector/type-perfect
+      - spaze/phpstan-disallowed-calls
+      - symplify/phpstan-extensions
+      - tomasvotruba/cognitive-complexity
+      - tomasvotruba/type-coverage
+      - nunomaduro/collision
+      - sandermuller/package-boost
+      - orchestra/testbench
+  test-framework:
+    pest:
+      require-dev:
+        - pestphp/pest
+        - pestphp/pest-plugin-arch
+        - mrpunyapal/rector-pest
+    pest-laravel-only:
+      # added on top of pest when category in {laravel-project, laravel-package}
+      require-dev:
+        - pestphp/pest-plugin-laravel
+    phpunit:
+      require-dev:
+        - phpunit/phpunit
+
+categories:
+
+  laravel-project:
+    mandatory:
+      require: []  # laravel new baseline; not enumerated here
+      require-dev:
+        - larastan/larastan
+        - laravel/boost
+        - laravel/pail
+        - laravel/tinker
+        - driftingly/rector-laravel
+    optional:
+      with-hihaho-rules:
+        default-inference: vendor==hihaho OR hihaho/phpstan-rules in require-dev
+        require: []
+        require-dev:
+          - hihaho/phpstan-rules
+          - hihaho/rector-rules
+          - symplify/phpstan-rules
+      with-security-advisories:
+        default-inference: roave/security-advisories in require-dev
+        require: []
+        require-dev:
+          - "roave/security-advisories: dev-latest"
+    shared-exclusions: []  # nothing dropped from shared list
+
+  laravel-package:
+    mandatory:
+      require:
+        - "illuminate/contracts: __LARAVEL_VERSIONS__"
+        - "illuminate/support: __LARAVEL_VERSIONS__"
+      require-dev:
+        - larastan/larastan
+        - driftingly/rector-laravel
+    optional:
+      hihaho-package-tools-flavoured:
+        default-inference: spatie/laravel-package-tools in require
+        require:
+          - spatie/laravel-package-tools
+        require-dev: []
+        also-selects-stub-variant: laravel-package-spatie
+    suggests:
+      - livewire/livewire  # informational only — never auto-installed, never audited
+    shared-exclusions: []
+
+  php-package:
+    mandatory:
+      require: []
+      require-dev:
+        - phpstan/phpstan
+        - stolt/lean-package-validator
+    optional: {}
+    shared-exclusions: []
+
+  phpstan-extension:
+    mandatory:
+      require:
+        - "phpstan/phpstan: ^2"
+      require-dev: []
+    optional:
+      laravel-aware:
+        default-inference: illuminate/* in require
+        require:
+          - "illuminate/support: __LARAVEL_VERSIONS__"
+        require-dev:
+          - larastan/larastan  # REPLACES phpstan/phpstan when this opt-in fires
+        replaces-in-require-dev:
+          - phpstan/phpstan
+    shared-exclusions:
+      - phpstan/phpstan  # because added to require
+
+  rector-extension:
+    mandatory:
+      require:
+        - "rector/rector: ^2"
+      require-dev:
+        - symplify/rule-doc-generator-contracts
+    optional:
+      laravel-aware:
+        default-inference: driftingly/rector-laravel in require OR require-dev
+        require:
+          - driftingly/rector-laravel
+        require-dev: []
+    shared-exclusions:
+      - rector/rector  # because added to require

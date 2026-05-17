@@ -1,0 +1,36 @@
+{
+    "name": "sandermuller/repo-init",
+    "type": "library",
+    "description": "AI playbook + stub library for bootstrapping the canonical Sander/hihaho repo setup. Dev-only, install-run-remove.",
+    "keywords": [
+        "ai",
+        "scaffold",
+        "bootstrap",
+        "laravel",
+        "php-package",
+        "phpstan-extension",
+        "rector-extension",
+        "package-boost"
+    ],
+    "homepage": "https://github.com/sandermuller/repo-init",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Sander Muller",
+            "email": "github@scode.nl",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.3",
+        "sandermuller/package-boost": "^0.15",
+        "orchestra/testbench": "^9.0||^10.0||^11.0"
+    },
+    "scripts": {
+        "post-install-cmd": [
+            "if [ \"$COMPOSER_DEV_MODE\" = \"1\" ]; then vendor/bin/testbench package-boost:sync 2>/dev/null || true; fi"
+        ]
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
