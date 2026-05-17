@@ -1,28 +1,26 @@
 # sandermuller/repo-init
 
-AI playbook + stub library for bootstrapping the canonical Sander/hihaho dev setup. Pure markdown + stub files. No PHP code. Install via Composer, run through an AI agent, remove when done.
+AI playbook + stub library for bootstrapping the canonical Sander/hihaho dev setup. Pure markdown + stub files. No PHP code. **Install globally once, use everywhere.**
 
-## Quick start
+## Install (one-time per machine)
 
 ```bash
-composer require --dev sandermuller/repo-init
+composer global require sandermuller/repo-init
 ```
 
-Then ask Claude (or any agent with the propagated `.claude/skills/repo-init/SKILL.md`):
+The post-install hook propagates the skill into `~/.claude/skills/repo-init/` (and `~/.cursor/skills/`, etc.) so it auto-activates in any project. From then on, just ask Claude (or any agent that reads the synced skill):
 
 > Set up this repo as a Laravel package.
 > Audit this repo against the canonical setup.
 > Upgrade tooling here to current baseline.
 
-The agent reads the matching phase file from `vendor/sandermuller/repo-init/phases/` and runs it end-to-end.
-
-When you're done:
+## Update
 
 ```bash
-composer remove --dev sandermuller/repo-init
+composer global update sandermuller/repo-init
 ```
 
-The synced skill stays in `.claude/skills/` for future use.
+Skill re-syncs automatically via `post-update-cmd`.
 
 ## What it sets up
 
@@ -40,6 +38,29 @@ The synced skill stays in `.claude/skills/` for future use.
 3. `php-package` — framework-agnostic
 4. `phpstan-extension` — phpstan rules package
 5. `rector-extension` — rector rules package
+
+## Project-local install (escape hatch)
+
+If you want to pin a specific repo-init version per project:
+
+```bash
+composer require --dev sandermuller/repo-init
+vendor/bin/testbench package-boost:sync
+```
+
+The project-local install takes precedence over the global one when both are present. Remove with `composer remove --dev sandermuller/repo-init`.
+
+## Uninstall (rare)
+
+```bash
+composer global remove sandermuller/repo-init
+```
+
+Optional skill cleanup:
+
+```bash
+rm -rf ~/.claude/skills/repo-init ~/.cursor/skills/repo-init ~/.agents/skills/repo-init
+```
 
 ## Spec
 

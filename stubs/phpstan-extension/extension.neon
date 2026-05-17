@@ -1,0 +1,24 @@
+# PHPStan extension config for __VENDOR__/__PACKAGE__.
+# Consumers register this extension via composer's `phpstan/extension-installer`
+# plugin (auto-discovery from extra.phpstan.includes in composer.json).
+
+parametersSchema:
+    # Add per-rule parameter schemas here. Example:
+    # __PACKAGE__YourRuleConfig: structure([
+    #     enabled: bool()
+    #     thresholds: arrayOf(int())
+    # ])
+
+parameters:
+    # Add per-rule default parameter values here. Example:
+    # __PACKAGE__YourRuleConfig:
+    #     enabled: true
+    #     thresholds: []
+
+services:
+    # Register your rule services here. Example:
+    # -
+    #     class: __NAMESPACE__\Rules\YourRule
+    #     arguments:
+    #         enabled: %__PACKAGE__YourRuleConfig.enabled%
+    #     tags: [phpstan.rules.rule]

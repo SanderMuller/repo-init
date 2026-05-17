@@ -5,22 +5,32 @@ description: Bootstrap or upgrade a repo with the canonical Sander/hihaho dev se
 
 # repo-init
 
-Routes the agent through a fixed entry flow, then to the right per-(category × mode) phase file. All phases, checklists, references, and stubs live in `vendor/sandermuller/repo-init/` — read them in place.
+Routes the agent through a fixed entry flow, then to the right per-(category × mode) phase file. All phases, checklists, references, and stubs live in `$REPO_INIT_HOME` — read them in place.
 
-## Pre-flight (run once per target repo)
+## Pre-flight (run once per session)
 
-Before any phase, verify the package is installed and the skill is synced:
+Before any phase:
 
-1. Check if `vendor/sandermuller/repo-init/` exists in the target repo's cwd.
-   - If **yes**: you're inside an existing repo with repo-init installed. Proceed to "Decide intent".
-   - If **no** and the repo has a `composer.json`: run `composer require --dev sandermuller/repo-init`, then `vendor/bin/testbench package-boost:sync`. Then proceed.
-   - If **no** and there is no `composer.json` (true greenfield): see "Greenfield package bootstrap" below.
+1. **Resolve `REPO_INIT_HOME`**:
+   - Run `composer global config home` to get the global Composer dir.
+   - Set `REPO_INIT_HOME=$(composer global config home)/vendor/sandermuller/repo-init`.
+   - Verify `REPO_INIT_HOME/SPEC.md` exists.
+   - **Escape hatch**: if `./vendor/sandermuller/repo-init/SPEC.md` exists in the target cwd, set `REPO_INIT_HOME=./vendor/sandermuller/repo-init` instead (project-local install shadows global).
+2. **If `REPO_INIT_HOME/SPEC.md` is missing**: tell the user:
+   > Repo-init isn't installed. Run `composer global require sandermuller/repo-init` to install it (one-time, machine-wide). Then ask me again.
+   And stop.
+3. **Verify skill is synced to user-level dir**: check `~/.claude/skills/repo-init/SKILL.md` exists. If not, run (from any project, or from the global install dir):
+   ```bash
+   cd $REPO_INIT_HOME && vendor/bin/testbench package-boost:sync --scope=user
+   ```
+   (This propagates the skill into `~/.claude/skills/`, `~/.cursor/skills/`, etc. so the skill activates in any project.)
+4. Proceed to the routing flow below.
 
 ## Decide intent
 
 Three modes:
 
-- **Bootstrap** — new repo, you're about to create or fill an empty directory.
+- **Bootstrap** — new repo, about to create or fill an empty directory.
 - **Audit** — existing repo, list gaps against the canonical setup. Read-only.
 - **Upgrade** — existing repo, apply fixes. Re-runs the audit first.
 
@@ -28,7 +38,7 @@ If unclear from the user's prompt, ask.
 
 ## Decide category
 
-For bootstrap, ask the user which category. For audit/upgrade, read the target's `composer.json` and follow `vendor/sandermuller/repo-init/references/detection-rules.md`.
+For bootstrap, ask the user which category. For audit/upgrade, read the target's `composer.json` and follow `$REPO_INIT_HOME/references/detection-rules.md`.
 
 Five categories:
 
@@ -46,7 +56,7 @@ Ambiguous → ask the user.
 
 ## Open the phase file
 
-Read `vendor/sandermuller/repo-init/phases/<mode>-<category>.md` end-to-end. Follow it top-to-bottom. Don't improvise — every step you need is in the file.
+Read `$REPO_INIT_HOME/phases/<mode>-<category>.md` end-to-end. Follow it top-to-bottom. Don't improvise — every step you need is in the file.
 
 ## Knobs to collect (bootstrap mode)
 
@@ -65,30 +75,46 @@ Before opening a bootstrap phase, gather these. Skill prompts the user for any y
 For `bootstrap-laravel-package`, `bootstrap-php-package`, `bootstrap-phpstan-extension`, `bootstrap-rector-extension` in a brand-new dir:
 
 1. Apply target-dir rule: `mkdir <name> && cd <name>` if `name` was provided; otherwise verify cwd is empty modulo `.git/`.
-2. Run `composer init --no-interaction --name=<vendor>/<name> --type=library --no-install --stability=stable`. (Derive `<name>` from cwd basename if absent.)
-3. Run `composer require --dev sandermuller/repo-init`. `orchestra/testbench` installs alongside as a transitive dev dep (declared in repo-init's own `require`), so the next step works immediately.
-4. Run `vendor/bin/testbench package-boost:sync`.
-5. Now open `phases/bootstrap-<category>.md` and follow it from step 1.
+2. Open `$REPO_INIT_HOME/phases/bootstrap-<category>.md` and follow it. The phase's first step copies a stub `composer.json` from `$REPO_INIT_HOME/stubs/<category>/` directly into cwd — no `composer init` prelude needed.
 
-For `bootstrap-laravel-project`, `laravel new <name>` (or `laravel new .` if `name` absent) replaces steps 1+2. Steps 3+4 still apply.
+For `bootstrap-laravel-project`, `laravel new <name>` (or `laravel new .` if `name` absent) creates the dir + Laravel skeleton in step 1; step 2 layers our additions on top.
+
+**No `composer require --dev sandermuller/repo-init` step is needed in the target repo.** Repo-init lives globally; the target stays clean.
 
 ## After every phase: what's next
 
 Phase files end with a "What's next" prompt. Typical:
 
 > Bootstrap done. Want to run an audit next, or are you done with repo-init for now?
-> If done: I can remove the package — `composer remove --dev sandermuller/repo-init`.
 
-**Self-removal is a single final step, not after every phase.** Only invoke `checklists/self-removal.md` when the user explicitly says they're done with repo-init for this repo.
+There's nothing to "remove" from the target — repo-init was never installed there. The skill simply stops.
 
 ## Safety rails the agent must honour
 
 All documented in phase files; summary:
 
-- **Per-category never-touch list** (`checklists/per-category-never-touch.md`) — `config/auth*.php`, `app/Policies/`, `.env*`, `.git/`, `vendor/`, `node_modules/`. Always honoured.
+- **Per-category never-touch list** (`$REPO_INIT_HOME/checklists/per-category-never-touch.md`) — `config/auth*.php`, `app/Policies/`, `.env*`, `.git/`, `vendor/`, `node_modules/`. Always honoured.
 - **Git-dirty guard** (audit + upgrade modes only) — run `git status --porcelain` before any write; skip paths prefixed `M`, ` M`, `MM`, `A`, `??`. Bootstrap exempts itself because cwd-must-be-empty is the precondition.
 - **larastan vs phpstan exclusivity** — never `composer require` both in the same call. Phase files spell out which is right per category.
 
-## Re-invoking later
+## Updating repo-init
 
-If the user removed repo-init and later asks for an audit or upgrade, the synced `.claude/skills/repo-init/SKILL.md` will still activate (package-boost copies skills, doesn't symlink). The skill's pre-flight step 1 detects the missing `vendor/sandermuller/repo-init/` and re-installs it. From the user's perspective, repo-init is always one prompt away.
+```bash
+composer global update sandermuller/repo-init
+```
+
+Then re-sync the user-level skill (auto-runs via package-boost's post-update hook, but can be run manually if needed):
+
+```bash
+cd $REPO_INIT_HOME && vendor/bin/testbench package-boost:sync --scope=user
+```
+
+## Project-local install (escape hatch)
+
+If a user wants to pin a specific repo-init version per project:
+
+```bash
+composer require --dev sandermuller/repo-init
+```
+
+The skill's pre-flight detects this and uses the project-local install as `REPO_INIT_HOME` (shadowing the global install). Self-removal then becomes `composer remove --dev sandermuller/repo-init` for that target.

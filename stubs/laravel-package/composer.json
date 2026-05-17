@@ -1,0 +1,104 @@
+{
+    "name": "__VENDOR__/__PACKAGE__",
+    "description": "__DESCRIPTION__",
+    "keywords": [
+        "__VENDOR__",
+        "__PACKAGE__",
+        "laravel"
+    ],
+    "homepage": "https://github.com/__VENDOR__/__PACKAGE__",
+    "license": "MIT",
+    "type": "library",
+    "authors": [
+        {
+            "name": "__AUTHOR_NAME__",
+            "email": "__AUTHOR_EMAIL__",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "__PHP_VERSION__",
+        "illuminate/contracts": "__LARAVEL_VERSIONS__",
+        "illuminate/support": "__LARAVEL_VERSIONS__"
+    },
+    "require-dev": {
+        "driftingly/rector-laravel": "^2.3",
+        "larastan/larastan": "^3.9",
+        "laravel/pao": "^1.0",
+        "laravel/pint": "^1.29",
+        "mrpunyapal/rector-pest": "^0.2",
+        "nunomaduro/collision": "^8.0",
+        "orchestra/testbench": "^9.0||^10.0||^11.0",
+        "pestphp/pest": "^4.0",
+        "pestphp/pest-plugin-arch": "^4.0",
+        "pestphp/pest-plugin-laravel": "^4.0",
+        "phpstan/extension-installer": "^1.4",
+        "phpstan/phpstan-deprecation-rules": "^2.0",
+        "phpstan/phpstan-phpunit": "^2.0",
+        "phpstan/phpstan-strict-rules": "^2.0",
+        "rector/rector": "^2.4",
+        "rector/type-perfect": "^2.1",
+        "sandermuller/package-boost": "^0.15",
+        "spaze/phpstan-disallowed-calls": "^4.10",
+        "symplify/phpstan-extensions": "^12.0",
+        "tomasvotruba/cognitive-complexity": "^1.1",
+        "tomasvotruba/type-coverage": "^2.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "__NAMESPACE_ESCAPED__\\\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "__NAMESPACE_ESCAPED__\\\\Tests\\\\": "tests/",
+            "Workbench\\\\App\\\\": "workbench/app/"
+        }
+    },
+    "scripts": {
+        "post-autoload-dump": [
+            "@clear",
+            "@prepare"
+        ],
+        "clear": "@php vendor/bin/testbench package:purge-skeleton --ansi",
+        "prepare": "@php vendor/bin/testbench package:discover --ansi",
+        "build": "@php vendor/bin/testbench workbench:build --ansi",
+        "serve": [
+            "Composer\\\\Config::disableProcessTimeout",
+            "@build",
+            "@php vendor/bin/testbench serve --ansi"
+        ],
+        "post-install-cmd": [
+            "if [ \"$COMPOSER_DEV_MODE\" = \"1\" ]; then vendor/bin/testbench package-boost:sync 2>/dev/null || true; fi"
+        ],
+        "phpstan": "vendor/bin/phpstan analyse --memory-limit=2G",
+        "phpstan-simplified": "vendor/bin/phpstan analyse --memory-limit=2G --error-format symplify",
+        "phpstan-clear-cache": "vendor/bin/phpstan clear-result-cache",
+        "format": "vendor/bin/pint",
+        "rector": "vendor/bin/rector process",
+        "test": "vendor/bin/pest",
+        "test-coverage": "vendor/bin/pest --coverage",
+        "sync-ai": "vendor/bin/testbench package-boost:sync",
+        "qa": [
+            "@rector",
+            "@format",
+            "@phpstan-simplified"
+        ]
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "__NAMESPACE_ESCAPED__\\\\__PACKAGE_STUDLY__ServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "phpstan/extension-installer": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

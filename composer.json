@@ -1,7 +1,7 @@
 {
     "name": "sandermuller/repo-init",
     "type": "library",
-    "description": "AI playbook + stub library for bootstrapping the canonical Sander/hihaho repo setup. Dev-only, install-run-remove.",
+    "description": "AI playbook + stub library for bootstrapping the canonical Sander/hihaho repo setup. Install globally: `composer global require sandermuller/repo-init`.",
     "keywords": [
         "ai",
         "scaffold",
@@ -28,7 +28,10 @@
     },
     "scripts": {
         "post-install-cmd": [
-            "if [ \"$COMPOSER_DEV_MODE\" = \"1\" ]; then vendor/bin/testbench package-boost:sync 2>/dev/null || true; fi"
+            "@php -r \"if (file_exists('vendor/bin/testbench')) { passthru('vendor/bin/testbench package-boost:sync --scope=user 2>/dev/null || true'); }\""
+        ],
+        "post-update-cmd": [
+            "@php -r \"if (file_exists('vendor/bin/testbench')) { passthru('vendor/bin/testbench package-boost:sync --scope=user 2>/dev/null || true'); }\""
         ]
     },
     "minimum-stability": "stable",

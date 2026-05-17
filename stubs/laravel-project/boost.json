@@ -1,0 +1,8 @@
+{
+    "agents": [
+        "claude_code",
+        "cursor",
+        "github_copilot",
+        "codex_cli"
+    ]
+}

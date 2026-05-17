@@ -2,7 +2,19 @@
 
 ## Overview
 
-Zero-code, dev-only Composer package that ships an AI playbook for bootstrapping, auditing, or upgrading a GitHub repo to the canonical Sander/hihaho dev setup. No PHP runtime, no artisan commands, no binaries — just one Claude skill that routes the agent through 15 per-(category × mode) markdown phases, plus pinned stub files the agent copies into the target repo and reference docs the agent consults. The package is installed via `composer require --dev sandermuller/repo-init`, stays installed throughout the entire workflow (every phase reads phases/checklists/references/stubs from `vendor/sandermuller/repo-init/` directly — nothing is copied into the target's working tree), and is removed via `composer remove --dev sandermuller/repo-init` only after the user confirms all work is done. No persistent state files in the target, no playbook propagation — the package itself *is* the playbook. v1 supports five repo categories: `laravel-project`, `laravel-package`, `php-package`, `phpstan-extension`, `rector-extension`.
+Zero-code, dev-only Composer package that ships an AI playbook for bootstrapping, auditing, or upgrading a GitHub repo to the canonical Sander/hihaho dev setup. No PHP runtime, no artisan commands, no binaries — just one Claude skill that routes the agent through 15 per-(category × mode) markdown phases, plus pinned stub files the agent copies into the target repo and reference docs the agent consults.
+
+**Distribution: global install (like `composer global require laravel/installer`).** Install once per machine:
+
+```bash
+composer global require sandermuller/repo-init
+```
+
+A one-time post-install step syncs the skill into the user-level Claude skill dir (`~/.claude/skills/repo-init/`) so it auto-activates in any project. From then on, every phase reads phases/checklists/references/stubs from the global install path (`$(composer global config home)/vendor/sandermuller/repo-init/`) directly — nothing is copied into target repos, and no per-project dev dep is added. Self-removal is a single optional command (`composer global remove sandermuller/repo-init`), almost never run in practice.
+
+Project-local install (`composer require --dev sandermuller/repo-init`) remains supported as an escape hatch for users who want to pin a different repo-init version per target — see §3.4.
+
+v1 supports five repo categories: `laravel-project`, `laravel-package`, `php-package`, `phpstan-extension`, `rector-extension`.
 
 ---
 
@@ -15,8 +27,8 @@ Zero-code, dev-only Composer package that ships an AI playbook for bootstrapping
 - **One phase = one self-contained playbook.** 15 phase files (5 categories × 3 modes: bootstrap, audit, upgrade) — the agent reads one file top-to-bottom and follows it.
 - **Stubs over generators.** Agent copies files from `stubs/<category>/` and substitutes placeholders manually (the file naming makes which placeholders to fill obvious; no templating engine).
 - **Wrap, don't duplicate.** Stubs and dep lists wire in `sandermuller/package-boost`, `larastan/larastan`, `laravel/pint`, `rector/rector`, `laravel/boost`, `hihaho/phpstan-rules` and `hihaho/rector-rules`. The playbook never reimplements what those packages already do.
-- **Stays-installed-until-done.** The package remains in `vendor/` for the full duration of the workflow (bootstrap, then optionally audit/upgrade in the same session, or across sessions). All phase files, checklists, references, and stubs are read from `vendor/sandermuller/repo-init/` *in place*. Nothing is copied into the target's working tree. State for in-flight work lives in the conversation context, not on disk.
-- **Single, final self-removal.** When the user explicitly says "I'm done" (not after every phase, not after every audit), the skill runs the self-removal flow once: confirm nothing in-flight, then `composer remove --dev sandermuller/repo-init`. If the user wants to re-audit a year later, they re-install.
+- **Globally installed, locally invoked.** Installed once per machine via `composer global require sandermuller/repo-init`. All phase files, checklists, references, and stubs read from the global vendor dir (resolved at skill pre-flight as `REPO_INIT_HOME = $(composer global config home)/vendor/sandermuller/repo-init`). Nothing is copied into the target's working tree. State for in-flight work lives in the conversation context, not on disk.
+- **Self-removal is optional and rare.** Most users keep repo-init installed globally forever and `composer global update sandermuller/repo-init` to refresh. Removing is a one-liner — `composer global remove sandermuller/repo-init` — invoked only if the user is decommissioning the tool entirely.
 
 ### Non-Goals (v1)
 
@@ -233,35 +245,54 @@ Phase files end with a "What's next" prompt the agent surfaces to the user — n
 
 Self-removal happens **once**, at the explicit end of the user's session with repo-init — not after every phase. See §10.
 
-### 3.3 Package-boost sync after install — case A: target repo already exists
+### 3.3 Pre-flight: locate the global install
 
-For **audit** and **upgrade** modes, and for **bootstrap-laravel-project** (where `laravel new` has already run), the pre-flight is:
+Every skill invocation runs this once:
 
-1. Check if `vendor/sandermuller/repo-init/` exists in target cwd. If not, run `composer require --dev sandermuller/repo-init` (target's `composer.json` exists at this point).
-2. Run `vendor/bin/testbench package-boost:sync` (or `php artisan package-boost:sync` in a Laravel project context). This propagates SKILL.md into `.claude/skills/repo-init/` so subsequent agent invocations auto-activate the skill from the target repo.
-3. Proceed to the routing flow in §3.1.
+1. Resolve `REPO_INIT_HOME = $(composer global config home)/vendor/sandermuller/repo-init`.
+2. Verify `REPO_INIT_HOME/SPEC.md` exists. If not, prompt the user:
+   > Repo-init isn't installed globally. Run `composer global require sandermuller/repo-init` to install it (one-time, machine-wide). Continue?
+3. Verify `~/.claude/skills/repo-init/SKILL.md` exists. If not, run `package-boost:sync --scope=user` (see §3.5 contract) to propagate the skill into the user-level skill dir.
+4. Proceed to the routing flow in §3.1. All subsequent stub/reference/checklist reads use absolute paths rooted at `REPO_INIT_HOME`.
 
-### 3.3.1 Greenfield package bootstrap — case B: target dir does not exist
+### 3.3.1 Greenfield package bootstrap
 
-For `bootstrap-laravel-package`, `bootstrap-php-package`, `bootstrap-phpstan-extension`, `bootstrap-rector-extension` (no Laravel installer to wrap), the install locus is the target dir we're about to operate in. The target-dir resolution rule (single source of truth — referenced from §3.1 and §7):
+For `bootstrap-laravel-package`, `bootstrap-php-package`, `bootstrap-phpstan-extension`, `bootstrap-rector-extension` (no Laravel installer to wrap):
 
-> **Target-dir rule.** If user passed positional `name`: create `./<name>/` and cd into it. If `name` is absent: target IS cwd, which must be empty modulo `.git/`. The agent verifies the empty-cwd precondition before any write; if violated, it stops and asks the user for a `name`.
+> **Target-dir rule** (single source of truth — referenced from §3.1 and §7): If user passed positional `name`, create `./<name>/` and cd. If `name` is absent, target IS cwd, which must be empty modulo `.git/`. If cwd-empty precondition fails, agent stops and asks for a `name`.
 
-Flow (assuming target-dir-rule has been applied — `cd` is into the correct location):
+Flow:
 
-1. **Discovery** — User invokes the agent without repo-init being available anywhere. Either:
-   - (a) The agent recognizes the task from the user's prompt + general knowledge, suggests `composer require --dev sandermuller/repo-init` in a sibling temp dir to "load" the skill, then proceeds. **Not recommended** — clutters the parent dir.
-   - (b) The user has previously installed repo-init in some other target repo (so `.claude/skills/repo-init/` is in their home / globally synced), and the skill auto-activates from there. **Recommended discovery path** — once installed anywhere with package-boost-sync to a global skill dir, it's available everywhere.
-   - (c) Agent reads SKILL.md directly from `https://github.com/sandermuller/repo-init/blob/main/.ai/skills/repo-init/SKILL.md` (web fetch). Useful fallback for first-time users.
-2. **Apply target-dir rule** — `mkdir <name> && cd <name>` if `name` was passed; otherwise verify cwd is empty.
-3. **Minimal composer init** — `composer init --no-interaction --name=<vendor>/<name> --type=library --no-install --stability=stable`. Produces a bare `composer.json` so `composer require` has somewhere to install. (When `name` was absent, derive `<name>` from cwd basename.)
-4. **Install repo-init into the target** — `composer require --dev sandermuller/repo-init`. Now `vendor/sandermuller/repo-init/` exists, and (thanks to repo-init's own `require` block declaring `orchestra/testbench`) so does `vendor/bin/testbench`.
-5. **Run package-boost sync** — `vendor/bin/testbench package-boost:sync`. Skill propagates into target's `.claude/skills/` for subsequent invocations.
-6. **Proceed to the bootstrap phase steps** (§7). The first action of the bootstrap phase is to OVERWRITE the minimal `composer.json` from step 3 with the proper category stub (with placeholders filled).
+1. **Apply target-dir rule** — `mkdir <name> && cd <name>` if `name` was passed; otherwise verify cwd is empty.
+2. **Proceed to the bootstrap phase steps** (§7). The bootstrap phase reads stubs from `$REPO_INIT_HOME/stubs/<category>/`, fills placeholders, writes into cwd. First file written is `composer.json` (no prior `composer init` needed — the stub IS the composer.json).
+3. **Run `composer install`** to materialise the target's `vendor/`.
 
-This adds 3 prelude steps (apply-target-dir-rule, composer init, composer require) before the bootstrap phase proper, but it puts the install locus inside the target — consistent with the "package-stays-installed-in-target" invariant from RQ21.
+For `bootstrap-laravel-project`, `laravel new <name>` (or `laravel new .` if `name` absent) creates the dir + Laravel skeleton in step 1; step 2 layers our additions on top.
 
-For `bootstrap-laravel-project`, `laravel new <name>` covers steps 2+3 (creates dir + composer.json). Step 4+5 still apply. Step 6 then layers our additions on top. The target-dir rule still applies — if `name` is absent, `laravel new .` is invoked in cwd.
+No `composer require --dev sandermuller/repo-init` step is needed in the target. Repo-init lives globally; the target stays clean.
+
+### 3.4 Project-local install (escape hatch)
+
+If the user wants a specific repo-init version pinned to a single project (e.g. testing a pre-release, or shipping a setup tied to an old repo-init version), they can install locally:
+
+```bash
+composer require --dev sandermuller/repo-init
+```
+
+The skill's pre-flight detects this case: if `./vendor/sandermuller/repo-init/SPEC.md` exists, `REPO_INIT_HOME` is set to `./vendor/sandermuller/repo-init` instead of the global path. Project-local takes precedence over global when both are present.
+
+Project-local install also requires `vendor/bin/testbench package-boost:sync` (not `--scope=user`) to propagate the skill into the target's `.claude/skills/`. The target then activates the skill from its own `.claude/skills/repo-init/` (which shadows the user-level skill if both exist; project shadowing user is Claude Code's default skill resolution).
+
+### 3.5 Package-boost contract: user-scope sync
+
+For the global install model to work, `sandermuller/package-boost` must support syncing into `~/.claude/skills/` (user level) in addition to its existing project-level sync. The contract:
+
+- New command: `vendor/bin/testbench package-boost:sync --scope=user` (or equivalent).
+- Reads skills from `vendor/<vendor>/<package>/.ai/skills/`, writes to `~/.claude/skills/`, `~/.cursor/skills/`, etc.
+- Idempotent — re-syncing doesn't duplicate.
+- When invoked from a *global* composer install (`COMPOSER_HOME/vendor/sandermuller/repo-init/`), `--scope=user` is implied if no `--scope` is passed.
+
+repo-init's own post-install hook fires `package-boost:sync --scope=user` automatically after `composer global require sandermuller/repo-init`, so the user doesn't run sync manually. See `references/package-boost-user-scope.md` for the full contract.
 
 ---
 
@@ -849,7 +880,7 @@ The "dogfood" property therefore reduces to: every stub in `stubs/` was generate
 
 2. **`.gitattributes` managed-block contract with package-boost.** The shared `.gitattributes` stub assumes package-boost will accept entries appended into its managed block by downstream tools. Confirm with the package-boost maintainer and document in `references/gitattributes-managed-block.md`. If rejected, fall back to a separate `# >>> repo-init (managed) >>>` block and downgrade the "NON-CANONICAL: two managed blocks" audit finding.
 
-3. **Audit-without-installing.** A stricter "install-and-remove" reading: agent reads the docs from a sibling cloned dir or a public URL without ever adding repo-init to the target's `composer.json`. Phase 8 nice-to-have; documents this in `references/no-install-mode.md`.
+3. **Package-boost user-scope sync feature.** RQ40 + §3.5 depend on a new `package-boost:sync --scope=user` command. Currently package-boost only syncs into the current project's `.claude/skills/`. Add the user-scope feature (~30 LOC change in package-boost), document the contract in `references/package-boost-user-scope.md`, ship before repo-init v0.1.
 
 4. **Skill propagation guarantee.** §10 assumes package-boost copies (not symlinks) skills into `.claude/skills/`. Verify this is still true and document the behaviour as a load-bearing contract.
 
@@ -897,7 +928,7 @@ The "dogfood" property therefore reduces to: every stub in `stubs/` was generate
 
 20. **`.gitattributes` managed-block contract.** **Decision:** repo-init appends entries into package-boost's existing `# >>> package-boost (managed) >>>` block — no second block. Requires a one-time package-boost update (~30 LOC) to preserve foreign lines during sync. Contract documented in `references/gitattributes-managed-block.md`. **Rationale:** Single managed block keeps the file readable and avoids the snowball problem if other tools later want to manage attributes. The cross-package contract is low cost since both packages share a maintainer.
 
-21. **Package install + propagation lifecycle.** **Decision:** Package stays installed in `vendor/` for the entire duration of the workflow (across phases, across sessions if needed). All phase files, checklists, references, and stubs are read in place from `vendor/sandermuller/repo-init/`. Nothing is copied into the target's working tree — no `.ai/playbooks/repo-init/`, no audit-state files. Self-removal is a single explicit final step, not an after-every-phase prompt. **Rationale:** Avoids codex v3 #1 (bootstrap-missing-install) by making install the first concrete skill step (§3.3), and codex v3 #2 (self-removal-breaks-architecture) by never copying then removing — the source IS the playbook, and removing the source ends the session intentionally. Re-installs are cheap if the user wants to resume later.
+21. **Package install + propagation lifecycle.** **Decision (v7 update):** Distribution is **global install** via `composer global require sandermuller/repo-init`, mirroring `composer global require laravel/installer`. Skill propagates once to `~/.claude/skills/repo-init/` via package-boost's new `--scope=user` sync (see RQ40). All phase/checklist/reference/stub reads use absolute paths rooted at `REPO_INIT_HOME = $(composer global config home)/vendor/sandermuller/repo-init`. Project-local install (`composer require --dev`) remains as an escape hatch (§3.4). Self-removal is optional (`composer global remove`) and rarely run. **Rationale:** Matches familiar `laravel new` UX; eliminates the greenfield `composer init` prelude; no per-target vendor pollution; one install per machine instead of per project.
 
 22. **Audit-report state location.** **Decision:** Conversation-scoped. No file written to the target repo. Re-running audit re-derives findings from scratch (fast — it's all file-system reads of `composer.json` + per-file hashing). **Rationale:** Avoids the implicit-state problem flagged in codex v3 #3 and the "no temp files" constraint from the user. Cost: no cross-session resume of upgrade plans; upgrade-after-audit-in-different-session must re-audit first (explicitly documented in §9 upgrade phase template).
 
@@ -934,6 +965,8 @@ The "dogfood" property therefore reduces to: every stub in `stubs/` was generate
 38. **Phase ordering + structured dep source-of-truth.** **Decision:** Placeholder-coverage test moved from Phase 1 to Phase 2 (where stubs exist). `references/per-category-deps.yml` added as machine-readable parallel of `per-category-deps.md` — CI parses YAML for the require-vs-require-dev sync check rather than parsing markdown prose (codex v5 correctly flagged markdown parsing as not enforceable). Phase markdown files cite dep names by string match so grep is deterministic. **Rationale:** Resolves codex v5 #5 — Phase 1 test no longer depends on Phase 2 output; sync check has a real source of truth.
 
 39. **Workbench scripts always added for `laravel-package`.** **Decision:** Drop `--with-workbench-scripts` flag. §5.4 says "always added". Matches RQ13. **Rationale:** Codex v5 flagged the body/RQ13 contradiction; observed pattern across all canonical sander L-packages is "always present" so the flag was vestigial.
+
+40. **Distribution model — global install (v7).** **Decision:** Default is `composer global require sandermuller/repo-init` (one per machine). Project-local install remains as an escape hatch (§3.4). Skill propagates to `~/.claude/skills/repo-init/` via a new package-boost feature: `vendor/bin/testbench package-boost:sync --scope=user`. Phase/stub/reference paths use absolute `REPO_INIT_HOME = $(composer global config home)/vendor/sandermuller/repo-init`. **Rationale:** Matches `laravel new` mental model. Eliminates per-target install (no `composer init` prelude on greenfield; no per-target vendor pollution; no per-target self-removal). One-time setup, everywhere availability. Requires a small (~30 LOC) feature addition to package-boost (we maintain it). Closes audit-without-install open question (#3 was "audit-without-install" — global install IS audit-without-per-project-install).
 
 ---
 
