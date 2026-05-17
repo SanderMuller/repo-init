@@ -126,3 +126,11 @@ jobs:
           coverage: none
 
       - run: bash .github/scripts/check-stub-composer-validity.sh
+
+  bootstrap-idempotency:
+    name: Bootstrap phase idempotency (RQ41)
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v6
+      - run: bash .github/scripts/check-bootstrap-idempotency.sh

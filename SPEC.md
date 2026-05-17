@@ -581,7 +581,7 @@ Open `checklists/post-bootstrap-verification.md` and confirm every item.
 
 Other categories follow the same shape with adjusted step lists. Notable differences:
 
-- `bootstrap-laravel-project.md` wraps `laravel new <name> --ai` as step 2 instead of copying stubs. Steps 3–10 then layer additions on top, prompting per-file when the Laravel installer wrote something the stub would overwrite.
+- `bootstrap-laravel-project.md` wraps `laravel new <name> --boost --git --no-interaction` as step 2 instead of copying stubs. Steps 3–10 then layer additions on top, prompting per-file when the Laravel installer wrote something the stub would overwrite.
 - `bootstrap-phpstan-extension.md` and `bootstrap-rector-extension.md` add a step for writing the `extension.neon` / `config/config.php` and wiring `extra.phpstan.includes` / `extra.rector.includes`.
 - `bootstrap-php-package.md` adds steps for `.lpv` and `PUBLIC_API.md`; skips the `extra.laravel.providers` wiring entirely.
 
@@ -642,11 +642,11 @@ Skip opted-out rows entirely.
 
 ## OUTDATED files
 For each file present, look up its **merge mode** in `references/upgrade-merge-modes.md` and apply the matching detector:
-- `replace` files (workflows, dependabot.yml, .editorconfig, pint.json) — diff against stub; any difference is OUTDATED.
+- `replace` files (workflows, dependabot.yml, .editorconfig) — diff against stub; any difference is OUTDATED.
 - `managed-block` files (.gitattributes) — diff *only inside* the package-boost managed block; flag OUTDATED if our entries inside the block drift.
 - `append-only` files (.gitignore) — flag MISSING per line we expect but is absent. Never OUTDATED — extra lines are allowed.
 - `merge-keys` files (composer.json) — flag MISSING per key we expect, walking each documented section: `scripts`, `extra.laravel.providers`, `extra.phpstan.includes`, `extra.rector.includes`, `config.allow-plugins`, `config.sort-packages`, `autoload-dev.classmap` (per category — see §9 for the section-to-category map). Never OUTDATED for whole-file diff.
-- `notify-only` files (phpstan.neon.dist, rector.php, phpstan-baseline.neon) — never flag OUTDATED automatically. User owns these. Mention drift in audit report as informational only.
+- `notify-only` files (phpstan.neon.dist, rector.php, pint.json, phpstan-baseline.neon) — never flag OUTDATED automatically. User owns these. Mention drift in audit report as informational only.
 
 ## NON-CANONICAL files
 - [ ] composer.lock committed (libraries should not commit lockfiles) — flag as NON-CANONICAL
@@ -820,7 +820,7 @@ The "dogfood" property therefore reduces to: every stub in `stubs/` was generate
 - [ ] `phases/bootstrap-php-package.md`
 - [ ] `phases/bootstrap-phpstan-extension.md`
 - [ ] `phases/bootstrap-rector-extension.md`
-- [ ] `phases/bootstrap-laravel-project.md` — wraps `laravel new <name> --ai`; layers stubs on top
+- [ ] `phases/bootstrap-laravel-project.md` — wraps `laravel new <name> --boost`; layers stubs on top
 - [ ] All bootstrap phases include the §3.3.1 greenfield install prelude (`mkdir`, `composer init`, `composer require --dev sandermuller/repo-init`) BEFORE the first stub-copy step. `bootstrap-laravel-project.md` substitutes `laravel new <name>` for the mkdir+composer-init steps.
 - [ ] `checklists/post-bootstrap-verification.md` — common verification items (composer install ok, vendor/ populated, tests run, phpstan passes initial smoke)
 - [ ] Tests — markdown lint; spec-link audit (every reference cited in a phase file exists in references/); greenfield-bootstrap-contract test (assert each bootstrap phase has the prelude steps in order)
@@ -878,7 +878,7 @@ The "dogfood" property therefore reduces to: every stub in `stubs/` was generate
 
 ## Open Questions
 
-1. **`--ai` flag on `laravel new`.** Phase `bootstrap-laravel-project.md` assumes `laravel new --ai` exists. Verify the current Laravel installer flag name; if it's `--with-ai` or absent, the phase file needs adjusting. Fallback path (probe + warn + plain `laravel new`) should be in the phase file.
+1. ~~**`--ai` flag on `laravel new`.**~~ **Resolved (2026-05):** the installer ships no `--ai` / `--with-ai` flag. The functional equivalent is `--boost` (installs `laravel/boost`, which writes `boost.json`, `.mcp.json`, AGENTS.md, CLAUDE.md). Agent-context auto-detection happens via env, no flag needed. `bootstrap-laravel-project.md` + audit / common-issues sections use `--boost` / `--no-boost`.
 
 2. **`.gitattributes` managed-block contract with package-boost.** The shared `.gitattributes` stub assumes package-boost will accept entries appended into its managed block by downstream tools. Confirm with the package-boost maintainer and document in `references/gitattributes-managed-block.md`. If rejected, fall back to a separate `# >>> repo-init (managed) >>>` block and downgrade the "NON-CANONICAL: two managed blocks" audit finding.
 
@@ -969,6 +969,8 @@ The "dogfood" property therefore reduces to: every stub in `stubs/` was generate
 39. **Workbench scripts always added for `laravel-package`.** **Decision:** Drop `--with-workbench-scripts` flag. §5.4 says "always added". Matches RQ13. **Rationale:** Codex v5 flagged the body/RQ13 contradiction; observed pattern across all canonical sander L-packages is "always present" so the flag was vestigial.
 
 40. **Distribution model — global install (v7).** **Decision:** Default is `composer global require sandermuller/repo-init` (one per machine). Project-local install remains as an escape hatch (§3.4). Skill propagates to `~/.claude/skills/repo-init/` via a new package-boost feature: `vendor/bin/testbench package-boost:sync --scope=user`. Phase/stub/reference paths use absolute `REPO_INIT_HOME = $(composer global config home)/vendor/sandermuller/repo-init`. **Rationale:** Matches `laravel new` mental model. Eliminates per-target install (no `composer init` prelude on greenfield; no per-target vendor pollution; no per-target self-removal). One-time setup, everywhere availability. Requires a small (~30 LOC) feature addition to package-boost (we maintain it). Closes audit-without-install open question (#3 was "audit-without-install" — global install IS audit-without-per-project-install).
+
+41. **Bootstrap phase idempotency (v0.2).** **Decision:** All 5 `bootstrap-<category>.md` phase files are idempotent — each mutating step has a `Skip if:` precondition that makes re-runs a no-op when the post-condition is already met. Read-only steps (pre-flight, verification, print-next-steps) always run. **Rationale:** Enables the `sandermuller/repo-new` CLI (see `specs/repo-new-cli.md`) to do mechanical scaffolding via PHP code, then the agent reads the corresponding bootstrap phase file end-to-end and idempotency guards mean CLI-completed steps are silently skipped. No mid-phase resume contract needed; single-entry-point + self-contained-phase model preserved. Eliminates codex v8 finding #1 (mid-phase handoff was fragile). CI conformance test (`check-bootstrap-idempotency.sh`) guards the contract. **Impact:** repo-init bumps to 0.2.0; `sandermuller/repo-new` requires `^0.2`.
 
 ---
 

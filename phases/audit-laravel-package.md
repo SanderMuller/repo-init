@@ -102,11 +102,11 @@ Category-mandatory:
 
 For each file present, look up its merge mode in `$REPO_INIT_HOME/references/upgrade-merge-modes.md`:
 
-- **`replace` files** (workflows, dependabot.yml, .editorconfig, pint.json, .mcp.json, testbench.yaml, workbench provider, run-tests.yml, tests/Pest.php OR phpunit.xml.dist): diff against `$REPO_INIT_HOME/stubs/<shared|laravel-package|laravel-package-spatie>/<path>` (with placeholders substituted using the audit's known values for vendor/name). Any difference → OUTDATED.
+- **`replace` files** (workflows, dependabot.yml, .editorconfig, .mcp.json, testbench.yaml, workbench provider, run-tests.yml, tests/Pest.php OR phpunit.xml.dist): diff against `$REPO_INIT_HOME/stubs/<shared|laravel-package|laravel-package-spatie>/<path>` (with placeholders substituted using the audit's known values for vendor/name). Any difference → OUTDATED.
 - **`managed-block` files** (`.gitattributes`): diff only inside the `# >>> package-boost (managed) >>>` block. Flag OUTDATED if our entries inside the block drift from `$REPO_INIT_HOME/stubs/shared/.gitattributes` content (within its own block). Don't flag content outside the block.
 - **`append-only` files** (`.gitignore`): for each line in `$REPO_INIT_HOME/stubs/shared/.gitignore` not present in the target's `.gitignore`, flag MISSING-line. Never flag OUTDATED for extra lines (user-added).
 - **`merge-keys` files** (`composer.json`): walk each documented key — `scripts`, `extra.laravel.providers`, `config.allow-plugins`, `config.sort-packages`. For each expected key missing, flag MISSING-key. Don't flag whole-file diff.
-- **`notify-only` files** (`phpstan.neon.dist`, `rector.php`, `phpstan-baseline.neon`): never auto-flag OUTDATED. Mention in the report under "Notes": "your phpstan.neon.dist has drifted from the stub — review manually if you want to align".
+- **`notify-only` files** (`phpstan.neon.dist`, `rector.php`, `pint.json`, `phpstan-baseline.neon`): never auto-flag OUTDATED. Mention in the report under "Notes": "your phpstan.neon.dist has drifted from the stub — review manually if you want to align".
 
 ## NON-CANONICAL findings
 

@@ -23,7 +23,7 @@ Ask the user (with auto-inferred defaults):
 - [ ] `.editorconfig`
 - [ ] `.gitattributes` (with package-boost managed block — see `$REPO_INIT_HOME/references/gitattributes-managed-block.md`)
 - [ ] `.gitignore`
-- [ ] `.mcp.json` (Laravel `--ai` writes this; or our stub)
+- [ ] `.mcp.json` (`laravel/boost` writes this on install; or our stub)
 - [ ] `pint.json`
 - [ ] `phpstan.neon.dist`
 - [ ] `phpstan-baseline.neon`
@@ -38,7 +38,7 @@ Ask the user (with auto-inferred defaults):
 
 **Category-specific (laravel-project):**
 
-- [ ] `boost.json` (Laravel `--ai` writes this; ours overlays if absent)
+- [ ] `boost.json` (`laravel/boost` writes this on install; ours overlays if absent)
 - [ ] `CLAUDE.md` and `AGENTS.md` (package-boost generated)
 - [ ] `composer.json` with `type: project`
 
@@ -88,7 +88,7 @@ Test-framework:
 
 Same logic as `audit-laravel-package.md` §OUTDATED — apply each file's mode from `$REPO_INIT_HOME/references/upgrade-merge-modes.md`. With laravel-project paths:
 
-- `replace`: workflows, dependabot.yml, .editorconfig, pint.json, .mcp.json (if ours), boost.json (if ours).
+- `replace`: workflows, dependabot.yml, .editorconfig, .mcp.json (if ours), boost.json (if ours).
 - `managed-block`: `.gitattributes`.
 - `append-only`: `.gitignore` — for laravel-project we expect the project-only extras (`/public/build`, `/public/hot`, `/public/storage`, `/storage/pail`, `_ide_helper*`). Flag MISSING-line per absent line.
 - `merge-keys` (`composer.json`): walk `scripts` (including `dev`, `qa`, `setup` — laravel-project specific), `config.allow-plugins`, `config.sort-packages`. Don't flag `extra.laravel.providers` (that's a package thing, not a project thing).

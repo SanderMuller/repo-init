@@ -9,6 +9,32 @@ Pre-`1.0.0` releases may introduce breaking changes in MINOR bumps; we surface t
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-05-17
+
+Bootstrap phase idempotency rework. Enables forthcoming `sandermuller/repo-new` CLI to do mechanical scaffolding without conflicting with the agent path.
+
+### Added
+
+- **RQ41 in SPEC.md** documenting the bootstrap-phase idempotency contract.
+- `**Idempotent.**` header banner on every `phases/bootstrap-<category>.md`.
+- `**Skip if:** <precondition>` block on each mutating step (steps 3-9 in laravel-package, equivalent in other categories). Read-only steps (pre-flight, verification, print) always run.
+- `## Idempotency invariants (RQ41 contract)` section at the bottom of every bootstrap phase file documenting the per-step skip preconditions for review.
+- `check-bootstrap-idempotency.sh` CI script asserting every phase file has the required structure.
+
+### Changed
+
+- **All 5 `bootstrap-<category>.md` phase files** rewritten with idempotency guards. Functional behaviour unchanged for first-time runs; second-runs (and CLI-then-agent runs) are now no-ops.
+- Open Q #1 (`--ai` flag on `laravel new`) resolved to use `--boost` (the actual Laravel installer flag). `bootstrap-laravel-project.md` + related docs updated.
+
+### Why
+
+`sandermuller/repo-new` CLI (separate package, in design at `specs/repo-new-cli.md`) does mechanical scaffolding for new repos — composer init, stub copy, composer require, etc. After CLI scaffolding, the user asks the agent to "finish" the bootstrap. Without idempotency, the agent re-reading the bootstrap phase file would re-do work the CLI already did — double-installs, redundant stub copies, lockfile thrash. Idempotency makes the agent path a no-op when CLI ran first, AND makes manual mid-run aborts safe to retry.
+
+### Compatibility
+
+- Phase file structure is backwards-compatible: a fresh repo run (no prior state) follows the same step list as before. Skip preconditions just add up-front guards that NEVER fire on fresh runs.
+- repo-init `^0.1` consumers can upgrade to `0.2` with no migration. Their existing repos are unaffected (audit/upgrade phase files unchanged).
+
 ## [0.1.0] - 2026-05-17
 
 Initial release. Global-install model (`composer global require sandermuller/repo-init`).
@@ -45,5 +71,6 @@ Initial release. Global-install model (`composer global require sandermuller/rep
 - 4 Open Questions remaining: `--ai` flag verification on Laravel installer; package-boost user-scope sync feature; skill-copy-not-symlink behavior verification.
 - Independently reviewed via codex in 3 rounds (v3 → v4 → v5 → v6). All findings addressed.
 
-[Unreleased]: https://github.com/sandermuller/repo-init/compare/0.1.0...HEAD
+[Unreleased]: https://github.com/sandermuller/repo-init/compare/0.2.0...HEAD
+[0.2.0]: https://github.com/sandermuller/repo-init/compare/0.1.0...0.2.0
 [0.1.0]: https://github.com/sandermuller/repo-init/releases/tag/0.1.0

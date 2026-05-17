@@ -2,6 +2,8 @@
 
 Greenfield setup of a Laravel package (a library that adds functionality to Laravel apps via a ServiceProvider).
 
+**Idempotent.** Each mutating step has a precondition check. If the post-condition is already met (e.g. CLI scaffolding ran first, or this phase was run before and aborted mid-way), the step is a no-op. See SPEC.md RQ41 for the contract.
+
 ## Pre-flight
 
 Run `$REPO_INIT_HOME/checklists/preflight.md`. Stop if anything is red. Verify category-fit per `$REPO_INIT_HOME/references/detection-rules.md`. Placeholder transforms (already cited under `$REPO_INIT_HOME/references/placeholder-rules.md` in step 4) apply to every stub substitution.
@@ -25,10 +27,14 @@ Confirm the derived `__NAMESPACE__` with the user once (per `$REPO_INIT_HOME/ref
 
 ### 1. Apply target-dir rule
 
-- If user passed positional `name`: `mkdir <name> && cd <name>`. Verify the dir didn't already exist.
-- Otherwise: target IS cwd. Verify cwd is empty modulo `.git/`. If not, stop and ask the user for a `name`.
+Lookup-only; no idempotency guard needed (cd is naturally idempotent).
+
+- If user passed positional `name`: `mkdir -p <name> && cd <name>`. Tolerate dir already existing (idempotency); fail only if dir exists AND is non-empty AND doesn't look like a partial scaffold of this category.
+- Otherwise: target IS cwd. Verify cwd is empty modulo `.git/` OR looks like a partial scaffold of `laravel-package`. If neither, stop and ask the user for a `name`.
 
 ### 2. Pick stub source dir
+
+Lookup-only; no mutation.
 
 Set `STUB_CATEGORY_DIR` based on the `variant`:
 
@@ -39,17 +45,29 @@ The two variants differ in `composer.json` (spatie has `spatie/laravel-package-t
 
 ### 3. Copy shared stubs
 
-For each file under `$REPO_INIT_HOME/stubs/shared/`, copy to the same relative path in cwd. Substitute placeholders per `$REPO_INIT_HOME/references/placeholder-rules.md`.
+**Precondition check:** for every file under `$REPO_INIT_HOME/stubs/shared/`, the equivalent file exists at the corresponding path in cwd AND contains no literal `__VENDOR__` / `__PACKAGE__` / `__NAMESPACE__` / `__AUTHOR_*` / `__PHP_VERSION__` / `__LARAVEL_VERSIONS__` placeholder strings (which would mean stub was copied but substitution was skipped).
+
+**If precondition met:** skip — shared stubs already copied + substituted.
+
+**Otherwise:** for each file under `$REPO_INIT_HOME/stubs/shared/`, copy to the same relative path in cwd. Substitute placeholders per `$REPO_INIT_HOME/references/placeholder-rules.md`.
 
 Special handling for `tests/`: copy `tests/Pest.php` only when `test-framework=pest`; skip when `phpunit`.
 
 ### 4. Copy category stubs
 
-For each file under `$STUB_CATEGORY_DIR/`, copy to cwd. Substitute placeholders, including file-path placeholders (e.g. `src/__PACKAGE_STUDLY__ServiceProvider.php` → `src/QueueInsightsServiceProvider.php`).
+**Precondition check:** for every file under `$STUB_CATEGORY_DIR/`, the equivalent file (with placeholder file-paths substituted — `src/__PACKAGE_STUDLY__ServiceProvider.php` → `src/QueueInsightsServiceProvider.php` etc.) exists at the corresponding path in cwd AND contains no literal placeholders.
+
+**If precondition met:** skip — category stubs already copied + substituted.
+
+**Otherwise:** for each file under `$STUB_CATEGORY_DIR/`, copy to cwd. Substitute placeholders, including file-path placeholders.
 
 ### 5. Compose the test-framework variant
 
-The stubs ship a default test-framework per variant: `laravel-package` (sander) defaults to **Pest**, `laravel-package-spatie` (hihaho) defaults to **PHPUnit**. If the user picked the OTHER framework, the agent must edit three things AFTER copying stubs:
+**Precondition check:** target's `composer.json` `scripts.test` matches the expected command for the chosen test-framework (`vendor/bin/pest` for pest, `vendor/bin/phpunit` for phpunit) AND target's `.github/workflows/run-tests.yml` last step `run:` matches the same binary AND (test-framework=pest) `tests/Pest.php` exists / (test-framework=phpunit) `tests/Pest.php` does NOT exist.
+
+**If precondition met:** skip — variant already composed.
+
+**Otherwise:** the stubs ship a default test-framework per variant: `laravel-package` (sander) defaults to **Pest**, `laravel-package-spatie` (hihaho) defaults to **PHPUnit**. If the user picked the OTHER framework, edit:
 
 **(a) `composer.json`**:
 - Swap `"test"` script: `vendor/bin/pest` ↔ `vendor/bin/phpunit`
@@ -68,6 +86,12 @@ Pick exactly one of these per the user's choice; never both.
 
 ### 6. Run `composer install`
 
+**Precondition check:** `vendor/` directory exists AND `composer.lock` exists AND `composer validate --check-lock --no-check-publish --no-check-version` returns 0.
+
+**If precondition met:** skip — deps already installed cleanly.
+
+**Otherwise:**
+
 ```bash
 composer install
 ```
@@ -76,7 +100,11 @@ On failure, consult `$REPO_INIT_HOME/references/composer-failure-modes.md`.
 
 ### 7. Run `composer require --dev` with the per-category dep list
 
-Build the list:
+**Precondition check:** for every dep in the list below, `composer show --installed <dep>` returns 0 (i.e. the dep is installed) AND the dep is in target's `composer.json` `require-dev` (per `composer show --installed --no-dev | grep <dep>` returning empty — confirming it's dev not prod).
+
+**If precondition met:** skip — all dev deps already present.
+
+**Otherwise:** build the list:
 
 - Shared `require-dev` from `$REPO_INIT_HOME/references/shared-dev-deps.md` (universal list), minus any per-category exclusions (`laravel-package` has none).
 - Category-mandatory `require-dev` from `$REPO_INIT_HOME/references/per-category-deps.md#laravel-package`: `larastan/larastan`, `driftingly/rector-laravel`.
@@ -84,17 +112,25 @@ Build the list:
   - `--with-hihaho-rules` (default `y` for vendor=hihaho): adds nothing for `laravel-package` (those are laravel-project-only).
   - `variant=spatie`: `spatie/laravel-package-tools` is in `require` (already in the spatie stub composer.json), not `require-dev`.
 
-Run as a single batched `composer require --dev <pkg1> <pkg2> ...` call. Respect the larastan-vs-phpstan exclusivity (use `larastan/larastan`; never also `phpstan/phpstan`).
+Run as a single batched `composer require --dev <pkg1> <pkg2> ...` call FOR THE MISSING ones only. Respect the larastan-vs-phpstan exclusivity (use `larastan/larastan`; never also `phpstan/phpstan`).
 
 On failure, consult `$REPO_INIT_HOME/references/composer-failure-modes.md`.
 
 ### 8. Run `composer require` for runtime deps if not already pulled
 
-`illuminate/contracts` + `illuminate/support` are already in the stub `composer.json` `require` block at the chosen `__LARAVEL_VERSIONS__`. `composer install` in step 6 pulled them. No extra step needed unless `variant=spatie` and `spatie/laravel-package-tools` somehow missing — re-check.
+**Precondition check:** `composer show --installed --no-dev` lists `illuminate/contracts` AND `illuminate/support` (AND, when `variant=spatie`, `spatie/laravel-package-tools`).
+
+**If precondition met:** skip — runtime deps already in target's `require`.
+
+**Otherwise:** `illuminate/contracts` + `illuminate/support` are already in the stub `composer.json` `require` block at the chosen `__LARAVEL_VERSIONS__`. `composer install` in step 6 should have pulled them. If somehow missing, `composer require illuminate/contracts:__LARAVEL_VERSIONS__ illuminate/support:__LARAVEL_VERSIONS__`. For `variant=spatie`, ensure `spatie/laravel-package-tools` is also in `require` (re-add if missing).
 
 ### 9. Install + sync target-local AI assets
 
-For project-local repo-init users (escape hatch per SPEC §3.4), or when the user explicitly wants this package to have its OWN target-local skill copy:
+**Precondition check:** EITHER `.claude/skills/repo-init/SKILL.md` exists in target cwd (project-local sync done) OR `~/.claude/skills/repo-init/SKILL.md` exists (global sync done) — the latter covers the standard global-install case where this new package doesn't need a project-local skill copy.
+
+**If precondition met:** skip — AI assets already available.
+
+**Otherwise:** for project-local repo-init users (escape hatch per SPEC §3.4), or when the user explicitly wants this package to have its OWN target-local skill copy:
 
 ```bash
 vendor/bin/testbench package-boost:install --all   # or --agents=claude_code per user preference
@@ -114,9 +150,13 @@ This wires up the project-local sync so adding a skill later is one command away
 
 ### 10. Run post-bootstrap verification
 
+Always run (read-only). No idempotency guard needed.
+
 Open `$REPO_INIT_HOME/checklists/post-bootstrap-verification.md` and confirm every item.
 
 ### 11. Print next steps
+
+Always run (informational).
 
 ```
 ✓ Bootstrap done for {vendor}/{name} (laravel-package, {variant} variant).
@@ -141,3 +181,16 @@ Want to run an audit next (`phases/audit-laravel-package.md`), or are you done w
 - **`spatie/laravel-package-tools` not installed but ServiceProvider extends `PackageServiceProvider`**: check `composer require` output; on failure consult composer-failure-modes.md.
 - **`vendor/bin/testbench` missing after `composer install`**: `orchestra/testbench` should be in `require-dev` from the shared list. If missing, `composer require --dev orchestra/testbench` separately.
 - **PHPStan red on first run with `vendor/bin/phpstan`**: expected — the stub `phpstan-baseline.neon` is empty. Generate one with `vendor/bin/phpstan analyse --generate-baseline`, then commit it as a known-debt baseline.
+
+## Idempotency invariants (RQ41 contract)
+
+Re-running this phase against a target where all steps' post-conditions are already met must be a no-op. Specifically:
+
+1. No file writes (every stub copy step's precondition guard skips when content already correct).
+2. No `composer install` / `composer require` invocations (preconditions verify deps already installed in correct scope).
+3. No `package-boost:sync` invocation (precondition verifies skill already synced).
+4. Verification + print-next-steps still run (they're read-only).
+
+This contract lets `sandermuller/repo-new` do mechanical scaffolding via CLI, then the agent runs this phase end-to-end and detects "nothing to do" automatically — no mid-phase resume contract needed.
+
+Tested in CI via `check-bootstrap-idempotency.sh`.

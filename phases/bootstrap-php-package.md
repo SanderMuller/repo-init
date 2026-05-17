@@ -2,6 +2,8 @@
 
 Greenfield setup of a framework-agnostic PHP package. No Laravel runtime dep — works with any composer-installable PHP project as a consumer.
 
+**Idempotent.** Each mutating step has a `Skip if:` precondition. Re-running this phase against an already-bootstrapped target is a no-op. See SPEC.md RQ41.
+
 ## Pre-flight
 
 Run `$REPO_INIT_HOME/checklists/preflight.md`. Verify category-fit per `$REPO_INIT_HOME/references/detection-rules.md`. Placeholder transforms used in this phase come from `$REPO_INIT_HOME/references/placeholder-rules.md`.
@@ -26,9 +28,13 @@ Confirm derived `__NAMESPACE__` with the user once.
 
 ### 2. Copy shared stubs
 
+**Skip per-file if:** the file exists at target path AND no literal `__VENDOR__`/`__PACKAGE__`/etc. placeholders remain.
+
 For each file under `$REPO_INIT_HOME/stubs/shared/`, copy to cwd. Substitute placeholders. Skip `tests/Pest.php` if `test-framework=phpunit`.
 
 ### 3. Copy php-package stubs
+
+**Skip per-file if:** the file (with file-path placeholders substituted) exists at target AND no literal placeholders remain.
 
 For each file under `$REPO_INIT_HOME/stubs/php-package/`:
 
@@ -40,6 +46,8 @@ For each file under `$REPO_INIT_HOME/stubs/php-package/`:
 - `.github/workflows/run-tests.yml` — copy (3-cell PHP-only matrix, no Laravel axis).
 
 ### 4. Compose test-framework variant
+
+**Skip if:** target's `composer.json` `scripts.test` matches expected command for chosen test-framework AND `.github/workflows/run-tests.yml` last step matches.
 
 The shipped stubs default to **Pest** for php-package. If the user picked PHPUnit:
 
@@ -53,6 +61,8 @@ If keeping Pest (the default): no edits needed.
 
 ### 5. Run `composer install`
 
+**Skip if:** `vendor/` exists AND `composer validate --check-lock --no-check-publish --no-check-version` returns 0.
+
 ```bash
 composer install
 ```
@@ -60,6 +70,8 @@ composer install
 On failure, consult `$REPO_INIT_HOME/references/composer-failure-modes.md`.
 
 ### 6. Run `composer require --dev` for the per-category dep list
+
+**Skip if:** every dep in the list below is in `composer.json` `require-dev`. For partial overlap, install only missing.
 
 From `$REPO_INIT_HOME/references/per-category-deps.md#php-package`:
 
@@ -74,6 +86,8 @@ Single batched call. On failure, consult composer-failure-modes.md.
 
 ### 7. Sync AI assets (project-local, optional)
 
+**Skip if:** target's `.ai/skills/` dir exists AND `.claude/skills/` contains synced content OR (default) `~/.claude/skills/repo-init/` exists from global install.
+
 Default for php-package is NO project-local AI assets — repo-init's global skill is sufficient. If the user wants this package to ship its own `.ai/skills/` (e.g. it's itself an AI-tooling library), bootstrap-spec opts in via:
 
 ```bash
@@ -84,6 +98,8 @@ vendor/bin/testbench package-boost:sync
 Otherwise skip.
 
 ### 8. Validate gitattributes
+
+Read-only check (no mutation). Always run.
 
 The php-package category uses `stolt/lean-package-validator` to ensure the published archive (`composer install --prefer-dist`) excludes dev/test/AI dirs. Run:
 
@@ -116,6 +132,12 @@ Want to run an audit next (`phases/audit-php-package.md`), or are you done?
 
 - Keep working: open `$REPO_INIT_HOME/phases/audit-php-package.md`.
 - Done: stop.
+
+## Idempotency invariants (RQ41 contract)
+
+Re-running this phase against a target where all steps' post-conditions are already met must be a no-op. Steps 1, 8, 9, 10 are read-only and always run; steps 2-7 have explicit `Skip if:` preconditions.
+
+Tested in CI via `check-bootstrap-idempotency.sh`.
 
 ## Common issues
 

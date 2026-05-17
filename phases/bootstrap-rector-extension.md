@@ -2,6 +2,8 @@
 
 Greenfield setup of a Rector extension package — a library that ships custom Rector rules, registered via `extra.rector.includes`.
 
+**Idempotent.** Each mutating step has a `Skip if:` precondition. Re-running this phase against an already-bootstrapped target is a no-op. See SPEC.md RQ41.
+
 ## Pre-flight
 
 Run `$REPO_INIT_HOME/checklists/preflight.md`. Verify category-fit with `$REPO_INIT_HOME/references/detection-rules.md`.
@@ -31,9 +33,13 @@ Confirm derived `__NAMESPACE__` with the user once.
 
 ### 2. Copy shared stubs
 
+**Skip per-file if:** the file exists at target path AND no literal placeholders remain.
+
 For each file under `$REPO_INIT_HOME/stubs/shared/`, copy to cwd. Substitute placeholders. Compose test-framework variant (Pest or PHPUnit) per `bootstrap-php-package.md` step 4.
 
 ### 3. Copy rector-extension stubs
+
+**Skip per-file if:** the file (with file-path placeholders substituted) exists at target AND no literal placeholders remain. For `config/config.php`: skip if file exists (don't overwrite user-added rule registrations).
 
 For each file under `$REPO_INIT_HOME/stubs/rector-extension/`:
 
@@ -45,11 +51,15 @@ For each file under `$REPO_INIT_HOME/stubs/rector-extension/`:
 
 ### 4. Run `composer install`
 
+**Skip if:** `vendor/` exists AND `composer validate --check-lock --no-check-publish --no-check-version` returns 0.
+
 ```bash
 composer install
 ```
 
 ### 5. Run `composer require --dev` for the per-category dep list
+
+**Skip if:** every dep in the list below is in `composer.json` `require-dev` AND `require` (for runtime deps `rector/rector` + `symplify/rule-doc-generator-contracts` + Laravel-aware `driftingly/rector-laravel`).
 
 From `$REPO_INIT_HOME/references/per-category-deps.md#rector-extension`:
 
@@ -108,6 +118,12 @@ Want to run an audit next (`phases/audit-rector-extension.md`), or are you done?
 
 - Keep working: open `$REPO_INIT_HOME/phases/audit-rector-extension.md`.
 - Done: stop.
+
+## Idempotency invariants (RQ41 contract)
+
+Re-running this phase against a target where all steps' post-conditions are already met must be a no-op. Steps 1, 6, 7, 8 are read-only and always run; steps 2-5 have explicit `Skip if:` preconditions.
+
+Tested in CI via `check-bootstrap-idempotency.sh`.
 
 ## Common issues
 

@@ -2,6 +2,8 @@
 
 Greenfield setup of a full Laravel application. Wraps `laravel new` from the Laravel installer, then layers our additions (hihaho rule packs, our pint/phpstan/rector configs, GitHub workflows, .ai/ skeleton).
 
+**Idempotent.** Each mutating step has a `Skip if:` precondition. Re-running this phase against an already-bootstrapped target is a no-op. See SPEC.md RQ41.
+
 ## Pre-flight
 
 Run `$REPO_INIT_HOME/checklists/preflight.md`. Stop if anything is red. Verify category-fit per `$REPO_INIT_HOME/references/detection-rules.md`. Placeholder transforms used in this phase come from `$REPO_INIT_HOME/references/placeholder-rules.md`.
@@ -25,7 +27,7 @@ If not installed, ask the user:
 - `author-name` / `author-email` — defaults from git config.
 - `with-hihaho-rules` — default `y` for vendor=hihaho, `N` otherwise.
 - `with-security-advisories` — default `N`.
-- `--ai` flag support — verify the installed Laravel installer version supports `--ai` (Laravel installer ≥ X.Y). If not, fall back to plain `laravel new` and warn the user that some AI scaffolding is skipped (they can run `composer require laravel/boost` manually after).
+- `--boost` flag — `laravel new --boost` installs `laravel/boost` (MCP wiring, AGENTS.md / CLAUDE.md scaffolding, `boost.json`). Default ON. Use `--no-boost` only if the user explicitly opts out (then `composer require laravel/boost` runs as a separate step). The installer also auto-detects agent context via env for JSON output — no flag needed for that.
 
 ## Steps
 
@@ -36,21 +38,23 @@ If not installed, ask the user:
 
 ### 2. Run the Laravel installer
 
-Preferred (when `--ai` flag is supported):
+**Skip if:** `composer.json` exists in target cwd AND has `laravel/framework` in `require` (Laravel skeleton already in place — could be from a prior run or external setup).
+
+Preferred:
 
 ```bash
-laravel new <name> --ai
+laravel new <name> --boost --git --no-interaction
 ```
 
-The `--ai` flag wires up MCP (laravel/mcp), the boost.json template, AGENTS.md / CLAUDE.md scaffolding, and other AI-tooling defaults. This reduces overlap with our subsequent steps.
+The `--boost` flag installs `laravel/boost`, which wires up MCP, `boost.json`, and AGENTS.md / CLAUDE.md scaffolding — reduces overlap with our subsequent steps. Add `--pest` to switch the test framework at install time, or omit for PHPUnit. Pass `--database=<driver>` if the user named one in inputs (otherwise the installer prompts).
 
-Fallback (when `--ai` not supported):
+If the user explicitly opted out of Boost:
 
 ```bash
-laravel new <name>
+laravel new <name> --no-boost --git --no-interaction
 ```
 
-Then proceed with the additions — they'll do the AI scaffolding manually.
+`laravel/boost` then comes in via §5's `composer require` instead, so the boost MCP/AGENTS scaffolding still lands — just outside the installer flow.
 
 ### 3. cd into the new dir
 
@@ -58,17 +62,19 @@ Then proceed with the additions — they'll do the AI scaffolding manually.
 cd <name>     # skip if `laravel new .` was used
 ```
 
-### 4. Inspect what `laravel new --ai` already installed
+### 4. Inspect what `laravel new` already installed
 
-Read the freshly-generated `composer.json`. The agent skips re-installing anything already present (per RQ29 — read freshly-generated composer.json to detect what --ai already installed).
+Read the freshly-generated `composer.json`. The agent skips re-installing anything already present (per RQ29 — read freshly-generated composer.json to detect what the installer already brought in).
 
-Likely already present (when `--ai` was used):
+Likely already present (when `--boost` was used):
 
 - `laravel/boost`
-- `laravel/mcp`
-- maybe `laravel/pint`
+- `laravel/mcp` (pulled transitively by boost)
+- `laravel/pint`
 
 ### 5. Install our additional dev deps
+
+**Skip if:** every dep in the list below is already in `composer.json` `require-dev` (per `composer show --installed <dep>` AND not in `--no-dev` filter). For partial overlap, install only the missing deps.
 
 Build the list from `$REPO_INIT_HOME/references/per-category-deps.md#laravel-project`:
 
@@ -100,6 +106,8 @@ Skip packages already in `composer.json`. On failure, consult `$REPO_INIT_HOME/r
 
 ### 6. Overlay our shared stubs (with prompts for conflicts)
 
+**Skip per-file if:** the equivalent file already exists at the target path AND its contents match `$REPO_INIT_HOME/stubs/shared/<file>` after placeholder substitution (no literal `__VENDOR__` etc. remaining).
+
 For each file in `$REPO_INIT_HOME/stubs/shared/`:
 
 - If the file doesn't exist in cwd: copy it, substitute placeholders.
@@ -112,13 +120,15 @@ Likely conflicts:
 - `phpunit.xml.dist` — already present from Laravel. **Skip ours** (Laravel's is more app-appropriate).
 - `tests/Pest.php` — skip unless user opted into Pest in step 5.
 - `.github/workflows/` — Laravel may have its own (`tests.yml`, etc.); ours adds `phpstan.yml`, `pint-check.yml`, `rector-check.yml`, `update-changelog.yml`. Different filenames → no conflict; just add.
-- `.mcp.json` — if `--ai` flag was used, this exists. Otherwise copy ours.
+- `.mcp.json` — `laravel/boost` writes this on install. If absent (user opted out of Boost), copy ours.
 
 ### 7. Overlay laravel-project-specific stubs
 
+**Skip per-file if:** the file already exists at target path AND contents match the stub after placeholder substitution. For `README.append.md` specifically: skip if the README already contains the appended content (grep for a sentinel phrase like "Code-quality tooling" section heading).
+
 For each file in `$REPO_INIT_HOME/stubs/laravel-project/`:
 
-- `boost.json` — if `--ai` flag was used, this exists. Otherwise copy ours.
+- `boost.json` — `laravel/boost` writes this on install. If absent (user opted out of Boost), copy ours.
 - `phpstan.neon.dist` — copy. Project uses paths `[app, routes, config, database, tests]` (NOT `src tests` — see RQ7).
 - `rector.php` — copy. Project uses `withPaths([app, routes, config, database, tests])`. When `with-hihaho-rules`, also adds `Hihaho\RectorRules\Sets::ALL`.
 - `README.append.md` — append its content to the existing `README.md` (Laravel ships a README); never overwrite.
@@ -142,6 +152,8 @@ _ide_helper_models.php
 Dedupe — don't add a line that's already there.
 
 ### 9. Sync AI assets
+
+**Skip if:** `.claude/skills/repo-init/SKILL.md` exists in target cwd AND content matches `vendor/sandermuller/repo-init/.ai/skills/repo-init/SKILL.md` (project-local sync already done). If syncing from global instead, no project-local copy is expected.
 
 For laravel-project, package-boost is invoked via artisan (not testbench):
 
@@ -186,9 +198,15 @@ Want to run an audit next (`phases/audit-laravel-project.md`), or are you done w
 - User wants to keep working: open `$REPO_INIT_HOME/phases/audit-laravel-project.md`.
 - User is done: nothing to remove (repo-init lives globally, not in this target).
 
+## Idempotency invariants (RQ41 contract)
+
+Re-running this phase against a target where all steps' post-conditions are already met must be a no-op: no `laravel new`, no `composer require`, no stub overwrites, no `package-boost:sync`. Steps 1, 3, 4, 10, 11 are read-only and always run. Steps 2, 5-9 have explicit `Skip if:` preconditions.
+
+Tested in CI via `check-bootstrap-idempotency.sh`.
+
 ## Common issues
 
-- **`laravel new --ai` flag not recognized**: installer version too old. `composer global update laravel/installer`, then retry. Fallback path is documented above.
+- **`laravel new --boost` flag not recognized**: installer version too old (pre-5.x). `composer global update laravel/installer`, then retry. As a last resort, omit `--boost` and let §5 install `laravel/boost` via `composer require` after the skeleton lands.
 - **`hihaho/phpstan-rules` not found on Packagist**: it's a private/internal package; user needs auth.json or to be on the hihaho composer auth. Document this in the failure mode, then escalate.
 - **PHPUnit + Pest both installed by accident**: pick one. Remove the other with `composer remove --dev <the wrong one>`. Pest is the harder one to remove (also touches `tests/Pest.php`).
 - **`composer dev` fails**: this depends on the `dev` script in composer.json (concurrent server + queue + pail + vite). If Vite isn't set up, edit the script or run pieces individually.
