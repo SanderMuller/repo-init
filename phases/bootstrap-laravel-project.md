@@ -4,7 +4,7 @@ Greenfield setup of a full Laravel application. Wraps `laravel new` from the Lar
 
 ## Pre-flight
 
-Run `$REPO_INIT_HOME/checklists/preflight.md`. Stop if anything is red.
+Run `$REPO_INIT_HOME/checklists/preflight.md`. Stop if anything is red. Verify category-fit per `$REPO_INIT_HOME/references/detection-rules.md`. Placeholder transforms used in this phase come from `$REPO_INIT_HOME/references/placeholder-rules.md`.
 
 Verify the Laravel installer is available:
 

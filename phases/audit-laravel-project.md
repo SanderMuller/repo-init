@@ -86,7 +86,7 @@ Test-framework:
 
 ## OUTDATED files (per merge mode)
 
-Same logic as `audit-laravel-package.md` §OUTDATED, but with laravel-project paths:
+Same logic as `audit-laravel-package.md` §OUTDATED — apply each file's mode from `$REPO_INIT_HOME/references/upgrade-merge-modes.md`. With laravel-project paths:
 
 - `replace`: workflows, dependabot.yml, .editorconfig, pint.json, .mcp.json (if ours), boost.json (if ours).
 - `managed-block`: `.gitattributes`.

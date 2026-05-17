@@ -1,0 +1,96 @@
+name: integrity
+
+on:
+  push:
+    paths:
+      - '.ai/**'
+      - 'checklists/**'
+      - 'phases/**'
+      - 'references/**'
+      - 'stubs/**'
+      - 'SPEC.md'
+      - '.github/scripts/**'
+      - '.github/workflows/integrity.yml'
+  pull_request:
+    paths:
+      - '.ai/**'
+      - 'checklists/**'
+      - 'phases/**'
+      - 'references/**'
+      - 'stubs/**'
+      - 'SPEC.md'
+      - '.github/scripts/**'
+      - '.github/workflows/integrity.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: integrity-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  layout:
+    name: Layout matches Resolved Questions
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v6
+      - run: bash .github/scripts/check-layout.sh
+
+  paths:
+    name: Path integrity
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v6
+      - run: bash .github/scripts/check-paths.sh
+
+  phase-coverage:
+    name: Phase coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v6
+      - run: bash .github/scripts/check-phase-coverage.sh
+
+  dep-sync:
+    name: Dep source-of-truth sync
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install pyyaml
+        run: pip install pyyaml
+
+      - run: python3 .github/scripts/check-dep-sync.py
+
+  placeholders:
+    name: Placeholder coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v6
+      - run: bash .github/scripts/check-placeholders.sh
+
+  merge-keys:
+    name: Merge-keys covers extras
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v6
+      - run: bash .github/scripts/check-merge-keys-coverage.sh
+
+  audit-scoping:
+    name: Audit scoping (opt-in gating)
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v6
+      - run: bash .github/scripts/check-audit-scoping.sh

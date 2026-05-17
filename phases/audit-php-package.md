@@ -73,7 +73,7 @@ Test-framework split:
 
 ## OUTDATED files (per merge mode)
 
-Same logic as audit-laravel-package.md, with php-package stub paths.
+Same logic as audit-laravel-package.md, with php-package stub paths. Apply each file's mode from `$REPO_INIT_HOME/references/upgrade-merge-modes.md`.
 
 ## NON-CANONICAL findings
 

@@ -66,7 +66,7 @@ OPTIONAL (Laravel-aware):
 
 ## OUTDATED files (per merge mode)
 
-Same logic as audit-laravel-package.md. Plus:
+Same logic as audit-laravel-package.md — apply each file's mode from `$REPO_INIT_HOME/references/upgrade-merge-modes.md`. Plus:
 
 - `extension.neon` is `replace` mode for the skeleton structure (the `parametersSchema`/`parameters`/`services` block headers) but `notify-only` for the actual rule registrations inside. Bootstrap writes the skeleton; user fills it in.
 

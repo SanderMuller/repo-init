@@ -13,7 +13,7 @@ final class __PACKAGE_STUDLY__ServiceProvider extends PackageServiceProvider
             ->name('__PACKAGE__')
             ->hasConfigFile();
         // ->hasViews()
-        // ->hasMigration('create___PACKAGE___table')
+        // ->hasMigration('create_yourtable_table')   // <- replace with your actual migration name
         // ->hasCommand(YourCommand::class);
     }
 }

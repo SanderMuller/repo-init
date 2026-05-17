@@ -8,7 +8,7 @@ Run `$REPO_INIT_HOME/checklists/preflight.md` AND re-run audit: open `$REPO_INIT
 
 ## Safety rails
 
-Same as `upgrade-laravel-package.md` §Honor the safety rails. (No Laravel-specific never-touch — `.env*` and `.git/` apply universally.)
+Same as `upgrade-laravel-package.md` §Honor the safety rails. Honour `$REPO_INIT_HOME/checklists/per-category-never-touch.md` (no Laravel-specific never-touch — `.env*` and `.git/` apply universally) and the git-dirty rule before every write. Verify category-fit one more time via `$REPO_INIT_HOME/references/detection-rules.md`; dep expectations come from `$REPO_INIT_HOME/references/per-category-deps.md`.
 
 ## Apply MISSING files
 
@@ -35,7 +35,7 @@ On failure, consult `references/composer-failure-modes.md`.
 
 ## Apply OUTDATED files per merge mode
 
-Same logic as upgrade-laravel-package.md.
+Same logic as upgrade-laravel-package.md — apply each file's mode from `$REPO_INIT_HOME/references/upgrade-merge-modes.md`.
 
 `PUBLIC_API.md`: `replace` mode for the section structure (headers). Content inside sections is user-owned (`notify-only`). If the stub has new sections the target doesn't, prompt to merge.
 

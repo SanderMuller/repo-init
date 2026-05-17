@@ -1,0 +1,39 @@
+name: lint-markdown
+
+on:
+  push:
+    paths:
+      - '**.md'
+      - '.github/workflows/lint-markdown.yml'
+      - '.markdownlint.json'
+  pull_request:
+    paths:
+      - '**.md'
+      - '.github/workflows/lint-markdown.yml'
+      - '.markdownlint.json'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lint-markdown-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: markdownlint
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+
+      - name: Install markdownlint-cli2
+        run: npm install -g markdownlint-cli2@0.18
+
+      - name: Run markdownlint
+        run: markdownlint-cli2 "**/*.md" "#node_modules" "#vendor"

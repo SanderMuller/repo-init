@@ -4,7 +4,7 @@ Greenfield setup of a PHPStan extension package — a library that ships custom 
 
 ## Pre-flight
 
-Run `$REPO_INIT_HOME/checklists/preflight.md`.
+Run `$REPO_INIT_HOME/checklists/preflight.md`. Verify category-fit per `$REPO_INIT_HOME/references/detection-rules.md`. Placeholder transforms used in this phase come from `$REPO_INIT_HOME/references/placeholder-rules.md`.
 
 ## Inputs to collect
 

@@ -1,0 +1,35 @@
+name: stub-drift
+
+on:
+  schedule:
+    # Every Monday at 09:00 UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+    inputs:
+      threshold:
+        description: 'Drift threshold (lines changed) before warning'
+        required: false
+        default: '5'
+      open_issue:
+        description: 'Open a tracking issue if drift detected'
+        required: false
+        default: 'true'
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  drift:
+    name: Check stubs against canonical references
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Run drift check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DRIFT_THRESHOLD: ${{ github.event.inputs.threshold || '5' }}
+          DRIFT_OPEN_ISSUE: ${{ github.event.inputs.open_issue == 'false' && '0' || '1' }}
+        run: bash .github/scripts/check-stub-drift.sh

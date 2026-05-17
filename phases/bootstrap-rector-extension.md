@@ -4,7 +4,11 @@ Greenfield setup of a Rector extension package — a library that ships custom R
 
 ## Pre-flight
 
-Run `$REPO_INIT_HOME/checklists/preflight.md`.
+Run `$REPO_INIT_HOME/checklists/preflight.md`. Verify category-fit with `$REPO_INIT_HOME/references/detection-rules.md`.
+
+## Placeholder reference
+
+Per `$REPO_INIT_HOME/references/placeholder-rules.md` — exact transforms for `__VENDOR__`, `__PACKAGE__`, `__NAMESPACE__`, etc. used in stub substitution below.
 
 ## Inputs to collect
 

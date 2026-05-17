@@ -65,7 +65,7 @@ Test-framework split:
 
 ## OUTDATED files (per merge mode)
 
-Same logic as audit-laravel-package.md. `config/config.php` is `notify-only` once rules are registered (user owns it); `replace` mode applies only to the skeleton if the file is empty/missing.
+For each file present, apply the merge mode from `$REPO_INIT_HOME/references/upgrade-merge-modes.md` — same logic as `audit-laravel-package.md`. `config/config.php` is `notify-only` once rules are registered (user owns it); `replace` mode applies only to the skeleton if the file is empty/missing.
 
 ## NON-CANONICAL findings
 

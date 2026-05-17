@@ -8,7 +8,7 @@ Run `$REPO_INIT_HOME/checklists/preflight.md` AND re-run audit: open `$REPO_INIT
 
 ## Safety rails
 
-Same as `upgrade-laravel-package.md` §Honor the safety rails. Per-category never-touch is critical for laravel-project (auth middleware, policies, config/auth*.php, routes/auth.php, .env — never write).
+Same as `upgrade-laravel-package.md` §Honor the safety rails. Per-category never-touch is critical for laravel-project (auth middleware, policies, config/auth*.php, routes/auth.php, .env — never write); enforce via `$REPO_INIT_HOME/checklists/per-category-never-touch.md` + git-dirty rule before every write. Verify category-fit one more time via `$REPO_INIT_HOME/references/detection-rules.md`; dep expectations come from `$REPO_INIT_HOME/references/per-category-deps.md`.
 
 ## Apply MISSING files
 
@@ -36,7 +36,7 @@ On failure, consult `references/composer-failure-modes.md`.
 
 ## Apply OUTDATED files per merge mode
 
-Same logic as upgrade-laravel-package.md, with laravel-project paths.
+Same logic as upgrade-laravel-package.md — apply each file's mode from `$REPO_INIT_HOME/references/upgrade-merge-modes.md`. With laravel-project paths.
 
 **Special handling for `.editorconfig`**: Laravel installer ships its own; ours overrides for strict utf-8/lf/4-space. If user has accepted Laravel's defaults for years, ask before clobbering — they may have intentional team-wide conventions you don't want to override.
 
