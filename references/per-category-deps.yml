@@ -30,8 +30,13 @@ shared:
         - mrpunyapal/rector-pest
     pest-laravel-only:
       # added on top of pest when category in {laravel-project, laravel-package}
+      # NOTE: pestphp/pest-plugin-laravel ^4.1+ required for Laravel 13 support.
+      # For laravel-project: Laravel ships PHPUnit by default; pest is opt-in
+      # via `--test-framework=pest` (then user runs `vendor/bin/pest --init`
+      # separately to migrate). CLI default for laravel-project is phpunit
+      # (not pest) for vendors outside the sander/hihaho convention.
       require-dev:
-        - pestphp/pest-plugin-laravel
+        - "pestphp/pest-plugin-laravel: ^4.1"
     phpunit:
       require-dev:
         - phpunit/phpunit
@@ -41,6 +46,12 @@ categories:
   laravel-project:
     mandatory:
       require: []  # laravel new baseline; not enumerated here
+      # IMPORTANT: CLI implementations MUST filter the require-dev list by
+      # what `laravel new` already installed. Laravel 13+ ships some of these
+      # in `require` (laravel/tinker moved from require-dev → require). The
+      # CLI must `composer show --installed --format=json` and skip already-
+      # present packages, otherwise `composer require --dev` errors with
+      # "currently present in the require key".
       require-dev:
         - larastan/larastan
         - laravel/boost

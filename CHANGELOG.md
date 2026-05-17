@@ -9,6 +9,15 @@ Pre-`1.0.0` releases may introduce breaking changes in MINOR bumps; we surface t
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-05-17
+
+Dogfooded via `sandermuller/repo-new` CLI scaffolding both a fictional `php-package` AND `laravel-project`. Two real data bugs surfaced in `per-category-deps.yml`:
+
+### Fixed
+
+- **`pestphp/pest-plugin-laravel` constraint** bumped to `^4.1` (only ^4.1+ supports Laravel 13). Previously unconstrained → resolved to old versions incompatible with Laravel 13's `^13.x` framework.
+- **`laravel-project` mandatory `require-dev` documentation** explicitly notes that CLI implementations MUST filter or move packages Laravel already shipped. Laravel 13+ ships `laravel/tinker` in `require` historically (was `require-dev`); a blanket `composer require --dev` errors with "currently present in the require key". The fix is two-step: `composer remove --no-update <pkg>` then `composer require --dev <list>` so packages end up in the right scope. Documented inline in per-category-deps.yml.
+
 ## [0.2.2] - 2026-05-17
 
 ### Fixed
@@ -90,7 +99,8 @@ Initial release. Global-install model (`composer global require sandermuller/rep
 - 4 Open Questions remaining: `--ai` flag verification on Laravel installer; package-boost user-scope sync feature; skill-copy-not-symlink behavior verification.
 - Independently reviewed via codex in 3 rounds (v3 → v4 → v5 → v6). All findings addressed.
 
-[Unreleased]: https://github.com/sandermuller/repo-init/compare/0.2.2...HEAD
+[Unreleased]: https://github.com/sandermuller/repo-init/compare/0.2.3...HEAD
+[0.2.3]: https://github.com/sandermuller/repo-init/compare/0.2.2...0.2.3
 [0.2.2]: https://github.com/sandermuller/repo-init/compare/0.2.1...0.2.2
 [0.2.1]: https://github.com/sandermuller/repo-init/compare/0.2.0...0.2.1
 [0.2.0]: https://github.com/sandermuller/repo-init/compare/0.1.0...0.2.0
