@@ -50,7 +50,7 @@ Five categories:
 | `laravel-package` | `type: library` + (`extra.laravel.providers` OR `illuminate/*` OR `socialiteproviders/manager` OR `spatie/laravel-package-tools`) |
 | `php-package` | `type: library` + none of the above |
 
-Sub-flags for `laravel-package` (v0.1):
+Sub-flags for `laravel-package`:
 
 - If `spatie/laravel-package-tools` is in `require`: use the `laravel-package-spatie` stub variant (hihaho-style). Otherwise use `laravel-package` (sander-style).
 - If `filament/filament` is in `require` OR user wants a Filament plugin: bootstrap routes to `phases/bootstrap-filament-plugin.md` instead. Audit / upgrade fall through to laravel-package phases.

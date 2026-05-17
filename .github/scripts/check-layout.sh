@@ -67,6 +67,14 @@ REQUIRED_PATHS=(
     "stubs/rector-extension/composer.json"
     "stubs/laravel-project/boost.json"
 
+    # Phase 8 LOW-priority bootstrap-only categories (added in Phase 8)
+    "stubs/filament-plugin/composer.json"
+    "stubs/nova-tool/composer.json"
+    "phases/bootstrap-filament-plugin.md"
+    "phases/bootstrap-nova-tool.md"
+    "references/branch-alias.md"
+    "references/bin-scripts.md"
+
     # Meta docs
     "README.md"
     "CHANGELOG.md"

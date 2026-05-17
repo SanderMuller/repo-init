@@ -17,12 +17,20 @@ EXIT_CODE=0
 CATEGORIES=(laravel-project laravel-package php-package phpstan-extension rector-extension)
 MODES=(bootstrap audit upgrade)
 
+# Phase 8 LOW categories: bootstrap-only in v0.1 (audit/upgrade fall through to laravel-package phases).
+BOOTSTRAP_ONLY_CATEGORIES=(filament-plugin nova-tool)
+
 # Required references per mode (space-separated). Parallel to MODES.
 REQUIRED_BOOTSTRAP="checklists/preflight.md checklists/post-bootstrap-verification.md references/detection-rules.md references/per-category-deps.md references/composer-failure-modes.md references/placeholder-rules.md"
 REQUIRED_AUDIT="checklists/preflight.md references/detection-rules.md references/per-category-deps.md references/upgrade-merge-modes.md"
 REQUIRED_UPGRADE="checklists/preflight.md checklists/per-category-never-touch.md checklists/post-upgrade-verification.md references/detection-rules.md references/per-category-deps.md references/upgrade-merge-modes.md references/composer-failure-modes.md references/composer-scripts.md"
 
-echo "[check-phase-coverage] checking 15 phase files..."
+# Phase 8 bootstrap-only phases use a relaxed required list (composer-failure-modes
+# isn't strictly required since these phases delegate to bootstrap-laravel-package
+# patterns; but they still must cite preflight + detection + deps + placeholders).
+REQUIRED_BOOTSTRAP_ONLY="checklists/preflight.md checklists/post-bootstrap-verification.md references/detection-rules.md references/per-category-deps.md references/composer-failure-modes.md references/placeholder-rules.md"
+
+echo "[check-phase-coverage] checking 15 v1 phase files + 2 Phase 8 bootstrap-only..."
 
 for category in "${CATEGORIES[@]}"; do
     for mode in "${MODES[@]}"; do
@@ -48,6 +56,24 @@ for category in "${CATEGORIES[@]}"; do
                 EXIT_CODE=1
             fi
         done
+    done
+done
+
+# Phase 8 bootstrap-only categories.
+for category in "${BOOTSTRAP_ONLY_CATEGORIES[@]}"; do
+    phase_file="phases/bootstrap-${category}.md"
+
+    if [[ ! -f "$phase_file" ]]; then
+        echo "FAIL: Phase 8 bootstrap phase missing: $phase_file"
+        EXIT_CODE=1
+        continue
+    fi
+
+    for ref in $REQUIRED_BOOTSTRAP_ONLY; do
+        if ! grep -qE "(\\\$REPO_INIT_HOME/)?${ref//\//\\/}" "$phase_file"; then
+            echo "FAIL: $phase_file does not reference $ref"
+            EXIT_CODE=1
+        fi
     done
 done
 

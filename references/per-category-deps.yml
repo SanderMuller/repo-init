@@ -121,3 +121,42 @@ categories:
         require-dev: []
     shared-exclusions:
       - rector/rector  # because added to require
+
+  # Phase 8 LOW: bootstrap-only categories. audit + upgrade fall through to
+  # laravel-package phases (these are structurally laravel-packages with
+  # ecosystem-specific runtime deps).
+  filament-plugin:
+    mandatory:
+      require:
+        - "filament/filament: ^3.0||^4.0"
+        - "illuminate/contracts: __LARAVEL_VERSIONS__"
+        - "illuminate/support: __LARAVEL_VERSIONS__"
+      require-dev:
+        - larastan/larastan
+        - driftingly/rector-laravel
+    optional: {}
+    suggests:
+      # When the plugin uses specific Filament components in tests, the user
+      # may want to require these individually. Not auto-installed.
+      - filament/forms
+      - filament/tables
+      - filament/notifications
+    shared-exclusions: []
+    audit-via: laravel-package
+    upgrade-via: laravel-package
+
+  nova-tool:
+    mandatory:
+      require:
+        - "laravel/nova: ^5.0"
+        - "illuminate/contracts: __LARAVEL_VERSIONS__"
+        - "illuminate/support: __LARAVEL_VERSIONS__"
+      require-dev:
+        - larastan/larastan
+        - driftingly/rector-laravel
+    optional: {}
+    suggests: []
+    shared-exclusions: []
+    requires-nova-auth: true  # see bootstrap-nova-tool.md pre-flight
+    audit-via: laravel-package
+    upgrade-via: laravel-package

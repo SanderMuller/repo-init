@@ -57,6 +57,6 @@ Substitute `0.X` with your current MINOR + 1 (the about-to-be-released version).
 - Audit phases do NOT flag `extra.branch-alias` as MISSING. It's opt-in per package, not part of the canonical baseline (per `references/upgrade-merge-modes.md` `merge-keys` mode, only documented keys are checked).
 - Upgrade phases never add or modify `extra.branch-alias` automatically. If the user wants to add it, they edit `composer.json` manually following this doc.
 
-## Phase 8 / v0.2
+## Future: interactive prompt
 
 If repo-init eventually ships interactive branch-alias prompts at bootstrap time, the agent will read this doc to derive the right alias version for new packages. v0.1 keeps it manual.

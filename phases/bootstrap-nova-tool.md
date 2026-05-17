@@ -8,13 +8,19 @@ Greenfield setup of a Laravel Nova v5 tool — a package that ships a sidebar No
 
 Run `$REPO_INIT_HOME/checklists/preflight.md`. Stop if anything is red. Verify category-fit per `$REPO_INIT_HOME/references/detection-rules.md` (sub-flag for laravel-package: `laravel/nova` in `require`). Placeholder transforms used in this phase come from `$REPO_INIT_HOME/references/placeholder-rules.md`.
 
-Verify Nova is accessible from the user's Composer setup:
+Verify Nova auth is configured. Laravel Nova is a paid package distributed via `composer.json` `repositories` entries pointing to `https://nova.laravel.com`. The user must have Nova credentials in `~/.composer/auth.json`:
 
 ```bash
-composer config --global --list | grep nova
+grep -i nova ~/.composer/auth.json 2>/dev/null && echo "Nova auth present" || echo "Nova auth missing — surface to user"
 ```
 
-Laravel Nova is a paid package distributed via `composer.json` `repositories` entries pointing to `https://nova.laravel.com`. The user must have configured auth (auth.json with their Nova license). If `composer require laravel/nova` would fail with 401, surface this to the user before proceeding.
+Alternative (more authoritative) — try a non-installing resolve:
+
+```bash
+composer create-project --no-install --no-interaction laravel/nova:^5.0 /tmp/nova-auth-check 2>&1 | head -5 && rm -rf /tmp/nova-auth-check
+```
+
+If 401, stop and tell the user to run `composer config http-basic.nova.laravel.com <email> <license-key>` (or edit `~/.composer/auth.json` directly) before re-invoking.
 
 ## Inputs to collect
 
@@ -66,7 +72,7 @@ On other failures, consult `$REPO_INIT_HOME/references/composer-failure-modes.md
 
 ### 6. Run `composer require --dev` for the per-category dep list
 
-Same as `bootstrap-laravel-package.md` step 7 (shared + laravel-package mandatory). nova-tool doesn't add extra dev deps.
+Same as `bootstrap-laravel-package.md` step 7 (shared + laravel-package mandatory per `$REPO_INIT_HOME/references/per-category-deps.md#laravel-package`). nova-tool doesn't add extra dev deps.
 
 ### 7. Install + sync target-local AI assets (optional)
 

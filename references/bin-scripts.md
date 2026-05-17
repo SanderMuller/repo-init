@@ -38,9 +38,18 @@ A typical `bin/` script for a pure-PHP package:
 
 // Find the consumer's autoload — works both when running standalone
 // (vendor/bin/mytool) and when running from within a clone (bin/mytool).
+//
+// Path math from `bin/mytool`:
+//   - In a clone:        bin/../vendor/autoload.php       = vendor/autoload.php           (1 up)
+//   - In vendor/bin/:    bin/../../../autoload.php        = vendor/autoload.php           (3 up — vendor/bin → vendor → autoload.php)
+//     NB: Composer symlinks vendor/bin/mytool → ../<vendor>/<package>/bin/mytool, so
+//     __DIR__ resolves to the package's own bin/. From there, ../../../autoload.php
+//     traverses: bin → package → vendor-namespace → vendor → autoload.php (4 up).
+//     Use BOTH paths and the first match wins.
 $autoloadPaths = [
-    __DIR__ . '/../vendor/autoload.php',           // running from clone
-    __DIR__ . '/../../../autoload.php',            // running from vendor/bin/ in consumer
+    __DIR__ . '/../vendor/autoload.php',              // running from clone
+    __DIR__ . '/../../../autoload.php',               // vendor/bin/ direct (no symlink)
+    __DIR__ . '/../../../../autoload.php',            // vendor/<vendor>/<pkg>/bin (resolved symlink)
 ];
 
 foreach ($autoloadPaths as $path) {
@@ -55,7 +64,7 @@ use __NAMESPACE__\Cli\Application;
 exit((new Application())->run($argv));
 ```
 
-The autoload-discovery dance is mandatory — symlinks in `vendor/bin/` resolve from the consumer's perspective.
+The autoload-discovery dance is mandatory — symlinks in `vendor/bin/` resolve to the package's own `bin/` dir, NOT to `vendor/bin/`, so `__DIR__` is the package's bin not the consumer's.
 
 ## composer.json wiring
 
@@ -89,6 +98,6 @@ The `.gitattributes` should NOT export-ignore `bin/` (consumers need it).
 - `sandermuller/php-x402` ships `bin/x402`.
 - Other sander packages do not.
 
-## Phase 8 / v0.2
+## Future: interactive prompt
 
 If repo-init eventually ships an interactive prompt at bootstrap time ("does this package ship a CLI tool?"), the agent will read this doc to scaffold the bin/ script + composer.json wiring. v0.1 keeps it manual.
