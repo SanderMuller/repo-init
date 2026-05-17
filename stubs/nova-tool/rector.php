@@ -41,15 +41,19 @@ return RectorConfig::configure()
     ->withParallel(300, 15, 15)
     ->withMemoryLimit('3G')
     ->withPhpSets(php__PHP_VERSION_NEON__: true)
-    ->withSets([
-        LaravelSetList::LARAVEL_CODE_QUALITY,
-        LaravelSetList::LARAVEL_ARRAYACCESS_TO_METHOD_CALL,
-        LaravelSetList::LARAVEL_CONTAINER_STRING_TO_FULLY_QUALIFIED_NAME,
-        LaravelSetList::LARAVEL_FACADE_ALIASES_TO_FULL_NAMES,
-        PestSetList::PEST_CODE_QUALITY,
-        PestSetList::PEST_CHAIN,
-        PestSetList::PEST_LARAVEL,
-    ])
+    ->withSets(array_merge(
+        [
+            LaravelSetList::LARAVEL_CODE_QUALITY,
+            LaravelSetList::LARAVEL_ARRAYACCESS_TO_METHOD_CALL,
+            LaravelSetList::LARAVEL_CONTAINER_STRING_TO_FULLY_QUALIFIED_NAME,
+            LaravelSetList::LARAVEL_FACADE_ALIASES_TO_FULL_NAMES,
+        ],
+        class_exists(\RectorPest\Set\PestSetList::class) ? [
+            \RectorPest\Set\PestSetList::PEST_CODE_QUALITY,
+            \RectorPest\Set\PestSetList::PEST_CHAIN,
+            \RectorPest\Set\PestSetList::PEST_LARAVEL,
+        ] : [],
+    ))
     ->withSkip([
         NullToStrictStringFuncCallArgRector::class,
         AddArrowFunctionReturnTypeRector::class,
