@@ -9,6 +9,54 @@ Pre-`1.0.0` releases may introduce breaking changes in MINOR bumps; we surface t
 
 ## [Unreleased]
 
+## [0.2.8] - 2026-05-17
+
+### Changed
+
+- **Phase 5 precondition gaps closed.** `phases/bootstrap-laravel-package.md`
+  step 5 now checks that pest deps are absent from `composer.json` when
+  test-framework=phpunit (and vice versa); that `config.allow-plugins`
+  doesn't carry stale `pestphp/pest-plugin` on phpunit scaffolds; that
+  test files don't use pest syntax (`grep -rE '^(test|it)\(|^expect\('`)
+  on phpunit scaffolds. Without these, scaffolder bugs could produce a
+  "phase 5 no-op" verdict on a broken target.
+- **Phase 9 precondition tightened.** Now requires both the repo-init
+  skill check AND `.claude/`/`AGENTS.md` presence in target (from
+  `package-boost:sync`). When only the skill check passes, `sync` is
+  mandatory regardless of repo-init install scope. Fixes the case where
+  `composer install --no-scripts` left target without AI tooling.
+
+### Audit nudge for users with pre-0.2.5 scaffolds
+
+If your scaffold was produced before 0.2.5, it may be missing
+`laravel/boost` in `require-dev` and have stale pest/phpunit drift.
+Run `phases/audit-laravel-package.md` against the target to detect.
+Symptoms: `package-boost:sync` fatals with
+`Class "Laravel\Boost\BoostServiceProvider" not found`; both pest+phpunit
+deps installed; `tests/Pest.php` present despite `--test-framework=phpunit`.
+
+## [0.2.7] - 2026-05-17
+
+### Fixed
+
+- `stubs/{laravel-package, laravel-package-spatie, filament-plugin,
+  nova-tool}/rector.php` — `withSets([...])` block mixed `LaravelSetList`
+  and `PestSetList` entries; earlier conditional-wrap missed this 7-entry
+  variant. Now: `array_merge([laravel-sets], class_exists(PestSetList) ?
+  [pest-sets] : [])` so phpunit-only scaffolds don't fatal on
+  `Class "PestSetList" not found`.
+
+## [0.2.6] - 2026-05-17
+
+### Fixed
+
+- `__TEST_RUNNER__` + `__TEST_COVERAGE_FLAG__` placeholders added to 5
+  stub `composer.json` scripts (`laravel-package`,
+  `laravel-package-spatie`, `filament-plugin`, `nova-tool`, `php-package`).
+  Previously hardcoded `vendor/bin/pest` or `vendor/bin/phpunit`, so the
+  chosen `--test-framework` was only half-applied. `phpstan-extension` +
+  `rector-extension` remain phpunit-hardcoded by spec.
+
 ## [0.2.5] - 2026-05-17
 
 ### Fixed

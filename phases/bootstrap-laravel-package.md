@@ -63,7 +63,15 @@ Special handling for `tests/`: copy `tests/Pest.php` only when `test-framework=p
 
 ### 5. Compose the test-framework variant
 
-**Precondition check:** target's `composer.json` `scripts.test` matches the expected command for the chosen test-framework (`vendor/bin/pest` for pest, `vendor/bin/phpunit` for phpunit) AND target's `.github/workflows/run-tests.yml` last step `run:` matches the same binary AND (test-framework=pest) `tests/Pest.php` exists / (test-framework=phpunit) `tests/Pest.php` does NOT exist.
+**Precondition check (all must pass):**
+
+- `composer.json` `scripts.test` matches expected binary (`vendor/bin/pest` for pest, `vendor/bin/phpunit` for phpunit)
+- `.github/workflows/run-tests.yml` last step `run:` matches the same binary
+- (pest) `tests/Pest.php` exists / (phpunit) `tests/Pest.php` does NOT exist
+- (phpunit) `composer.json` `require-dev` contains NO `pestphp/*` packages; `config.allow-plugins` has no `pestphp/pest-plugin` entry
+- (pest) `composer.json` `require-dev` contains NO `phpunit/phpunit` (Pest pulls it transitively at the right version; explicit entry can pin a conflicting version)
+- (phpunit) `tests/**/*.php` contain NO pest syntax: `grep -rE '^(test|it)\(|^expect\(' tests/` returns no hits; (pest) inverse check optional
+- (pest) `composer.json` `config.allow-plugins."pestphp/pest-plugin"` is `true`
 
 **If precondition met:** skip — variant already composed.
 
@@ -129,9 +137,14 @@ On failure, consult `$REPO_INIT_HOME/references/composer-failure-modes.md`.
 
 ### 9. Install + sync target-local AI assets
 
-**Precondition check:** EITHER `.claude/skills/repo-init/SKILL.md` exists in target cwd (project-local sync done) OR `~/.claude/skills/repo-init/SKILL.md` exists (global sync done) — the latter covers the standard global-install case where this new package doesn't need a project-local skill copy.
+**Precondition check (BOTH must pass):**
+
+- Target has the AI agent directories materialized from `package-boost:sync`: at least one of `.claude/`, `.agents/`, `.cursor/`, `.junie/`, `.kiro/` exists in target cwd, AND `AGENTS.md`/`CLAUDE.md` exist at the target root. (`package-boost:sync` is the only step that generates these; missing means sync never ran.)
+- Repo-init's own skill is reachable: EITHER `.claude/skills/repo-init/SKILL.md` in target cwd (project-local install case) OR `~/.claude/skills/repo-init/SKILL.md` (global install case).
 
 **If precondition met:** skip — AI assets already available.
+
+**If only the skill check passes** but `.claude/`/`AGENTS.md`/etc. are missing in target: `package-boost:sync` never ran (likely because composer install used `--no-scripts`). Run `vendor/bin/testbench package-boost:sync` regardless of repo-init install scope — the target's own AI tooling is independent of repo-init's skill location.
 
 **Otherwise:** for project-local repo-init users (escape hatch per SPEC §3.4), or when the user explicitly wants this package to have its OWN target-local skill copy:
 
