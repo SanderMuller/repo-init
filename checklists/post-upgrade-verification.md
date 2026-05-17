@@ -7,13 +7,17 @@ Run after every upgrade phase. If anything is red, stop and report to the user b
 - [ ] `composer validate` returns 0.
 - [ ] `composer install` runs cleanly after the upgrade (no new conflicts; lockfile resolves).
 - [ ] No package in both `require` AND `require-dev` (per §5.1.1 exclusivity):
+
   ```bash
   composer show --installed --tree | grep -E '(rector/rector|phpstan/phpstan|spatie/laravel-package-tools|driftingly/rector-laravel)' | head -10
   ```
+
 - [ ] `larastan` vs `phpstan/phpstan` exclusivity (per §5.3):
+
   ```bash
   composer show --installed | grep -E '^(larastan/larastan|phpstan/phpstan) '
   ```
+
   Laravel-aware categories: only `larastan/larastan`. Framework-agnostic: only `phpstan/phpstan`.
 
 ## Tooling smoke tests

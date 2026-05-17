@@ -70,15 +70,18 @@ Special handling for `tests/`: copy `tests/Pest.php` only when `test-framework=p
 **Otherwise:** the stubs ship a default test-framework per variant: `laravel-package` (sander) defaults to **Pest**, `laravel-package-spatie` (hihaho) defaults to **PHPUnit**. If the user picked the OTHER framework, edit:
 
 **(a) `composer.json`**:
+
 - Swap `"test"` script: `vendor/bin/pest` ↔ `vendor/bin/phpunit`
 - Swap `"test-coverage"` script: `vendor/bin/pest --coverage` ↔ `vendor/bin/phpunit --coverage-html=coverage`
 - Swap dev deps: ADD `pestphp/pest` + `pestphp/pest-plugin-arch` + `pestphp/pest-plugin-laravel` + `mrpunyapal/rector-pest` OR ADD `phpunit/phpunit`; REMOVE the other set.
 - Swap `config.allow-plugins`: ADD `pestphp/pest-plugin: true` for pest; REMOVE for phpunit.
 
 **(b) `.github/workflows/run-tests.yml`**:
+
 - Change the last step's `run:` from `vendor/bin/pest --ci` (pest default) to `vendor/bin/phpunit` (phpunit) — or vice versa. **Without this edit, CI fails immediately because the workflow runs the wrong test binary.**
 
 **(c) Test bootstrap file**:
+
 - Pest: keep `tests/Pest.php` (copied from shared in step 3).
 - PHPUnit: delete `tests/Pest.php` (if present); rely on `phpunit.xml` (also from shared).
 

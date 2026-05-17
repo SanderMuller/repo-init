@@ -28,36 +28,46 @@ What counts as breaking for repo-init:
 
 1. **Update CHANGELOG.md** — move `[Unreleased]` entries to a new `[X.Y.Z] - YYYY-MM-DD` section. Update the link references at the bottom.
 2. **Commit** the CHANGELOG bump:
+
    ```bash
    git commit -am "Release X.Y.Z"
    ```
+
 3. **Tag**:
+
    ```bash
    git tag -s X.Y.Z -m "Release X.Y.Z"
    # or unsigned:
    git tag X.Y.Z
    ```
+
 4. **Push tag**:
+
    ```bash
    git push origin main --tags
    ```
-5. **Verify Packagist auto-publish** — the Packagist webhook fires on tag push; check https://packagist.org/packages/sandermuller/repo-init for the new version.
+
+5. **Verify Packagist auto-publish** — the Packagist webhook fires on tag push; check <https://packagist.org/packages/sandermuller/repo-init> for the new version.
 6. **Verify the install path** by running on a fresh machine (or VM / container):
+
    ```bash
    composer global require sandermuller/repo-init:X.Y.Z
    ls -la ~/.claude/skills/repo-init/SKILL.md
    ```
+
 7. **GitHub release**:
+
    ```bash
    gh release create X.Y.Z --generate-notes
    ```
+
    The `update-changelog.yml` workflow will pick up the release body and update CHANGELOG.md if needed.
 
 ## Hot-fix path
 
 If a release breaks the install (e.g. `composer global require` errors out):
 
-1. Yank from Packagist (https://packagist.org/packages/sandermuller/repo-init → Settings → mark version as abandoned, or contact packagist support).
+1. Yank from Packagist (<https://packagist.org/packages/sandermuller/repo-init> → Settings → mark version as abandoned, or contact packagist support).
 2. Cut a `.PATCH+1` with the fix.
 3. Document the yank in CHANGELOG with a `[YANKED]` marker.
 

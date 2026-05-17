@@ -7,9 +7,11 @@ Run after every bootstrap phase. If anything is red, stop and report to the user
 - [ ] `composer validate` returns 0.
 - [ ] `composer install` ran cleanly (vendor/ populated, composer.lock generated).
 - [ ] `composer.lock` exists. For `php-package`, `phpstan-extension`, `rector-extension`, `laravel-package` — composer.lock should NOT be committed (the .gitignore excludes it). Verify:
+
   ```bash
   git check-ignore composer.lock && echo "OK: gitignored" || echo "FAIL: lockfile not ignored"
   ```
+
   For `laravel-project`: composer.lock IS committed (Laravel convention). Skip this check.
 
 ## File presence

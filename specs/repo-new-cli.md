@@ -18,6 +18,7 @@ composer global require sandermuller/repo-new     # CLI (new)
 The CLI walks the user through 2–7 prompts, then mechanically scaffolds the target dir using `repo-init`'s stubs + data. After scaffolding, the user asks Claude to continue — the agent reads `repo-init`'s `bootstrap-<category>.md` phase file end-to-end and each step's idempotency guards detect what's already done (skip) vs what's left (execute). No mid-phase resume contract; the existing single-entry-point model is preserved.
 
 Two packages because (per codex review):
+
 - `repo-init` stays pure markdown + stubs (RQ1 preserved, no PHP).
 - `repo-new` ships PHP code (Symfony Console wizard + scaffolder). Depends on `repo-init` in `require` to read stubs + per-category-deps.yml at runtime.
 

@@ -11,7 +11,7 @@ Run `$REPO_INIT_HOME/checklists/preflight.md` AND re-run the audit phase: open `
 For every file write in the steps below:
 
 - Check `$REPO_INIT_HOME/checklists/per-category-never-touch.md` — never write to a never-touch path.
-- Check git-dirty rule: run `git status --porcelain`. Skip paths with prefixes `M`, ` M`, `MM`, `A`, `??` (modified, staged, or untracked). Override requires explicit user opt-in per file.
+- Check git-dirty rule: run `git status --porcelain`. Skip paths with prefixes `M`, `M`, `MM`, `A`, `??` (modified, staged, or untracked). Override requires explicit user opt-in per file.
 - Verify category-fit once more via `$REPO_INIT_HOME/references/detection-rules.md`; dep expectations come from `$REPO_INIT_HOME/references/per-category-deps.md`.
 
 If a write is blocked, surface to user with the gap finding and the rule that blocked it.

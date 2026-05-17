@@ -5,7 +5,7 @@ Files the agent must never write, regardless of phase.
 ## Scope per mode
 
 - **Bootstrap mode**: target dir is empty (modulo `.git/`) — the cwd-empty precondition is the protection. The git-dirty rule is NOT applied; new files from `laravel new` are expected to be untracked at the moment bootstrap starts writing on top of them. Security never-touch paths below still apply.
-- **Audit / Upgrade mode**: BOTH security never-touch paths AND git-dirty rule apply. Agent runs `git status --porcelain` before any write and skips paths with prefixes `M`, ` M`, `MM`, `A`, `??`. Override requires explicit per-file user opt-in.
+- **Audit / Upgrade mode**: BOTH security never-touch paths AND git-dirty rule apply. Agent runs `git status --porcelain` before any write and skips paths with prefixes `M`, `M`, `MM`, `A`, `??`. Override requires explicit per-file user opt-in.
 
 ## `laravel-project` security never-touch (all modes)
 

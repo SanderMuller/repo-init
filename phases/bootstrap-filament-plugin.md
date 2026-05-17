@@ -37,6 +37,7 @@ For each file under `$REPO_INIT_HOME/stubs/shared/`, copy to cwd. Substitute pla
 For each file under `$REPO_INIT_HOME/stubs/filament-plugin/`, copy to cwd. Substitute placeholders, including file-path placeholders.
 
 Key files:
+
 - `composer.json` — has `filament/filament: ^3.0||^4.0` in `require`. Substitute `__LARAVEL_VERSIONS__`.
 - `src/__PACKAGE_STUDLY__ServiceProvider.php` — extends `Illuminate\Support\ServiceProvider` AND implements `Filament\Contracts\Plugin`. Has dual-mode `register(?Panel $panel = null)` and `boot(?Panel $panel = null)` so the class works both as a Laravel ServiceProvider AND a Filament plugin registered via `$panel->plugin(YourPlugin::make())`.
 - `resources/views/.gitkeep` — placeholder for Filament-style Blade views (commented out in stub; user uncomments + uses).

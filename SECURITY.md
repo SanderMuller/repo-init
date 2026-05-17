@@ -10,7 +10,7 @@ Pre-`1.0.0`: only the latest MINOR is actively supported.
 
 ## Reporting a vulnerability
 
-Email security issues to **github@scode.nl** with the subject `[repo-init security]`. Do NOT open a public GitHub issue for security-related concerns.
+Email security issues to **<github@scode.nl>** with the subject `[repo-init security]`. Do NOT open a public GitHub issue for security-related concerns.
 
 You'll get an acknowledgement within 72 hours. Coordinated disclosure timeline is negotiated case-by-case.
 

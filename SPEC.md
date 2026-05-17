@@ -516,7 +516,7 @@ Rationale: a hard floor avoids the matrix-of-matrices problem (each PHP × Larav
 Files the agent must never write, regardless of phase. **Per-mode scope:**
 
 - **Bootstrap mode:** target dir is empty (modulo `.git/`) — the cwd-empty precondition is the protection. The git-dirty rule is *not* applied; new files from `laravel new` are expected to be untracked at the moment the bootstrap phase starts writing on top of them. The security never-touch paths below still apply for `laravel-project` bootstrap (we never write to `config/auth*.php` even when overlaying onto a fresh `laravel new` output).
-- **Audit / Upgrade mode:** both the security never-touch paths AND the git-dirty rule are applied. Agent runs `git status --porcelain` before any write and skips paths with prefixes `M`, ` M`, `MM`, `A`, `??`. Override requires explicit per-file user opt-in.
+- **Audit / Upgrade mode:** both the security never-touch paths AND the git-dirty rule are applied. Agent runs `git status --porcelain` before any write and skips paths with prefixes `M`, `M`, `MM`, `A`, `??`. Override requires explicit per-file user opt-in.
 
 **`laravel-project` security never-touch (all modes):**
 
@@ -827,7 +827,7 @@ The "dogfood" property therefore reduces to: every stub in `stubs/` was generate
 
 ### Phase 4: Audit Phases (Priority: HIGH)
 
-- [ ] `phases/audit-laravel-package.md` — full checklist per §8: opt-in confirmation prompt FIRST, then MANDATORY runtime+dev deps, then OPTIONAL deps (only for confirmed opt-ins), then OUTDATED files per merge mode, then composer.json merge-keys per §9 (scripts + extra.* + config.* + autoload-dev), then NON-CANONICAL
+- [ ] `phases/audit-laravel-package.md` — full checklist per §8: opt-in confirmation prompt FIRST, then MANDATORY runtime+dev deps, then OPTIONAL deps (only for confirmed opt-ins), then OUTDATED files per merge mode, then composer.json merge-keys per §9 (scripts + extra.*+ config.* + autoload-dev), then NON-CANONICAL
 - [ ] `phases/audit-php-package.md` (no Laravel opt-in path; spatie variant N/A)
 - [ ] `phases/audit-phpstan-extension.md` (Laravel-aware opt-in detected from `illuminate/*` presence)
 - [ ] `phases/audit-rector-extension.md` (Laravel-aware opt-in detected from `driftingly/rector-laravel` presence)
@@ -836,7 +836,7 @@ The "dogfood" property therefore reduces to: every stub in `stubs/` was generate
 
 ### Phase 5: Upgrade Phases (Priority: HIGH)
 
-- [ ] `phases/upgrade-laravel-package.md` — full step list per §9: re-audit first, MISSING-runtime-deps + MISSING-dev-deps (separate composer require calls), OUTDATED files per merge mode, composer.json merge-keys (scripts + extra.* + config.* + autoload-dev), NON-CANONICAL fixes
+- [ ] `phases/upgrade-laravel-package.md` — full step list per §9: re-audit first, MISSING-runtime-deps + MISSING-dev-deps (separate composer require calls), OUTDATED files per merge mode, composer.json merge-keys (scripts + extra.*+ config.* + autoload-dev), NON-CANONICAL fixes
 - [ ] `phases/upgrade-php-package.md`
 - [ ] `phases/upgrade-phpstan-extension.md`
 - [ ] `phases/upgrade-rector-extension.md`
