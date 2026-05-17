@@ -9,6 +9,18 @@ Pre-`1.0.0` releases may introduce breaking changes in MINOR bumps; we surface t
 
 ## [Unreleased]
 
+## [0.2.11] - 2026-05-17
+
+### Fixed
+
+- **sander-variant ServiceProvider stub missing `#[Override]`**: same N2c
+  miss as 0.2.10's spatie + workbench fix.
+  `stubs/laravel-package/src/__PACKAGE_STUDLY__ServiceProvider.php`
+  `register()` now ships with `use Override; #[Override]` so
+  `rector --dry-run` exits 0 on fresh `--variant=sander` scaffolds. nova-tool
+  and filament-plugin SP stubs intentionally unchanged: their `boot()` /
+  custom-signature `register()` aren't overrides of the parent ServiceProvider.
+
 ## [0.2.10] - 2026-05-17
 
 ### Fixed

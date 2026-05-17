@@ -3,9 +3,11 @@
 namespace __NAMESPACE__;
 
 use Illuminate\Support\ServiceProvider;
+use Override;
 
 final class __PACKAGE_STUDLY__ServiceProvider extends ServiceProvider
 {
+    #[Override]
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__ . '/../config/__PACKAGE__.php', '__PACKAGE__');
