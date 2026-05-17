@@ -10,6 +10,7 @@ use Rector\DeadCode\Rector\ClassMethod\RemoveUselessReturnTagRector;
 use Rector\Php81\Rector\FuncCall\NullToStrictStringFuncCallArgRector;
 use Rector\Privatization\Rector\ClassMethod\PrivatizeFinalClassMethodRector;
 use Rector\TypeDeclaration\Rector\ArrowFunction\AddArrowFunctionReturnTypeRector;
+use RectorPest\Set\PestSetList;
 use RectorLaravel\Set\LaravelSetList;
 
 return RectorConfig::configure()
@@ -48,10 +49,10 @@ return RectorConfig::configure()
             LaravelSetList::LARAVEL_CONTAINER_STRING_TO_FULLY_QUALIFIED_NAME,
             LaravelSetList::LARAVEL_FACADE_ALIASES_TO_FULL_NAMES,
         ],
-        class_exists(\RectorPest\Set\PestSetList::class) ? [
-            \RectorPest\Set\PestSetList::PEST_CODE_QUALITY,
-            \RectorPest\Set\PestSetList::PEST_CHAIN,
-            \RectorPest\Set\PestSetList::PEST_LARAVEL,
+        class_exists(PestSetList::class) ? [
+            PestSetList::PEST_CODE_QUALITY,
+            PestSetList::PEST_CHAIN,
+            PestSetList::PEST_LARAVEL,
         ] : [],
     ))
     ->withSkip([

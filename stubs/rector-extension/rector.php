@@ -10,6 +10,7 @@ use Rector\DeadCode\Rector\ClassMethod\RemoveUselessReturnTagRector;
 use Rector\Php81\Rector\FuncCall\NullToStrictStringFuncCallArgRector;
 use Rector\Privatization\Rector\ClassMethod\PrivatizeFinalClassMethodRector;
 use Rector\TypeDeclaration\Rector\ArrowFunction\AddArrowFunctionReturnTypeRector;
+use RectorPest\Set\PestSetList;
 
 return RectorConfig::configure()
     ->withCache(
@@ -40,9 +41,9 @@ return RectorConfig::configure()
     ->withParallel(300, 15, 15)
     ->withMemoryLimit('3G')
     ->withPhpSets(php__PHP_VERSION_NEON__: true)
-    ->withSets(class_exists(\RectorPest\Set\PestSetList::class) ? [
-        \RectorPest\Set\PestSetList::PEST_CODE_QUALITY,
-        \RectorPest\Set\PestSetList::PEST_CHAIN,
+    ->withSets(class_exists(PestSetList::class) ? [
+        PestSetList::PEST_CODE_QUALITY,
+        PestSetList::PEST_CHAIN,
     ] : [])
     ->withSkip([
         NullToStrictStringFuncCallArgRector::class,

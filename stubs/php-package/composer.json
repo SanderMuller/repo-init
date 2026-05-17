@@ -69,6 +69,13 @@
             "@format",
             "@phpstan-simplified",
             "@validate-gitattributes"
+        ],
+        "qa-check": [
+            "vendor/bin/rector process --dry-run",
+            "vendor/bin/pint --test",
+            "@phpstan-simplified",
+            "@validate-gitattributes",
+            "@test"
         ]
     },
     "config": {

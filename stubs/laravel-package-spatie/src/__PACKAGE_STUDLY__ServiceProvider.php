@@ -7,6 +7,7 @@ use Spatie\LaravelPackageTools\PackageServiceProvider;
 
 final class __PACKAGE_STUDLY__ServiceProvider extends PackageServiceProvider
 {
+    #[\Override]
     public function configurePackage(Package $package): void
     {
         $package

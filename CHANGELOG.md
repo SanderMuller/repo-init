@@ -9,6 +9,33 @@ Pre-`1.0.0` releases may introduce breaking changes in MINOR bumps; we surface t
 
 ## [Unreleased]
 
+## [0.2.9] - 2026-05-17
+
+### Fixed
+
+- **N1**: rector.php stubs (7 categories) now `use RectorPest\Set\PestSetList;`
+  + short-form refs (`PestSetList::class`, `PestSetList::PEST_CODE_QUALITY`)
+  instead of inline FQN. Pint's `fully_qualified_strict_types` was rewriting
+  the FQN to the import on every run, so `pint --test` flagged the stub
+  state as dirty out of the box. Class autoload still gated by
+  `class_exists(PestSetList::class) ? [...] : []` — the array only
+  evaluates when class is present.
+- **N2**: `stubs/laravel-package-spatie/src/__PACKAGE_STUDLY__ServiceProvider.php`
+  now declares `#[\Override]` on `configurePackage()`. Without it,
+  `rector --dry-run` flagged `AddOverrideAttributeToOverriddenMethodsRector`
+  on a fresh scaffold (1 file would change).
+- **N3**: `checklists/post-bootstrap-verification.md` no longer requires
+  `.ai/` and `.codex/` directories in target — `package-boost:sync`
+  doesn't generate either. Correct expected set is
+  `.claude/.agents/.cursor/.junie/.kiro/` + `AGENTS.md/CLAUDE.md/GEMINI.md`.
+
+### Added
+
+- `qa-check` composer script in 7 stubs — no-mutate verification gate
+  for CI / pre-PR. Runs `rector process --dry-run`, `pint --test`,
+  `@phpstan-simplified`, `@test`. Complements existing `qa` which is
+  mutating (`rector process` + `pint`) and meant for local fix-up.
+
 ## [0.2.8] - 2026-05-17
 
 ### Changed

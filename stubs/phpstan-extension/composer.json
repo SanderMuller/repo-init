@@ -76,6 +76,12 @@
             "@rector",
             "@format",
             "@phpstan-simplified"
+        ],
+        "qa-check": [
+            "vendor/bin/rector process --dry-run",
+            "vendor/bin/pint --test",
+            "@phpstan-simplified",
+            "@test"
         ]
     },
     "config": {
