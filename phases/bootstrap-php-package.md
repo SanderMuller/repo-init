@@ -57,7 +57,7 @@ The shipped stubs default to **Pest** for php-package. If the user picked PHPUni
 
 **(b) `.github/workflows/run-tests.yml`**: change the last step's `run:` from `vendor/bin/pest --ci` to `vendor/bin/phpunit`. **Without this edit, CI fails immediately.**
 
-**(c) Test file**: delete `tests/Pest.php` (copied in step 2); use `phpunit.xml.dist` (also from shared).
+**(c) Test file**: delete `tests/Pest.php` (copied in step 2); use `phpunit.xml` (also from shared).
 
 If keeping Pest (the default): no edits needed.
 

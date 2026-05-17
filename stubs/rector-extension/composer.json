@@ -25,16 +25,15 @@
     "require-dev": {
         "laravel/pao": "^1.0",
         "laravel/pint": "^1.29",
-        "mrpunyapal/rector-pest": "^0.2",
         "nikic/php-parser": "^5.4",
         "nunomaduro/collision": "^8.0",
         "orchestra/testbench": "^9.0||^10.0||^11.0",
-        "pestphp/pest": "^4.0",
         "phpstan/extension-installer": "^1.4",
         "phpstan/phpstan": "^2.0",
         "phpstan/phpstan-deprecation-rules": "^2.0",
         "phpstan/phpstan-phpunit": "^2.0",
         "phpstan/phpstan-strict-rules": "^2.0",
+        "phpunit/phpunit": "^11.0||^12.0",
         "rector/type-perfect": "^2.1",
         "sandermuller/package-boost": "^0.15",
         "spaze/phpstan-disallowed-calls": "^4.10",
@@ -44,12 +43,12 @@
     },
     "autoload": {
         "psr-4": {
-            "__NAMESPACE_ESCAPED__\\\\": "src/"
+            "__NAMESPACE_ESCAPED__\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "__NAMESPACE_ESCAPED__\\\\Tests\\\\": "tests/"
+            "__NAMESPACE_ESCAPED__\\Tests\\": "tests/"
         }
     },
     "extra": {
@@ -68,8 +67,8 @@
         "phpstan-clear-cache": "vendor/bin/phpstan clear-result-cache",
         "format": "vendor/bin/pint",
         "rector": "vendor/bin/rector process",
-        "test": "vendor/bin/pest",
-        "test-coverage": "vendor/bin/pest --coverage",
+        "test": "vendor/bin/phpunit",
+        "test-coverage": "vendor/bin/phpunit --coverage-html=coverage",
         "sync-ai": "vendor/bin/testbench package-boost:sync",
         "qa": [
             "@rector",
@@ -81,7 +80,6 @@
     "config": {
         "sort-packages": true,
         "allow-plugins": {
-            "pestphp/pest-plugin": true,
             "phpstan/extension-installer": true,
             "rector/extension-installer": true
         }

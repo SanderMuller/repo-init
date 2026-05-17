@@ -28,7 +28,7 @@ Ask the user (with auto-inferred defaults):
 - [ ] `phpstan.neon.dist`
 - [ ] `phpstan-baseline.neon`
 - [ ] `rector.php`
-- [ ] `phpunit.xml.dist` (Laravel ships `phpunit.xml` historically; either is acceptable for laravel-project — flag as NON-CANONICAL only if `phpunit.xml` exists without `.dist`)
+- [ ] `phpunit.xml` (Laravel ships `phpunit.xml` historically; either is acceptable for laravel-project — flag as NON-CANONICAL only if `phpunit.xml` exists without `.dist`)
 - [ ] `.github/workflows/phpstan.yml`
 - [ ] `.github/workflows/pint-check.yml`
 - [ ] `.github/workflows/rector-check.yml`

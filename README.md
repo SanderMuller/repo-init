@@ -14,7 +14,7 @@ Walks an AI agent (Claude Code, Cursor, GitHub Copilot, …) through **bootstrap
 - `.editorconfig`, `.gitattributes` (with package-boost managed block), `.gitignore`
 - `.mcp.json` — laravel-boost MCP wiring
 - `.github/workflows/{phpstan,pint-check,rector-check,run-tests,update-changelog}.yml` + `dependabot.yml`
-- `tests/Pest.php` or `phpunit.xml.dist` (vendor-driven default)
+- `tests/Pest.php` or `phpunit.xml` (vendor-driven default)
 - Per-category extras (testbench.yaml, workbench/, ServiceProvider, extension.neon, etc.)
 
 ## Install (one-time per machine)

@@ -43,12 +43,12 @@
     },
     "autoload": {
         "psr-4": {
-            "__NAMESPACE_ESCAPED__\\\\": "src/"
+            "__NAMESPACE_ESCAPED__\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "__NAMESPACE_ESCAPED__\\\\Tests\\\\": "tests/"
+            "__NAMESPACE_ESCAPED__\\Tests\\": "tests/"
         }
     },
     "scripts": {

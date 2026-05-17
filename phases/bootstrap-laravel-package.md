@@ -80,7 +80,7 @@ Special handling for `tests/`: copy `tests/Pest.php` only when `test-framework=p
 
 **(c) Test bootstrap file**:
 - Pest: keep `tests/Pest.php` (copied from shared in step 3).
-- PHPUnit: delete `tests/Pest.php` (if present); rely on `phpunit.xml.dist` (also from shared).
+- PHPUnit: delete `tests/Pest.php` (if present); rely on `phpunit.xml` (also from shared).
 
 Pick exactly one of these per the user's choice; never both.
 

@@ -22,7 +22,7 @@ Per-file declaration of how the upgrade phase reconciles a stub against an exist
 - `.github/workflows/update-changelog.yml`
 - `.github/dependabot.yml`
 - `tests/Pest.php` (pest-only; replaced when test-framework is pest)
-- `phpunit.xml.dist` (phpunit-only)
+- `phpunit.xml` (phpunit-only)
 - Category-specific run-tests workflows: `.github/workflows/run-tests.yml`
 - `testbench.yaml` (laravel-package only)
 - `workbench/app/Providers/WorkbenchServiceProvider.php` (laravel-package only)

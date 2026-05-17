@@ -57,7 +57,7 @@ Same logic as upgrade-laravel-package.md — apply each file's mode from `$REPO_
 
 **`.gitattributes`**: managed-block merge. The package-boost block may not exist yet on older projects — bootstrap creates it. Upgrade may need to create it on first run; then insert our entries inside.
 
-**`phpunit.xml.dist` vs `phpunit.xml`**: Laravel ships `phpunit.xml` (no `.dist`). Ours says use `.dist`. NON-CANONICAL fix handles the rename — see below.
+**`phpunit.xml` vs `phpunit.xml`**: Laravel ships `phpunit.xml` (no `.dist`). Ours says use `.dist`. NON-CANONICAL fix handles the rename — see below.
 
 ## Apply composer.json merge-keys patches
 
@@ -72,7 +72,7 @@ Don't touch `extra.laravel.providers` for laravel-project — Laravel uses `extr
 
 ## Apply NON-CANONICAL fixes (each prompted)
 
-- **`phpunit.xml` (no .dist)**: prompt "rename to `phpunit.xml.dist`?" Only if `.dist` doesn't already exist.
+- **`phpunit.xml` (no .dist)**: prompt "rename to `phpunit.xml`?" Only if `.dist` doesn't already exist.
 - **PHP floor `^8.2`**: prompt to bump.
 - **Both larastan + bare phpstan**: prompt to remove `phpstan/phpstan`.
 - **`composer.lock` NOT committed** (rare — Laravel convention is to commit it for apps): prompt to add to git.

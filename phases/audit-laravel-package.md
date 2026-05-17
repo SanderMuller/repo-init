@@ -31,7 +31,7 @@ Check each expected path. If absent, mark MISSING and add to the report.
 - [ ] `phpstan.neon.dist`
 - [ ] `phpstan-baseline.neon`
 - [ ] `rector.php`
-- [ ] `phpunit.xml.dist` (if test-framework=phpunit) OR `tests/Pest.php` (if pest)
+- [ ] `phpunit.xml` (if test-framework=phpunit) OR `tests/Pest.php` (if pest)
 - [ ] `.github/workflows/phpstan.yml`
 - [ ] `.github/workflows/pint-check.yml`
 - [ ] `.github/workflows/rector-check.yml`
@@ -102,7 +102,7 @@ Category-mandatory:
 
 For each file present, look up its merge mode in `$REPO_INIT_HOME/references/upgrade-merge-modes.md`:
 
-- **`replace` files** (workflows, dependabot.yml, .editorconfig, .mcp.json, testbench.yaml, workbench provider, run-tests.yml, tests/Pest.php OR phpunit.xml.dist): diff against `$REPO_INIT_HOME/stubs/<shared|laravel-package|laravel-package-spatie>/<path>` (with placeholders substituted using the audit's known values for vendor/name). Any difference → OUTDATED.
+- **`replace` files** (workflows, dependabot.yml, .editorconfig, .mcp.json, testbench.yaml, workbench provider, run-tests.yml, tests/Pest.php OR phpunit.xml): diff against `$REPO_INIT_HOME/stubs/<shared|laravel-package|laravel-package-spatie>/<path>` (with placeholders substituted using the audit's known values for vendor/name). Any difference → OUTDATED.
 - **`managed-block` files** (`.gitattributes`): diff only inside the `# >>> package-boost (managed) >>>` block. Flag OUTDATED if our entries inside the block drift from `$REPO_INIT_HOME/stubs/shared/.gitattributes` content (within its own block). Don't flag content outside the block.
 - **`append-only` files** (`.gitignore`): for each line in `$REPO_INIT_HOME/stubs/shared/.gitignore` not present in the target's `.gitignore`, flag MISSING-line. Never flag OUTDATED for extra lines (user-added).
 - **`merge-keys` files** (`composer.json`): walk each documented key — `scripts`, `extra.laravel.providers`, `config.allow-plugins`, `config.sort-packages`. For each expected key missing, flag MISSING-key. Don't flag whole-file diff.
@@ -111,7 +111,7 @@ For each file present, look up its merge mode in `$REPO_INIT_HOME/references/upg
 ## NON-CANONICAL findings
 
 - [ ] **`composer.lock` committed in a library**: laravel-package is a library; lockfiles should not be committed (per `references/version-defaults.md` + Composer convention). Flag NON-CANONICAL with the suggestion "`git rm --cached composer.lock` + add to .gitignore".
-- [ ] **`phpunit.xml` (without `.dist`) committed**: prefer `phpunit.xml.dist` so users can override locally. Flag NON-CANONICAL.
+- [ ] **`phpunit.xml` (without `.dist`) committed**: prefer `phpunit.xml` so users can override locally. Flag NON-CANONICAL.
 - [ ] **`phpstan/phpstan` in `require-dev` alongside `larastan/larastan`**: §5.3 exclusivity violation. Flag NON-CANONICAL.
 - [ ] **Two managed blocks in `.gitattributes`** (a `# >>> package-boost (managed) >>>` block AND a `# >>> repo-init (managed) >>>` block): suboptimal per `references/gitattributes-managed-block.md` contract; everything should be inside the package-boost block.
 - [ ] **PHP floor `^8.2` (or below) in `require.php`**: repo-init floors at `^8.3`. Suggest bump.

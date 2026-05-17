@@ -85,7 +85,7 @@ For each composer.json key documented in `$REPO_INIT_HOME/references/composer-sc
 For each NON-CANONICAL finding:
 
 - **`composer.lock` committed**: prompt "remove composer.lock from git tracking? `git rm --cached composer.lock` + ensure `composer.lock` line is in `.gitignore`." User can decline.
-- **`phpunit.xml` (without `.dist`)**: prompt "rename `phpunit.xml` → `phpunit.xml.dist`?" Only do this if `phpunit.xml.dist` doesn't already exist (don't clobber).
+- **`phpunit.xml` (without `.dist`)**: prompt "rename `phpunit.xml` → `phpunit.xml`?" Only do this if `phpunit.xml` doesn't already exist (don't clobber).
 - **PHP floor `^8.2`**: prompt "bump `require.php` from `^8.2` to `^8.3`?" Single-line composer.json edit. Warn that this may require Composer to re-resolve deps; suggest `composer update --lock` after.
 - **Two managed blocks in `.gitattributes`**: prompt "merge the `# >>> repo-init (managed) >>>` block into the `# >>> package-boost (managed) >>>` block per the contract in `references/gitattributes-managed-block.md`?" Move repo-init's entries into package-boost's block (dedupe), then remove the standalone repo-init block.
 - **Both `phpstan/phpstan` and `larastan/larastan` in `require-dev`**: prompt "remove `phpstan/phpstan` (transitively provided by larastan)?" `composer remove --dev phpstan/phpstan`.

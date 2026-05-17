@@ -24,7 +24,7 @@ None for `php-package`. The category has no Laravel-aware sub-flag. Detect `test
 - [ ] `phpstan.neon.dist`
 - [ ] `phpstan-baseline.neon`
 - [ ] `rector.php`
-- [ ] `phpunit.xml.dist` (if test-framework=phpunit) OR `tests/Pest.php` (if pest)
+- [ ] `phpunit.xml` (if test-framework=phpunit) OR `tests/Pest.php` (if pest)
 - [ ] 4 shared workflows + `run-tests.yml` (PHP-only matrix)
 - [ ] `.github/dependabot.yml`
 

@@ -102,7 +102,7 @@ sandermuller/repo-init/
     │   ├── phpstan-baseline.neon                 # Empty
     │   ├── phpstan.neon.dist                     # Variants live in stubs/<category>/phpstan.neon.dist
     │   ├── rector.php                            # Variants live in stubs/<category>/rector.php
-    │   ├── phpunit.xml.dist
+    │   ├── phpunit.xml
     │   ├── tests/Pest.php
     │   └── .github/
     │       ├── dependabot.yml
@@ -562,7 +562,7 @@ Run checklists/preflight.md first. Stop if anything is red.
    - Otherwise: target IS cwd. Verify cwd is empty except for `.git/`; if violated, stop and ask the user for a `name`.
 3. Read stubs from `vendor/sandermuller/repo-init/stubs/shared/`. Substitute placeholders (per §2 transform table). Write to cwd.
 4. Read stubs from `vendor/sandermuller/repo-init/stubs/laravel-package/` (or `laravel-package-spatie/` per sub-flag). Substitute. Write.
-5. Compose the test-framework variant: copy `tests/Pest.php` (pest) or `phpunit.xml.dist` (phpunit) from `stubs/shared/`.
+5. Compose the test-framework variant: copy `tests/Pest.php` (pest) or `phpunit.xml` (phpunit) from `stubs/shared/`.
 6. Write `composer.json` (assembled from the category stub + script block from `references/composer-scripts.md`).
 7. Run `composer install`.
 8. Run `composer require --dev` with the dep list from `references/shared-dev-deps.md` + `references/per-category-deps.md#laravel-package`. Apply the test-framework split (§5.1). Handle composer failures per `references/composer-failure-modes.md`.
@@ -607,7 +607,7 @@ Check each path; if absent, mark MISSING and add to the audit report.
 - [ ] phpstan.neon.dist
 - [ ] phpstan-baseline.neon
 - [ ] rector.php
-- [ ] phpunit.xml.dist OR tests/Pest.php (per test-framework)
+- [ ] phpunit.xml OR tests/Pest.php (per test-framework)
 - [ ] testbench.yaml
 - [ ] workbench/app/Providers/WorkbenchServiceProvider.php
 - [ ] .github/workflows/phpstan.yml
@@ -650,7 +650,7 @@ For each file present, look up its **merge mode** in `references/upgrade-merge-m
 
 ## NON-CANONICAL files
 - [ ] composer.lock committed (libraries should not commit lockfiles) — flag as NON-CANONICAL
-- [ ] phpunit.xml vs phpunit.xml.dist (prefer .dist) — flag as NON-CANONICAL
+- [ ] phpunit.xml vs phpunit.xml (prefer .dist) — flag as NON-CANONICAL
 - [ ] Two managed blocks in .gitattributes (only package-boost's should exist; see `references/gitattributes-managed-block.md`)
 
 ## EXTRA files / deps
@@ -713,7 +713,7 @@ Per-key writes use the `merge-keys` mode from `references/upgrade-merge-modes.md
 ## NON-CANONICAL fixes
 For each NON-CANONICAL finding:
 - composer.lock → ask user whether to `git rm --cached composer.lock` and add to .gitignore.
-- phpunit.xml → ask whether to rename to phpunit.xml.dist (only if phpunit.xml.dist doesn't exist).
+- phpunit.xml → ask whether to rename to phpunit.xml (only if phpunit.xml doesn't exist).
 - PHP floor `^8.2` → ask whether to bump to `^8.3` (one-line composer.json edit).
 
 ## Verification
@@ -800,7 +800,7 @@ The "dogfood" property therefore reduces to: every stub in `stubs/` was generate
 - [ ] Write `references/composer-failure-modes.md` — common failure → resolution playbook (REQUIRED by Phase 3 bootstrap + Phase 5 upgrade)
 - [ ] Write `references/placeholder-rules.md` — StudlyCase derivation + edge cases (REQUIRED by Phase 3 bootstrap step that fills stubs)
 - [ ] Write `checklists/preflight.md`, `checklists/per-category-never-touch.md`, `checklists/self-removal.md`
-- [ ] Copy `stubs/shared/` files from canonical reference (`SanderMuller/laravel-queue-insights`): `.editorconfig`, `.gitattributes`, `.gitignore`, `.mcp.json`, `pint.json`, `phpstan-baseline.neon`, `phpunit.xml.dist`, `tests/Pest.php`, `.github/workflows/*.yml`, `.github/dependabot.yml`. Replace concrete repo names with `__VENDOR__` / `__PACKAGE__` placeholders.
+- [ ] Copy `stubs/shared/` files from canonical reference (`SanderMuller/laravel-queue-insights`): `.editorconfig`, `.gitattributes`, `.gitignore`, `.mcp.json`, `pint.json`, `phpstan-baseline.neon`, `phpunit.xml`, `tests/Pest.php`, `.github/workflows/*.yml`, `.github/dependabot.yml`. Replace concrete repo names with `__VENDOR__` / `__PACKAGE__` placeholders.
 - [ ] Write the package's own `composer.json` (per §2 bottom) with the `post-install-cmd` hook
 - [ ] Tests — markdown lint on all phase + reference + checklist files (placeholder-coverage moves to Phase 2 where stubs actually exist)
 

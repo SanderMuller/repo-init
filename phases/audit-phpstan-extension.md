@@ -16,7 +16,7 @@ Verify detection per `$REPO_INIT_HOME/references/detection-rules.md`: target has
 
 ## MISSING files
 
-**Shared:** same list as audit-laravel-package.md but using `phpunit.xml.dist` (never `tests/Pest.php`).
+**Shared:** same list as audit-laravel-package.md but using `phpunit.xml` (never `tests/Pest.php`).
 
 **Category-specific (phpstan-extension):**
 

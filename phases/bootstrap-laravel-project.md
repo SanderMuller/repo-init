@@ -117,7 +117,7 @@ Likely conflicts:
 
 - `.editorconfig` — Laravel ships its own. Ours overrides for strict utf-8 + lf + 4-space.
 - `.gitattributes` — Laravel's is minimal; ours adds the package-boost managed block. **Use `managed-block` merge mode** (per `$REPO_INIT_HOME/references/upgrade-merge-modes.md`) — don't replace; insert our entries inside (or alongside) Laravel's content.
-- `phpunit.xml.dist` — already present from Laravel. **Skip ours** (Laravel's is more app-appropriate).
+- `phpunit.xml` — already present from Laravel. **Skip ours** (Laravel's is more app-appropriate).
 - `tests/Pest.php` — skip unless user opted into Pest in step 5.
 - `.github/workflows/` — Laravel may have its own (`tests.yml`, etc.); ours adds `phpstan.yml`, `pint-check.yml`, `rector-check.yml`, `update-changelog.yml`. Different filenames → no conflict; just add.
 - `.mcp.json` — `laravel/boost` writes this on install. If absent (user opted out of Boost), copy ours.

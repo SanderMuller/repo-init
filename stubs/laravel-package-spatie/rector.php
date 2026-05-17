@@ -11,13 +11,11 @@ use Rector\Php81\Rector\FuncCall\NullToStrictStringFuncCallArgRector;
 use Rector\Privatization\Rector\ClassMethod\PrivatizeFinalClassMethodRector;
 use Rector\TypeDeclaration\Rector\ArrowFunction\AddArrowFunctionReturnTypeRector;
 use RectorLaravel\Set\LaravelSetList;
-use RectorPest\Set\PestSetList;
 
 return RectorConfig::configure()
     ->withCache(
         cacheDirectory: './.cache/rector',
         cacheClass: FileCacheStorage::class,
-        containerCacheDirectory: './.cache/rectorContainer',
     )
     ->withPaths([
         __DIR__ . '/src',

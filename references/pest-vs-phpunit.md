@@ -23,7 +23,7 @@ User can override at bootstrap time via `--test-framework=pest|phpunit`.
 ### Test stub files
 
 - `pest`: `tests/Pest.php` (Pest's bootstrap file with `pest()->extend(...)` for assertions).
-- `phpunit`: `phpunit.xml.dist` (PHPUnit config with `<testsuites>`, `<source>`, `<env>`).
+- `phpunit`: `phpunit.xml` (PHPUnit config with `<testsuites>`, `<source>`, `<env>`).
 
 ### Composer scripts
 

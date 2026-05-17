@@ -22,7 +22,7 @@ Dogfooded via `sandermuller/repo-new` CLI scaffolding both a fictional `php-pack
 
 ### Fixed
 
-- **`run-tests.yml` watches the right PHPUnit config file.** All 7 category stubs (`stubs/<cat>/.github/workflows/run-tests.yml`) had path filter watching `phpunit.xml`, but scaffold ships `phpunit.xml.dist`. Result: PHPUnit config changes in generated repos wouldn't trigger CI. Fixed across `php-package`, `laravel-package`, `laravel-package-spatie`, `phpstan-extension`, `rector-extension`, `filament-plugin`, `nova-tool`. Surfaced by codex post-fix review of 0.2.1.
+- **`run-tests.yml` watches the right PHPUnit config file.** All 7 category stubs (`stubs/<cat>/.github/workflows/run-tests.yml`) had path filter watching `phpunit.xml`, but scaffold ships `phpunit.xml`. Result: PHPUnit config changes in generated repos wouldn't trigger CI. Fixed across `php-package`, `laravel-package`, `laravel-package-spatie`, `phpstan-extension`, `rector-extension`, `filament-plugin`, `nova-tool`. Surfaced by codex post-fix review of 0.2.1.
 
 ## [0.2.1] - 2026-05-17
 

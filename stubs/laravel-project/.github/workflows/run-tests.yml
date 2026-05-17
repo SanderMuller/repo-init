@@ -30,12 +30,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - { php: '8.3', stability: prefer-lowest }
-          - { php: '8.3', stability: prefer-stable }
-          - { php: '8.4', stability: prefer-stable }
+        php: ['8.3', '8.4']
 
-    name: P${{ matrix.php }} - ${{ matrix.stability }}
+    name: P${{ matrix.php }}
 
     steps:
       - uses: actions/checkout@v6
@@ -47,7 +44,7 @@ jobs:
           coverage: none
 
       - name: Install dependencies
-        run: composer update --${{ matrix.stability }} --prefer-dist --no-interaction
+        run: composer install --prefer-dist --no-interaction
 
       - name: Execute tests
         run: vendor/bin/phpunit

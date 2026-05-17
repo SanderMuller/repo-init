@@ -44,13 +44,13 @@
     },
     "autoload": {
         "psr-4": {
-            "__NAMESPACE_ESCAPED__\\\\": "src/"
+            "__NAMESPACE_ESCAPED__\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "__NAMESPACE_ESCAPED__\\\\Tests\\\\": "tests/",
-            "Workbench\\\\App\\\\": "workbench/app/"
+            "__NAMESPACE_ESCAPED__\\Tests\\": "tests/",
+            "Workbench\\App\\": "workbench/app/"
         }
     },
     "scripts": {
@@ -62,7 +62,7 @@
         "prepare": "@php vendor/bin/testbench package:discover --ansi",
         "build": "@php vendor/bin/testbench workbench:build --ansi",
         "serve": [
-            "Composer\\\\Config::disableProcessTimeout",
+            "Composer\\Config::disableProcessTimeout",
             "@build",
             "@php vendor/bin/testbench serve --ansi"
         ],
@@ -86,7 +86,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "__NAMESPACE_ESCAPED__\\\\__PACKAGE_STUDLY__ServiceProvider"
+                "__NAMESPACE_ESCAPED__\\__PACKAGE_STUDLY__ServiceProvider"
             ]
         }
     },
