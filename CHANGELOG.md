@@ -9,6 +9,42 @@ Pre-`1.0.0` releases may introduce breaking changes in MINOR bumps; we surface t
 
 ## [Unreleased]
 
+## [0.2.4] - 2026-05-17
+
+Critical packaging fix plus the round-3/4 dogfood-surfaced parity fixes.
+
+### Fixed
+
+- **Source archive stripped its own stubs**: `stubs/*/.gitattributes` files
+  are templates for SCAFFOLDED projects, but git also honored them when
+  building the Packagist tarball — removing every dotfile and managed-block
+  entry they listed (`.editorconfig`, `.gitignore`, `.mcp.json`,
+  `.github/workflows/*`, `rector.php`, `phpstan.neon.dist`, `phpunit.xml`,
+  `testbench.yaml`, `workbench/`, etc.). Renamed all 5 stub `.gitattributes`
+  → `_gitattributes`; companion `repo-new` 0.2+ release renames back to
+  `.gitattributes` on scaffold-time copy.
+- **PSR-4 double-trailing-backslash** in 7 stub `composer.json` (`\\\\` → `\\`).
+- **`phpunit.xml.dist` → `phpunit.xml`** (file rename + 30 ref updates across
+  workflows, gitattributes, .lpv, docs).
+- **Test-framework conditional stubs**: `tests/Pest.php` moved to new
+  `stubs/test-framework-pest/`; phpunit-only packages no longer ship the
+  Pest bootstrap. Added `stubs/test-framework-{pest,phpunit}/tests/Unit/ExampleTest.php`
+  so `composer test` passes on fresh scaffold.
+- **rector.php in 8 stubs**: dropped `containerCacheDirectory` (path doesn't
+  exist pre-run); `PestSetList` now wrapped in `class_exists()` so
+  phpunit-only categories don't crash.
+- **phpstan.neon.dist in 8 stubs**: ignore `method.internalClass` in
+  `tests/*` with `reportUnmatched: false` (Pest's `expect()` API is
+  `@internal` but the intended public surface for tests).
+- **rector-extension stub**: stripped pest deps + allow-plugin; added
+  `phpunit/phpunit ^11.0||^12.0`; switched test scripts to `vendor/bin/phpunit`.
+
+### Added
+
+- `stubs/shared/{README,LICENSE,CHANGELOG,SECURITY}.md` baseline meta files
+  with placeholder substitution.
+- `stubs/laravel-project/.github/workflows/run-tests.yml` (PHP-only matrix).
+
 ## [0.2.3] - 2026-05-17
 
 Dogfooded via `sandermuller/repo-new` CLI scaffolding both a fictional `php-package` AND `laravel-project`. Two real data bugs surfaced in `per-category-deps.yml`:

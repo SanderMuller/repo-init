@@ -15,6 +15,7 @@ Run after every bootstrap phase. If anything is red, stop and report to the user
 ## File presence
 
 - [ ] All shared stubs present: `.editorconfig`, `.gitattributes`, `.gitignore`, `.mcp.json`, `pint.json`, `phpstan-baseline.neon`, `phpunit.xml` OR `tests/Pest.php` (per test-framework).
+- [ ] Baseline OSS meta files present: `README.md`, `LICENSE`, `CHANGELOG.md`, `SECURITY.md`. Missing any of these is a stop condition. README content follows the `readme` skill from `sandermuller/package-boost`; `CHANGELOG.md` uses Keep a Changelog format with an `## [Unreleased]` section seeded but otherwise empty.
 - [ ] `.github/dependabot.yml` and all 4 shared workflows (`phpstan.yml`, `pint-check.yml`, `rector-check.yml`, `update-changelog.yml`) present.
 - [ ] Category-specific `.github/workflows/run-tests.yml` present.
 - [ ] `composer.json` present with substituted placeholders (no `__VENDOR__` / `__PACKAGE__` strings left).
@@ -40,8 +41,9 @@ grep -r '__VENDOR__\|__PACKAGE__\|__NAMESPACE__\|__AUTHOR_\|__PHP_VERSION\|__LAR
 
 ## AI tooling sync
 
+- [ ] `vendor/bin/testbench package-boost:sync` ran cleanly (post-autoload-dump hook fires automatically OR run manually if scaffolder used `--no-scripts`).
+- [ ] Sync output present in repo root: `.ai/`, `.claude/`, `.agents/`, `.cursor/`, `.junie/`, `.kiro/`, `.codex/` directories (one per supported AI agent) AND meta files `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`. Missing → sync didn't run.
 - [ ] If repo-init is project-local (escape hatch, rare): `.claude/skills/repo-init/SKILL.md` exists in cwd. Otherwise verify `~/.claude/skills/repo-init/SKILL.md` exists (global).
-- [ ] If the package itself ships `.ai/skills/` (rare): `vendor/bin/testbench package-boost:sync` ran without error.
 
 ## Larastan vs phpstan exclusivity
 
