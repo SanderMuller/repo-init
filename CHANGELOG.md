@@ -9,6 +9,15 @@ Pre-`1.0.0` releases may introduce breaking changes in MINOR bumps; we surface t
 
 ## [Unreleased]
 
+## [0.2.13] - 2026-05-17
+
+### Fixed
+
+- **`stubs/php-package/.lpv`**: line 13 was a duplicate of line 12
+  (`phpunit.xml export-ignore` listed twice). Surfaced via php-x402 upgrade
+  dogfood where the sub-agent had to hand-write `.lpv` instead of copying
+  the stub. Lean-package-validator would warn on the duplicate.
+
 ## [0.2.12] - 2026-05-17
 
 Surfaced via an audit pass over 9 SanderMuller PHP repos against the
