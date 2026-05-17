@@ -1,0 +1,72 @@
+# Post-bootstrap verification
+
+Run after every bootstrap phase. If anything is red, stop and report to the user before printing the "next steps" prompt.
+
+## Composer integrity
+
+- [ ] `composer validate` returns 0.
+- [ ] `composer install` ran cleanly (vendor/ populated, composer.lock generated).
+- [ ] `composer.lock` exists. For `php-package`, `phpstan-extension`, `rector-extension`, `laravel-package` — composer.lock should NOT be committed (the .gitignore excludes it). Verify:
+  ```bash
+  git check-ignore composer.lock && echo "OK: gitignored" || echo "FAIL: lockfile not ignored"
+  ```
+  For `laravel-project`: composer.lock IS committed (Laravel convention). Skip this check.
+
+## File presence
+
+- [ ] All shared stubs present: `.editorconfig`, `.gitattributes`, `.gitignore`, `.mcp.json`, `pint.json`, `phpstan-baseline.neon`, `phpunit.xml.dist` OR `tests/Pest.php` (per test-framework).
+- [ ] `.github/dependabot.yml` and all 4 shared workflows (`phpstan.yml`, `pint-check.yml`, `rector-check.yml`, `update-changelog.yml`) present.
+- [ ] Category-specific `.github/workflows/run-tests.yml` present.
+- [ ] `composer.json` present with substituted placeholders (no `__VENDOR__` / `__PACKAGE__` strings left).
+- [ ] `phpstan.neon.dist` + `rector.php` present.
+
+## Placeholder substitution
+
+Grep for unsubstituted placeholders:
+
+```bash
+grep -r '__VENDOR__\|__PACKAGE__\|__NAMESPACE__\|__AUTHOR_\|__PHP_VERSION\|__LARAVEL_VERSIONS__\|__DESCRIPTION__' . --include='*.json' --include='*.php' --include='*.md' --include='*.neon' --include='*.yml' 2>/dev/null
+```
+
+- [ ] No hits. If hits, the agent missed a substitution; revisit step 3 of the bootstrap phase.
+
+## Tooling smoke tests
+
+- [ ] `vendor/bin/pint --test` runs (may report formatting drift on the stubs — that's fine for first run, just confirms pint is callable).
+- [ ] `vendor/bin/phpstan analyse --no-progress --memory-limit=2G` runs (may have errors on empty src/; that's fine, we just confirm phpstan is callable).
+- [ ] `vendor/bin/rector process --dry-run` runs (may report 0 changes on empty src/; confirms rector is callable).
+- [ ] For `test-framework=pest`: `vendor/bin/pest --version` returns a Pest 4 version.
+- [ ] For `test-framework=phpunit`: `vendor/bin/phpunit --version` returns a PHPUnit 11+ version.
+
+## AI tooling sync
+
+- [ ] If repo-init is project-local (escape hatch, rare): `.claude/skills/repo-init/SKILL.md` exists in cwd. Otherwise verify `~/.claude/skills/repo-init/SKILL.md` exists (global).
+- [ ] If the package itself ships `.ai/skills/` (rare): `vendor/bin/testbench package-boost:sync` ran without error.
+
+## Larastan vs phpstan exclusivity
+
+```bash
+composer show --installed | grep -E '^(larastan/larastan|phpstan/phpstan) '
+```
+
+- [ ] Laravel categories: only `larastan/larastan` listed (NOT bare `phpstan/phpstan`).
+- [ ] Framework-agnostic categories: only `phpstan/phpstan` listed (NOT `larastan/larastan`).
+- [ ] If both are listed: violation of `references/phpstan-config.md` §exclusivity. Remove the wrong one: `composer remove --dev <wrong-one>`.
+
+## Git state
+
+- [ ] `git status` reports a working tree of fresh untracked files (expected — they're not yet committed).
+- [ ] No errors during the bootstrap that left files in inconsistent state.
+- [ ] (Optional) Suggest the user run `git add . && git commit -m 'Initial commit: scaffolded via sandermuller/repo-init'`.
+
+## Stop conditions
+
+Stop and report to the user if ANY of:
+
+- `composer install` failed.
+- `composer require --dev` partially succeeded (some packages installed, others rejected).
+- Placeholder substitution left literal `__FOO__` strings in any file.
+- Both `larastan` and bare `phpstan/phpstan` are installed.
+- A never-touch path (per `checklists/per-category-never-touch.md`) was written to.
+
+In any of these cases, do NOT print the "Bootstrap done" message — present the failure to the user with the offending file/dep list.
