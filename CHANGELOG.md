@@ -9,6 +9,29 @@ Pre-`1.0.0` releases may introduce breaking changes in MINOR bumps; we surface t
 
 ## [Unreleased]
 
+## [0.2.10] - 2026-05-17
+
+### Fixed
+
+Three follow-ups from peer's strict-verify dogfood of 0.2.9:
+
+- **N1 import order in laravel-flavor rector.php**: 0.2.9 inserted
+  `use RectorPest\Set\PestSetList;` BEFORE `use RectorLaravel\Set\LaravelSetList;`.
+  Pint's `ordered_imports` requires alphabetical (`RectorLaravel` before
+  `RectorPest`). Swapped in 4 laravel-flavor stubs.
+- **N2b spatie ServiceProvider `#[\Override]` FQN form**: 0.2.9 added the
+  attribute as inline FQN. Rector's `AddOverrideAttributeToOverriddenMethodsRector`
+  rewrites this to `use Override; #[Override]`. Updated stub to ship the
+  imported form directly.
+- **N2c workbench WorkbenchServiceProvider missing `#[Override]`**: same
+  rector rule fires on `register()`. Added `use Override; #[Override]` to
+  4 workbench SP stubs. `boot()` does NOT get the attribute (parent
+  `Illuminate\Support\ServiceProvider::boot()` doesn't exist; `#[Override]`
+  on a non-overriding method is a compile error).
+
+Strategy going forward: always import, never inline FQN. `pint --test` +
+`rector --dry-run` now exit 0 on a fresh scaffold.
+
 ## [0.2.9] - 2026-05-17
 
 ### Fixed

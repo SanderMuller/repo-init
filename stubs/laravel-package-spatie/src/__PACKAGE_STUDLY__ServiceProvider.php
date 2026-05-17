@@ -2,12 +2,13 @@
 
 namespace __NAMESPACE__;
 
+use Override;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
 final class __PACKAGE_STUDLY__ServiceProvider extends PackageServiceProvider
 {
-    #[\Override]
+    #[Override]
     public function configurePackage(Package $package): void
     {
         $package

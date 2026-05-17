@@ -10,8 +10,8 @@ use Rector\DeadCode\Rector\ClassMethod\RemoveUselessReturnTagRector;
 use Rector\Php81\Rector\FuncCall\NullToStrictStringFuncCallArgRector;
 use Rector\Privatization\Rector\ClassMethod\PrivatizeFinalClassMethodRector;
 use Rector\TypeDeclaration\Rector\ArrowFunction\AddArrowFunctionReturnTypeRector;
-use RectorPest\Set\PestSetList;
 use RectorLaravel\Set\LaravelSetList;
+use RectorPest\Set\PestSetList;
 
 return RectorConfig::configure()
     ->withCache(
