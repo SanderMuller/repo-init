@@ -14,13 +14,13 @@ Verify Nova auth is configured. Laravel Nova is a paid package distributed via `
 grep -i nova ~/.composer/auth.json 2>/dev/null && echo "Nova auth present" || echo "Nova auth missing — surface to user"
 ```
 
-Alternative (more authoritative) — try a non-installing resolve:
+Alternative (more authoritative, side-effect free) — probe via `composer show`:
 
 ```bash
-composer create-project --no-install --no-interaction laravel/nova:^5.0 /tmp/nova-auth-check 2>&1 | head -5 && rm -rf /tmp/nova-auth-check
+composer show -a laravel/nova:^5.0 2>&1 | head -5
 ```
 
-If 401, stop and tell the user to run `composer config http-basic.nova.laravel.com <email> <license-key>` (or edit `~/.composer/auth.json` directly) before re-invoking.
+If the output contains "Could not find package" or any 401 / authentication error, stop and tell the user to run `composer config --global http-basic.nova.laravel.com <email> <license-key>` (or edit `~/.composer/auth.json` directly) before re-invoking.
 
 ## Inputs to collect
 

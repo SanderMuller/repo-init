@@ -13,9 +13,10 @@ Before any phase:
 
 1. **Resolve `REPO_INIT_HOME`**:
    - Run `composer global config home` to get the global Composer dir.
-   - Set `REPO_INIT_HOME=$(composer global config home)/vendor/sandermuller/repo-init`.
-   - Verify `REPO_INIT_HOME/SPEC.md` exists.
-   - **Escape hatch**: if `./vendor/sandermuller/repo-init/SPEC.md` exists in the target cwd, set `REPO_INIT_HOME=./vendor/sandermuller/repo-init` instead (project-local install shadows global).
+   - Compute `REPO_INIT_HOME=<composer-global-home>/vendor/sandermuller/repo-init` and **remember the absolute path** for the rest of the session.
+   - If your shell tool spawns a fresh subshell per command (Claude Code default): **inline-substitute the absolute path** in every subsequent command (e.g. `cat /Users/<u>/.composer/vendor/sandermuller/repo-init/phases/bootstrap-laravel-package.md` instead of `cat $REPO_INIT_HOME/phases/...`). The `$REPO_INIT_HOME` shorthand used throughout phase files / references is a documentation convention — substitute it before running shell commands.
+   - Verify `<resolved-REPO_INIT_HOME>/SPEC.md` exists.
+   - **Escape hatch**: if `./vendor/sandermuller/repo-init/SPEC.md` exists in the target cwd, use that path instead (project-local install shadows global).
 2. **If `REPO_INIT_HOME/SPEC.md` is missing**: tell the user:
    > Repo-init isn't installed. Run `composer global require sandermuller/repo-init` to install it (one-time, machine-wide). Then ask me again.
    And stop.

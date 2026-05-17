@@ -78,7 +78,7 @@ Build the list from `$REPO_INIT_HOME/references/per-category-deps.md#laravel-pro
 - `laravel/pail`
 - `laravel/tinker` (Laravel may already include this — check)
 - `driftingly/rector-laravel`
-- All shared deps from `$REPO_INIT_HOME/references/shared-dev-deps.md` minus anything already installed: `laravel/pao`, `laravel/pint` (already), `phpstan/extension-installer`, `phpstan/phpstan-strict-rules`, `phpstan/phpstan-deprecation-rules`, `phpstan/phpstan-phpunit`, `rector/rector`, `rector/type-perfect`, `spaze/phpstan-disallowed-calls`, `symplify/phpstan-extensions`, `tomasvotruba/cognitive-complexity`, `tomasvotruba/type-coverage`, `nunomaduro/collision` (laravel-project ships this).
+- All shared deps from `$REPO_INIT_HOME/references/shared-dev-deps.md` minus anything Laravel installer already pulled. Read the freshly-generated `composer.json` to determine what's already there. Common already-installed by `laravel new`: `laravel/pint`, `nunomaduro/collision`, `phpunit/phpunit` (when test-framework=phpunit). Anything else from the shared list needs explicit `composer require --dev`: `laravel/pao`, `phpstan/extension-installer`, `phpstan/phpstan-strict-rules`, `phpstan/phpstan-deprecation-rules`, `phpstan/phpstan-phpunit`, `rector/rector`, `rector/type-perfect`, `spaze/phpstan-disallowed-calls`, `symplify/phpstan-extensions`, `tomasvotruba/cognitive-complexity`, `tomasvotruba/type-coverage`, `sandermuller/package-boost`.
 
 **OPTIONAL (only when opted in):**
 
@@ -174,7 +174,7 @@ Next:
 - Edit .env (copy .env.example if .env doesn't exist): set APP_NAME, APP_URL, DB_*, MAIL_*.
 - Run `php artisan migrate` to set up the database.
 - Run `composer dev` to start the dev server (or `php artisan serve` for just the web app).
-- Set up the GitHub remote: `gh repo create {vendor}/{name} --private --source=. --remote=origin --push`.
+- Set up the GitHub remote — ask the user whether `--public` or `--private` first (Laravel apps are commonly private but not always): `gh repo create {vendor}/{name} --public|--private --source=. --remote=origin --push`.
 - Run `composer qa` to confirm baseline passes.
 {when --with-hihaho-rules: - Hihaho rules are active; check phpstan.neon.dist for the include.}
 

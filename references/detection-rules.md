@@ -20,8 +20,8 @@ After the category is decided, also record:
 - **`socialite-provider`** — `socialiteproviders/manager` in `require` → no `extra.laravel.providers` expected; Socialite providers register via the manager extension, not Laravel auto-discovery.
 - **`mcp-bridge`** — `laravel/mcp` in `require` → workbench scripts recommended.
 - **`hihaho-package-tools-flavoured`** — `spatie/laravel-package-tools` in `require` → use the `laravel-package-spatie` stub variant (ServiceProvider extends `PackageServiceProvider`).
-- **`filament-plugin`** — `filament/filament` in `require` OR `extra.filament` set → route bootstrap to `phases/bootstrap-filament-plugin.md` instead of generic laravel-package bootstrap. v0.1: audit / upgrade still fall through to laravel-package phases.
-- **`nova-tool`** — `laravel/nova` in `require` → route bootstrap to `phases/bootstrap-nova-tool.md`. v0.1: audit / upgrade still fall through to laravel-package phases.
+- **`filament-plugin`** — `filament/filament` in `require` OR `extra.filament` set → route bootstrap to `phases/bootstrap-filament-plugin.md` instead of generic laravel-package bootstrap. Audit / upgrade fall through to laravel-package phases.
+- **`nova-tool`** — `laravel/nova` in `require` → route bootstrap to `phases/bootstrap-nova-tool.md`. Audit / upgrade fall through to laravel-package phases.
 - **`laravel-aware-extension`** (phpstan-extension / rector-extension only) — any `illuminate/*` in `require` → opt-in for Laravel-aware sub-recipe (adds `larastan/larastan` for phpstan extensions, `driftingly/rector-laravel` for rector extensions).
 
 ## Error cases

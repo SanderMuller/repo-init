@@ -39,8 +39,9 @@ ls -la ~/.claude/skills/repo-init/SKILL.md
 # Expected: regular file (no `->` arrow indicating a symlink target).
 
 # Compute hashes — should be identical right after install:
-shasum "$(composer global config home)/vendor/sandermuller/repo-init/.ai/skills/repo-init/SKILL.md"
-shasum ~/.claude/skills/repo-init/SKILL.md
+# (sha256sum on Linux; on macOS use `shasum -a 256` instead.)
+sha256sum "$(composer global config home)/vendor/sandermuller/repo-init/.ai/skills/repo-init/SKILL.md"
+sha256sum ~/.claude/skills/repo-init/SKILL.md
 
 # Now remove:
 composer global remove sandermuller/repo-init

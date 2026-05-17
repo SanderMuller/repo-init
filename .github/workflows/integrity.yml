@@ -94,3 +94,35 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - run: bash .github/scripts/check-audit-scoping.sh
+
+  yaml-validity:
+    name: YAML syntactic validity
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install pyyaml
+        run: pip install pyyaml
+
+      - run: bash .github/scripts/check-yaml-validity.sh
+
+  stub-composer-validity:
+    name: Stub composer.json validity
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup PHP + Composer
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+
+      - run: bash .github/scripts/check-stub-composer-validity.sh

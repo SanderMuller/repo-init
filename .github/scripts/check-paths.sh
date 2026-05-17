@@ -15,6 +15,7 @@ EXIT_CODE=0
 # Files that may contain references:
 TARGETS=(
     ".ai/skills/repo-init/SKILL.md"
+    "SPEC.md"
     phases/*.md
     checklists/*.md
     references/*.md

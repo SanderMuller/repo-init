@@ -91,7 +91,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "__NAMESPACE_ESCAPED__\\\\ToolServiceProvider"
+                "__NAMESPACE_ESCAPED__\\\\__PACKAGE_STUDLY__ServiceProvider"
             ]
         }
     },

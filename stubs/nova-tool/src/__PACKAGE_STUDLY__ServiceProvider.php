@@ -7,7 +7,7 @@ use Illuminate\Support\ServiceProvider;
 use Laravel\Nova\Events\ServingNova;
 use Laravel\Nova\Nova;
 
-final class ToolServiceProvider extends ServiceProvider
+final class __PACKAGE_STUDLY__ServiceProvider extends ServiceProvider
 {
     public function boot(): void
     {

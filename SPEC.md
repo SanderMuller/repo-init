@@ -535,6 +535,8 @@ Files the agent must never write, regardless of phase. **Per-mode scope:**
 
 ## 7. Bootstrap Phase Pattern (`phases/bootstrap-*.md`)
 
+> **Note (v7 alignment).** The step list below describes the *project-local install* shape from the early-draft SPEC. The current v7 global-install architecture (per RQ40 + §3.3 / §3.3.1) means steps 9–10 below (`testbench package-boost:install --all` and project-local `:sync`) are SKIPPED by default — repo-init is installed globally and the skill is synced once at `composer global require` time, not per-target. Phase 9 step 9 in the actual `phases/bootstrap-laravel-package.md` (and siblings) reflects this. The example below is kept for reference but the live phase files are authoritative.
+
 Each bootstrap phase file follows the same shape. Example: `phases/bootstrap-laravel-package.md`.
 
 ```markdown
