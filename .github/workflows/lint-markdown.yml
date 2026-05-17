@@ -36,4 +36,4 @@ jobs:
         run: npm install -g markdownlint-cli2@0.18
 
       - name: Run markdownlint
-        run: markdownlint-cli2 "**/*.md" "#node_modules" "#vendor"
+        run: markdownlint-cli2 "**/*.md" "#node_modules" "#vendor" "#.ai" "#.claude" "#.agents" "#.cursor" "#.junie" "#.kiro" "#.codex"
