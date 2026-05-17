@@ -9,6 +9,39 @@ Pre-`1.0.0` releases may introduce breaking changes in MINOR bumps; we surface t
 
 ## [Unreleased]
 
+## [0.2.12] - 2026-05-17
+
+Surfaced via an audit pass over 9 SanderMuller PHP repos against the
+canonical baseline. Two spec bugs + three audit gaps fixed; the same
+audit now flags every drift correctly.
+
+### Fixed
+
+- **audit-laravel-package.md L114** + **audit-php-package.md L81**:
+  phpunit.xml/.dist wording was self-contradictory (text said "prefer
+  phpunit.xml" while flagging `phpunit.xml`). After 0.2.4 the canonical
+  baseline ships `phpunit.xml` (no `.dist`); the rule now correctly flags
+  `phpunit.xml.dist`-committed targets and suggests rename. Mirror fix
+  in audit-phpstan-extension.md + audit-rector-extension.md.
+
+### Added
+
+- **audit-laravel-package.md category-mandatory list**: `laravel/boost`
+  added (was added to per-category-deps.yml in 0.2.5 but audit doc never
+  updated). Recurs in 6/6 audited laravel-packages.
+- **`.gitattributes` package-boost managed block** is now a HIGH-severity
+  NON-CANONICAL flag across all 4 audit phases (was soft mention). 5 of
+  9 audited repos missing entirely; without the block, `composer archive`
+  ships `.cache/`, `.claude/`, workbench/, AGENTS.md into the published
+  tarball.
+- **`.lpv` ↔ `validate-gitattributes` cross-script check** in
+  audit-laravel-package.md: if `.lpv` is present, composer scripts must
+  include `validate-gitattributes`. Caught by laravel-x402 in the audit.
+- **detection-rules.md out-of-scope section**: documents `composer-plugin`
+  (boost-core in the audit), `metapackage`, `drupal-*`/`wordpress-*`/
+  `magento-*` `type:` values. Audit now stops cleanly with "category out
+  of scope" instead of trying to fit them into the five-category model.
+
 ## [0.2.11] - 2026-05-17
 
 ### Fixed

@@ -24,6 +24,16 @@ After the category is decided, also record:
 - **`nova-tool`** — `laravel/nova` in `require` → route bootstrap to `phases/bootstrap-nova-tool.md`. Audit / upgrade fall through to laravel-package phases.
 - **`laravel-aware-extension`** (phpstan-extension / rector-extension only) — any `illuminate/*` in `require` → opt-in for Laravel-aware sub-recipe (adds `larastan/larastan` for phpstan extensions, `driftingly/rector-laravel` for rector extensions).
 
+## Out-of-scope `type:` values
+
+If `composer.json` `type:` is one of the following, the repo is out of scope for repo-init's five-category model:
+
+- **`composer-plugin`** — composer plugins use composer-internal APIs and don't fit testbench-based testing. Conceptually closest to `php-package` but require `composer/composer` in `require-dev` + `extra.class` autoload entry. No repo-init stub variant; suggest the user run `audit-php-package.md` manually and skip testbench-related checks.
+- **`metapackage`** — pure dependency aggregator; no source/tests/CI.
+- **`drupal-*`, `wordpress-*`, `magento-*`** — out of scope, not PHP-package-shaped.
+
+In all of these, the audit phase should detect early, print "category out of scope" naming the matched `type:`, and stop.
+
 ## Error cases
 
 - `composer.json` missing AND user has not picked a category → ask user to confirm category.

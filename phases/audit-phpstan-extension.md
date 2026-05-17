@@ -78,6 +78,8 @@ Same logic as audit-laravel-package.md — apply each file's mode from `$REPO_IN
 - [ ] `composer.lock` committed.
 - [ ] `tests/Rules/stubs/` exists but NOT declared in `autoload-dev.classmap`. Phpstan extension test fixtures need classmap loading. Flag.
 - [ ] PHP floor `^8.2` or below.
+- [ ] **`phpunit.xml.dist` committed (with `.dist` suffix)**: canonical baseline as of repo-init 0.2.4 ships `phpunit.xml` (no `.dist`). Flag NON-CANONICAL.
+- [ ] **`.gitattributes` package-boost managed block MISSING** (HIGH severity): see audit-laravel-package.md for rationale + fix.
 
 ## EXTRA findings
 

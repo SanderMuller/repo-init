@@ -75,6 +75,8 @@ For each file present, apply the merge mode from `$REPO_INIT_HOME/references/upg
 - [ ] `composer.lock` committed.
 - [ ] PHP floor `^8.2` or below.
 - [ ] `extra.rector.includes` points to a file that doesn't exist.
+- [ ] **`phpunit.xml.dist` committed (with `.dist` suffix)**: canonical baseline as of repo-init 0.2.4 ships `phpunit.xml` (no `.dist`). Flag NON-CANONICAL.
+- [ ] **`.gitattributes` package-boost managed block MISSING** (HIGH severity): see audit-laravel-package.md for rationale + fix.
 
 ## EXTRA findings
 

@@ -94,6 +94,7 @@ Test-framework split:
 Category-mandatory:
 
 - [ ] `larastan/larastan` (NEVER also `phpstan/phpstan` per §5.3 exclusivity — if both present, flag both: `phpstan/phpstan` is EXTRA, `larastan/larastan` is correct).
+- [ ] `laravel/boost` — required for `testbench.yaml` to boot, which lists `Laravel\Boost\BoostServiceProvider`. Missing → `package-boost:sync` and any testbench-based command fatals with `Class "Laravel\Boost\BoostServiceProvider" not found`. Added in repo-init 0.2.5.
 - [ ] `driftingly/rector-laravel`
 
 `livewire/livewire` is `suggest only` — never flagged.
@@ -111,10 +112,12 @@ For each file present, look up its merge mode in `$REPO_INIT_HOME/references/upg
 ## NON-CANONICAL findings
 
 - [ ] **`composer.lock` committed in a library**: laravel-package is a library; lockfiles should not be committed (per `references/version-defaults.md` + Composer convention). Flag NON-CANONICAL with the suggestion "`git rm --cached composer.lock` + add to .gitignore".
-- [ ] **`phpunit.xml` (without `.dist`) committed**: prefer `phpunit.xml` so users can override locally. Flag NON-CANONICAL.
+- [ ] **`phpunit.xml.dist` committed (with `.dist` suffix)**: canonical baseline as of repo-init 0.2.4 ships `phpunit.xml` (no `.dist` suffix). Flag NON-CANONICAL with the suggestion "`git mv phpunit.xml.dist phpunit.xml` + update CI path-filters + .gitignore + stub composer scripts that reference it".
 - [ ] **`phpstan/phpstan` in `require-dev` alongside `larastan/larastan`**: §5.3 exclusivity violation. Flag NON-CANONICAL.
 - [ ] **Two managed blocks in `.gitattributes`** (a `# >>> package-boost (managed) >>>` block AND a `# >>> repo-init (managed) >>>` block): suboptimal per `references/gitattributes-managed-block.md` contract; everything should be inside the package-boost block.
 - [ ] **PHP floor `^8.2` (or below) in `require.php`**: repo-init floors at `^8.3`. Suggest bump.
+- [ ] **`.gitattributes` package-boost managed block MISSING** (HIGH severity, not soft mention): grep for `# >>> package-boost (managed) >>>`. Without the block, `composer archive` ships local-only files (`.cache/`, `.claude/`, `AGENTS.md`, workbench/, etc.) into the published tarball, ballooning install size + leaking dev tooling. Flag NON-CANONICAL with the suggestion "run `vendor/bin/testbench package-boost:sync` to regenerate the managed block".
+- [ ] **`.lpv` present but no `validate-gitattributes` composer script**: `.lpv` is the lean-package-validator config; without the script wired into composer scripts, the validator can never run. Flag NON-CANONICAL with the suggestion "add `\"validate-gitattributes\": \"vendor/bin/lean-package-validator validate\"` to composer.json scripts (and `qa-check` if present)".
 
 ## EXTRA findings
 

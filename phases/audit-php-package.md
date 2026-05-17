@@ -78,12 +78,13 @@ Same logic as audit-laravel-package.md, with php-package stub paths. Apply each 
 ## NON-CANONICAL findings
 
 - [ ] `composer.lock` committed (libraries should not commit lockfiles).
-- [ ] `phpunit.xml` without `.dist`.
+- [ ] **`phpunit.xml.dist` committed (with `.dist` suffix)**: canonical baseline as of repo-init 0.2.4 ships `phpunit.xml` (no `.dist`). Flag NON-CANONICAL.
 - [ ] `larastan/larastan` in `require-dev` for a php-package — Laravel-aware deps in a framework-agnostic category. Flag and ask: "is this actually a `laravel-package`? Re-detect."
 - [ ] `illuminate/*` in `require` — same. Re-route to `audit-laravel-package.md`.
 - [ ] PHP floor `^8.2` (or below).
 - [ ] Missing `validate-gitattributes` script in `composer.json` — php-package should have it.
 - [ ] `.lpv` exists but no `vendor/bin/lean-package-validator validate` clean. Run the validator; if it warns, flag NON-CANONICAL with the specific missing export-ignore lines.
+- [ ] **`.gitattributes` package-boost managed block MISSING** (HIGH severity): same as laravel-package — without it, `composer archive` ships local-only files. Flag NON-CANONICAL; suggest `vendor/bin/testbench package-boost:sync` (requires `orchestra/testbench` to be in require-dev, which `shared/always` mandates).
 
 ## EXTRA findings
 
