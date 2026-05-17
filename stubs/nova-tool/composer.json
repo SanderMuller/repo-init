@@ -33,6 +33,7 @@
     "require-dev": {
         "driftingly/rector-laravel": "^2.3",
         "larastan/larastan": "^3.9",
+        "laravel/boost": "^2.0||^3.0",
         "laravel/pao": "^1.0",
         "laravel/pint": "^1.29",
         "mrpunyapal/rector-pest": "^0.2",

@@ -9,6 +9,20 @@ Pre-`1.0.0` releases may introduce breaking changes in MINOR bumps; we surface t
 
 ## [Unreleased]
 
+## [0.2.5] - 2026-05-17
+
+### Fixed
+
+- **Add `laravel/boost` to laravel-package + laravel-package-spatie +
+  filament-plugin + nova-tool require-dev**. All four categories' stub
+  `testbench.yaml` lists `Laravel\Boost\BoostServiceProvider` as a provider,
+  so `package-boost:sync` (which boots testbench) fatals with
+  `Class "Laravel\Boost\BoostServiceProvider" not found` if Boost isn't in
+  require-dev. Discovered when a real user scaffolded a laravel-package
+  interactively and hit the fatal at sync time. Updated both
+  `per-category-deps.yml` and the per-category stub `composer.json` so
+  fresh scaffolds + audits both surface it.
+
 ## [0.2.4] - 2026-05-17
 
 Critical packaging fix plus the round-3/4 dogfood-surfaced parity fixes.

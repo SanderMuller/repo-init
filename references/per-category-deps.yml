@@ -80,6 +80,7 @@ categories:
         - "illuminate/support: __LARAVEL_VERSIONS__"
       require-dev:
         - larastan/larastan
+        - laravel/boost  # testbench.yaml loads Laravel\Boost\BoostServiceProvider during package-boost:sync; missing it fatals the sync
         - driftingly/rector-laravel
     optional:
       hihaho-package-tools-flavoured:
@@ -144,6 +145,7 @@ categories:
         - "illuminate/support: __LARAVEL_VERSIONS__"
       require-dev:
         - larastan/larastan
+        - laravel/boost  # testbench.yaml loads Laravel\Boost\BoostServiceProvider during package-boost:sync; missing it fatals the sync
         - driftingly/rector-laravel
     optional: {}
     suggests:
@@ -164,6 +166,7 @@ categories:
         - "illuminate/support: __LARAVEL_VERSIONS__"
       require-dev:
         - larastan/larastan
+        - laravel/boost  # testbench.yaml loads Laravel\Boost\BoostServiceProvider during package-boost:sync; missing it fatals the sync
         - driftingly/rector-laravel
     optional: {}
     suggests: []
