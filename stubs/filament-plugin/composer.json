@@ -80,8 +80,8 @@
         "phpstan-clear-cache": "vendor/bin/phpstan clear-result-cache",
         "format": "vendor/bin/pint",
         "rector": "vendor/bin/rector process",
-        "test": "vendor/bin/pest",
-        "test-coverage": "vendor/bin/pest --coverage",
+        "test": "vendor/bin/__TEST_RUNNER__",
+        "test-coverage": "vendor/bin/__TEST_RUNNER__ __TEST_COVERAGE_FLAG__",
         "sync-ai": "vendor/bin/testbench package-boost:sync",
         "qa": [
             "@rector",
