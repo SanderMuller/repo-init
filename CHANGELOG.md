@@ -9,6 +9,19 @@ Pre-`1.0.0` releases may introduce breaking changes in MINOR bumps; we surface t
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-05-17
+
+Dogfood-surfaced bug fixes from scaffolding sandermuller/repo-new via the agent path.
+
+### Fixed
+
+- **`stubs/shared/.gitattributes` slimmed to validator-passing set.** The previous shipped file listed entries for files that don't always exist post-scaffold (e.g. `.ai/`, `.cursorrules`, `.windsurfrules`, `testbench.yaml`, `workbench/`, `phpunit.xml`, `CHANGELOG.md`). `stolt/lean-package-validator` inspects the working tree and flagged the mismatch as invalid. Slimmed to the validator-approved set: only files that always exist after scaffold + `package-boost:sync`. Category-specific extras (`testbench.yaml`, `workbench/`) moved to per-category `.gitattributes` overrides for `laravel-package`, `laravel-package-spatie`, `filament-plugin`, `nova-tool`.
+- **Idempotency precondition wording for renamed-on-substitution stubs.** `bootstrap-php-package.md` step 3 + `bootstrap-laravel-package.md` step 4 now explicitly tell the agent to derive the SUBSTITUTED target filename FIRST (e.g. `src/RepoNew.php`) before checking existence, not check the literal stub filename (e.g. `src/__PACKAGE_STUDLY__.php`). Without this clarification, re-runs would re-copy + re-substitute renamed stubs incorrectly.
+
+### Why these bugs existed
+
+Both surfaced during the dogfood scaffold of `sandermuller/repo-new` (a future package whose CLI is designed in `specs/repo-new-cli.md`). The validator bug existed because the shipped `.gitattributes` was max-everything (covering all categories' file sets). The idempotency wording bug was a subtle slip in the v0.2 rework — the spec was correct in intent but the implementation hint was missing.
+
 ## [0.2.0] - 2026-05-17
 
 Bootstrap phase idempotency rework. Enables forthcoming `sandermuller/repo-new` CLI to do mechanical scaffolding without conflicting with the agent path.
@@ -71,6 +84,7 @@ Initial release. Global-install model (`composer global require sandermuller/rep
 - 4 Open Questions remaining: `--ai` flag verification on Laravel installer; package-boost user-scope sync feature; skill-copy-not-symlink behavior verification.
 - Independently reviewed via codex in 3 rounds (v3 → v4 → v5 → v6). All findings addressed.
 
-[Unreleased]: https://github.com/sandermuller/repo-init/compare/0.2.0...HEAD
+[Unreleased]: https://github.com/sandermuller/repo-init/compare/0.2.1...HEAD
+[0.2.1]: https://github.com/sandermuller/repo-init/compare/0.2.0...0.2.1
 [0.2.0]: https://github.com/sandermuller/repo-init/compare/0.1.0...0.2.0
 [0.1.0]: https://github.com/sandermuller/repo-init/releases/tag/0.1.0

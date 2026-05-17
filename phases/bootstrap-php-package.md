@@ -34,7 +34,9 @@ For each file under `$REPO_INIT_HOME/stubs/shared/`, copy to cwd. Substitute pla
 
 ### 3. Copy php-package stubs
 
-**Skip per-file if:** the file (with file-path placeholders substituted) exists at target AND no literal placeholders remain.
+**Skip per-file if:** the SUBSTITUTED target filename already exists. **CRITICAL:** for stub files with `__PACKAGE_STUDLY__` or `__VENDOR_STUDLY__` in the filename, derive the target filename FIRST (substitute placeholders in the path), then check existence. Example: stub `src/__PACKAGE_STUDLY__.php` for a package named `repo-new` → check `src/RepoNew.php` exists, NOT `src/__PACKAGE_STUDLY__.php` exists. Checking the literal stub path will always miss because the file gets renamed after substitution.
+
+Also verify file content has no literal `__VENDOR__` / `__PACKAGE__` / etc. placeholders remaining.
 
 For each file under `$REPO_INIT_HOME/stubs/php-package/`:
 

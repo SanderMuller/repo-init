@@ -77,8 +77,70 @@ for category in "${BOOTSTRAP_ONLY_CATEGORIES[@]}"; do
     done
 done
 
+# Phase 8 fall-through contract: each bootstrap-only category must declare
+# `audit-via:` and `upgrade-via:` in the YAML, those targets must have real
+# phase files, and SKILL.md must document the routing so the agent doesn't
+# guess.
+YML="references/per-category-deps.yml"
+SKILL=".ai/skills/repo-init/SKILL.md"
+
+if [[ ! -f "$YML" ]]; then
+    echo "FAIL: $YML missing — can't verify Phase 8 fall-through contract."
+    EXIT_CODE=1
+fi
+
+if [[ ! -f "$SKILL" ]]; then
+    echo "FAIL: $SKILL missing — can't verify Phase 8 fall-through routing."
+    EXIT_CODE=1
+fi
+
+for category in "${BOOTSTRAP_ONLY_CATEGORIES[@]}"; do
+    # Extract audit-via / upgrade-via values from the YAML category block.
+    # Match the category header line, then read forward until the next
+    # top-level (2-space-indented) sibling category.
+    audit_via=$(awk -v cat="  ${category}:" '
+        $0 == cat { in_block=1; next }
+        in_block && /^  [a-zA-Z]/ { in_block=0 }
+        in_block && /^    audit-via:/ { sub(/^    audit-via: */, ""); print; exit }
+    ' "$YML")
+
+    upgrade_via=$(awk -v cat="  ${category}:" '
+        $0 == cat { in_block=1; next }
+        in_block && /^  [a-zA-Z]/ { in_block=0 }
+        in_block && /^    upgrade-via:/ { sub(/^    upgrade-via: */, ""); print; exit }
+    ' "$YML")
+
+    if [[ -z "$audit_via" ]]; then
+        echo "FAIL: $YML category '$category' missing 'audit-via:' (Phase 8 fall-through contract)"
+        EXIT_CODE=1
+    elif [[ ! -f "phases/audit-${audit_via}.md" ]]; then
+        echo "FAIL: $YML category '$category' → audit-via: $audit_via, but phases/audit-${audit_via}.md missing"
+        EXIT_CODE=1
+    fi
+
+    if [[ -z "$upgrade_via" ]]; then
+        echo "FAIL: $YML category '$category' missing 'upgrade-via:' (Phase 8 fall-through contract)"
+        EXIT_CODE=1
+    elif [[ ! -f "phases/upgrade-${upgrade_via}.md" ]]; then
+        echo "FAIL: $YML category '$category' → upgrade-via: $upgrade_via, but phases/upgrade-${upgrade_via}.md missing"
+        EXIT_CODE=1
+    fi
+
+    # SKILL.md must mention the bootstrap-only category by name AND make
+    # the fall-through explicit (so the agent doesn't try to open a
+    # nonexistent audit-<category>.md).
+    if ! grep -q "$category" "$SKILL"; then
+        echo "FAIL: $SKILL does not mention bootstrap-only category '$category'"
+        EXIT_CODE=1
+    fi
+    if ! grep -qE "Audit.*(fall through|fall-through|route).*laravel-package|$category.*laravel-package" "$SKILL"; then
+        echo "FAIL: $SKILL does not document audit/upgrade fall-through for '$category' → laravel-package"
+        EXIT_CODE=1
+    fi
+done
+
 if [[ "$EXIT_CODE" -eq 0 ]]; then
-    echo "[check-phase-coverage] OK — every (category × mode) phase references its required checklists + refs."
+    echo "[check-phase-coverage] OK — every (category × mode) phase references its required checklists + refs; Phase 8 fall-through contract honoured."
 fi
 
 exit "$EXIT_CODE"

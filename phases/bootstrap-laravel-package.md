@@ -55,7 +55,7 @@ Special handling for `tests/`: copy `tests/Pest.php` only when `test-framework=p
 
 ### 4. Copy category stubs
 
-**Precondition check:** for every file under `$STUB_CATEGORY_DIR/`, the equivalent file (with placeholder file-paths substituted — `src/__PACKAGE_STUDLY__ServiceProvider.php` → `src/QueueInsightsServiceProvider.php` etc.) exists at the corresponding path in cwd AND contains no literal placeholders.
+**Precondition check:** for every file under `$STUB_CATEGORY_DIR/`, the equivalent file at the SUBSTITUTED target path exists AND contains no literal placeholders. **CRITICAL:** derive the target filename FIRST by substituting `__PACKAGE_STUDLY__` / `__VENDOR_STUDLY__` / `__PACKAGE__` in the path, THEN check existence. Example: stub `src/__PACKAGE_STUDLY__ServiceProvider.php` for `sandermuller/queue-insights` → check `src/QueueInsightsServiceProvider.php` exists, NOT `src/__PACKAGE_STUDLY__ServiceProvider.php`. The literal placeholder path will always miss because the file was renamed during substitution. (Dogfood-discovered bug from 2026-05-17.)
 
 **If precondition met:** skip — category stubs already copied + substituted.
 
