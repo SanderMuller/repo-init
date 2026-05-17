@@ -41,8 +41,15 @@ For each file under `$REPO_INIT_HOME/stubs/php-package/`:
 
 ### 4. Compose test-framework variant
 
-- `pest`: composer.json (already pest-flavoured), `tests/Pest.php` kept.
-- `phpunit`: edit composer.json — swap `pestphp/*` deps for `phpunit/phpunit`, change `"test"` script. Use `phpunit.xml.dist`, skip `tests/Pest.php`. Also edit `.github/workflows/run-tests.yml` to `vendor/bin/phpunit` (already done for the shipped stub if pest; otherwise the agent makes the swap).
+The shipped stubs default to **Pest** for php-package. If the user picked PHPUnit:
+
+**(a) `composer.json`**: swap `pestphp/*` deps for `phpunit/phpunit`; change `"test"` from `vendor/bin/pest` to `vendor/bin/phpunit`; change `"test-coverage"` to `vendor/bin/phpunit --coverage-html=coverage`; remove `pestphp/pest-plugin: true` from `config.allow-plugins`.
+
+**(b) `.github/workflows/run-tests.yml`**: change the last step's `run:` from `vendor/bin/pest --ci` to `vendor/bin/phpunit`. **Without this edit, CI fails immediately.**
+
+**(c) Test file**: delete `tests/Pest.php` (copied in step 2); use `phpunit.xml.dist` (also from shared).
+
+If keeping Pest (the default): no edits needed.
 
 ### 5. Run `composer install`
 

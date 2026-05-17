@@ -26,7 +26,22 @@ Skipped — laravel-project doesn't have repo-init-mandated runtime deps (the us
 
 ## Apply MISSING dev deps
 
-Single batched `composer require --dev <list>`. Mandatory + confirmed opt-ins. Apply exclusions.
+Per-category mandatory `require-dev` for `laravel-project`:
+
+- `larastan/larastan`
+- `laravel/boost`
+- `laravel/pail`
+- `laravel/tinker` (Laravel may ship this already)
+- `driftingly/rector-laravel`
+
+Plus shared dev deps from `$REPO_INIT_HOME/references/shared-dev-deps.md` minus what Laravel installer typically already ships (read freshly-generated composer.json to confirm): `laravel/pao`, `laravel/pint` (already), `phpstan/extension-installer`, `phpstan/phpstan-strict-rules`, `phpstan/phpstan-deprecation-rules`, `phpstan/phpstan-phpunit`, `rector/rector`, `rector/type-perfect`, `spaze/phpstan-disallowed-calls`, `symplify/phpstan-extensions`, `tomasvotruba/cognitive-complexity`, `tomasvotruba/type-coverage`, `nunomaduro/collision` (Laravel ships), `sandermuller/package-boost`, `orchestra/testbench` (typically NOT in laravel-project — skip).
+
+Plus confirmed opt-ins:
+
+- `--with-hihaho-rules`: `hihaho/phpstan-rules`, `hihaho/rector-rules`, `symplify/phpstan-rules`
+- `--with-security-advisories`: `roave/security-advisories: dev-latest`
+
+Single batched `composer require --dev <list>` call.
 
 **Test framework note**: if the user has both `pestphp/pest` and `phpunit/phpunit` from prior installs, ask which to keep. Don't auto-resolve — wrong choice rewrites test scaffolding.
 

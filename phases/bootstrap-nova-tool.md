@@ -50,8 +50,8 @@ For each file under `$REPO_INIT_HOME/stubs/shared/`, copy to cwd. Substitute pla
 
 For each file under `$REPO_INIT_HOME/stubs/nova-tool/`:
 
-- `composer.json` — has `laravel/nova: ^5.0` in `require`.
-- `src/ToolServiceProvider.php` — boots the tool's routes + assets when Nova is being served.
+- `composer.json` — has `laravel/nova: ^5.0` in `require` AND a `repositories` block pointing at `https://nova.laravel.com` (mandatory — Nova isn't on Packagist).
+- `src/__PACKAGE_STUDLY__ServiceProvider.php` — boots the tool's routes + assets when Nova is being served.
 - `src/__PACKAGE_STUDLY__.php` — the actual `Laravel\Nova\Tool` subclass with `menu()` + `boot()`.
 - `routes/inertia.php` — placeholder for tool routes (commented out in stub).
 - `resources/views/.gitkeep`, `resources/js/.gitkeep`, `resources/css/.gitkeep`, `dist/js/.gitkeep`, `dist/css/.gitkeep` — placeholders for tool assets.
@@ -122,4 +122,4 @@ Want to keep working, or are you done?
 
 - **`composer require laravel/nova` 401s**: user lacks Nova license auth. Document the fix (add to `auth.json` with their nova.laravel.com credentials).
 - **Tool not showing in Nova sidebar**: check `NovaServiceProvider::tools()` in the consuming app actually returns the tool. The stub doesn't auto-register; consumers must add it explicitly.
-- **Asset publishing — `dist/` empty**: `dist/js/tool.js` + `dist/css/tool.css` are placeholders. User builds the frontend separately and emits to those paths. The `ToolServiceProvider` calls `Nova::script` + `Nova::style` pointing at them.
+- **Asset publishing — `dist/` empty**: `dist/js/tool.js` + `dist/css/tool.css` are placeholders. User builds the frontend separately and emits to those paths. The `__PACKAGE_STUDLY__ServiceProvider` calls `Nova::script` + `Nova::style` pointing at them.

@@ -12,7 +12,7 @@ What each category adds on top of the shared list (`shared-dev-deps.md`). Split 
 | `laravel-package` | `larastan/larastan`, `driftingly/rector-laravel` | `illuminate/contracts`, `illuminate/support` at `__LARAVEL_VERSIONS__` |
 | `php-package` | `phpstan/phpstan`, `stolt/lean-package-validator` | (no `illuminate/*`) |
 | `phpstan-extension` | (none beyond shared, minus `phpstan/phpstan` per shared exclusion) | `phpstan/phpstan: ^2` |
-| `rector-extension` | `symplify/rule-doc-generator-contracts` (rule doc generation contract) | `rector/rector: ^2` |
+| `rector-extension` | (none beyond shared, minus `rector/rector` per §5.1.1) | `rector/rector: ^2`, `symplify/rule-doc-generator-contracts: ^11.2` |
 
 `laravel-package` `require` is intentionally minimal — `illuminate/contracts` + `illuminate/support`. Phase file tells the agent to extend per feature (add `illuminate/console`, `illuminate/queue`, `illuminate/redis`, etc. as the package uses them).
 

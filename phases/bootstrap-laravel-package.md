@@ -49,8 +49,20 @@ For each file under `$STUB_CATEGORY_DIR/`, copy to cwd. Substitute placeholders,
 
 ### 5. Compose the test-framework variant
 
-- If `test-framework=phpunit`: keep `phpunit.xml.dist` from `stubs/shared/`. Edit the stub `composer.json` to use `phpunit/phpunit` in `require-dev` and `"test": "vendor/bin/phpunit"` in `scripts` (already pre-set in `stubs/laravel-package-spatie/composer.json`; for `sander` variant, the agent edits the just-written `composer.json` per `$REPO_INIT_HOME/references/composer-scripts.md` substitutions table).
-- If `test-framework=pest`: keep `tests/Pest.php`. Composer.json is already pest-flavoured (sander variant); for `spatie` variant the agent edits to pest. Add `pestphp/pest`, `pestphp/pest-plugin-arch`, `pestphp/pest-plugin-laravel`, `mrpunyapal/rector-pest` to `require-dev`.
+The stubs ship a default test-framework per variant: `laravel-package` (sander) defaults to **Pest**, `laravel-package-spatie` (hihaho) defaults to **PHPUnit**. If the user picked the OTHER framework, the agent must edit three things AFTER copying stubs:
+
+**(a) `composer.json`**:
+- Swap `"test"` script: `vendor/bin/pest` ↔ `vendor/bin/phpunit`
+- Swap `"test-coverage"` script: `vendor/bin/pest --coverage` ↔ `vendor/bin/phpunit --coverage-html=coverage`
+- Swap dev deps: ADD `pestphp/pest` + `pestphp/pest-plugin-arch` + `pestphp/pest-plugin-laravel` + `mrpunyapal/rector-pest` OR ADD `phpunit/phpunit`; REMOVE the other set.
+- Swap `config.allow-plugins`: ADD `pestphp/pest-plugin: true` for pest; REMOVE for phpunit.
+
+**(b) `.github/workflows/run-tests.yml`**:
+- Change the last step's `run:` from `vendor/bin/pest --ci` (pest default) to `vendor/bin/phpunit` (phpunit) — or vice versa. **Without this edit, CI fails immediately because the workflow runs the wrong test binary.**
+
+**(c) Test bootstrap file**:
+- Pest: keep `tests/Pest.php` (copied from shared in step 3).
+- PHPUnit: delete `tests/Pest.php` (if present); rely on `phpunit.xml.dist` (also from shared).
 
 Pick exactly one of these per the user's choice; never both.
 

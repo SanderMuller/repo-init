@@ -111,8 +111,8 @@ categories:
     mandatory:
       require:
         - "rector/rector: ^2"
-      require-dev:
-        - symplify/rule-doc-generator-contracts
+        - "symplify/rule-doc-generator-contracts: ^11.2"
+      require-dev: []
     optional:
       laravel-aware:
         default-inference: driftingly/rector-laravel in require OR require-dev

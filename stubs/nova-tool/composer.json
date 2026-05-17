@@ -24,6 +24,12 @@
         "illuminate/contracts": "__LARAVEL_VERSIONS__",
         "illuminate/support": "__LARAVEL_VERSIONS__"
     },
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://nova.laravel.com"
+        }
+    ],
     "require-dev": {
         "driftingly/rector-laravel": "^2.3",
         "larastan/larastan": "^3.9",

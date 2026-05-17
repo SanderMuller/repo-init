@@ -28,12 +28,15 @@
     },
     "scripts": {
         "post-install-cmd": [
-            "@php -r \"if (file_exists('vendor/bin/testbench')) { passthru('vendor/bin/testbench package-boost:sync --scope=user 2>/dev/null || true'); }\""
+            "@php bin/post-install-sync.php"
         ],
         "post-update-cmd": [
-            "@php -r \"if (file_exists('vendor/bin/testbench')) { passthru('vendor/bin/testbench package-boost:sync --scope=user 2>/dev/null || true'); }\""
+            "@php bin/post-install-sync.php"
         ]
     },
+    "bin": [
+        "bin/post-install-sync.php"
+    ],
     "minimum-stability": "stable",
     "prefer-stable": true
 }

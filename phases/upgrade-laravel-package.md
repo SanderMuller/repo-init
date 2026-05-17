@@ -26,13 +26,31 @@ For each MISSING file from the audit:
 
 ## Apply MISSING runtime deps
 
-Single batched `composer require <list>` call. Per-category mandatory `require` + confirmed opt-ins. Apply per-category exclusions.
+Per-category mandatory `require` for `laravel-package`:
+
+- `illuminate/contracts: __LARAVEL_VERSIONS__`
+- `illuminate/support: __LARAVEL_VERSIONS__`
+- (sub-flag `hihaho-package-tools-flavoured`) `spatie/laravel-package-tools`
+
+Single batched `composer require <list>` for everything missing.
 
 On failure, consult `$REPO_INIT_HOME/references/composer-failure-modes.md`.
 
 ## Apply MISSING dev deps
 
-Single batched `composer require --dev <list>` call. Shared (minus exclusions) + category-mandatory + confirmed opt-ins.
+Per-category mandatory `require-dev` for `laravel-package`:
+
+- `larastan/larastan` (NEVER also `phpstan/phpstan` per §5.3 exclusivity)
+- `driftingly/rector-laravel`
+
+Plus shared dev deps from `$REPO_INIT_HOME/references/shared-dev-deps.md` (universal — `laravel/pao`, `laravel/pint`, `phpstan/extension-installer`, `phpstan/phpstan-strict-rules`, `phpstan/phpstan-deprecation-rules`, `phpstan/phpstan-phpunit`, `rector/rector`, `rector/type-perfect`, `spaze/phpstan-disallowed-calls`, `symplify/phpstan-extensions`, `tomasvotruba/cognitive-complexity`, `tomasvotruba/type-coverage`, `nunomaduro/collision`, `sandermuller/package-boost`, `orchestra/testbench`).
+
+Test-framework split (Pest by default for sander vendor):
+
+- `pest`: `pestphp/pest`, `pestphp/pest-plugin-arch`, `pestphp/pest-plugin-laravel`, `mrpunyapal/rector-pest`
+- `phpunit`: `phpunit/phpunit`
+
+Single batched `composer require --dev <list>` call.
 
 Respect `larastan` vs `phpstan/phpstan` exclusivity (§5.3): never `composer require` both in the same call. If one is already installed, install only the other:
 

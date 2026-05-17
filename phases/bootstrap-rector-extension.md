@@ -53,9 +53,13 @@ composer install
 
 From `$REPO_INIT_HOME/references/per-category-deps.md#rector-extension`:
 
-**MANDATORY:**
+**MANDATORY (runtime — these are already in the stub `composer.json`'s `require` block, installed by step 5):**
 
-- `symplify/rule-doc-generator-contracts` — the rule documentation contract package.
+- `rector/rector: ^2`
+- `symplify/rule-doc-generator-contracts: ^11.2` — rule documentation contract.
+
+**MANDATORY (dev — added via `composer require --dev`):**
+
 - Shared deps from `$REPO_INIT_HOME/references/shared-dev-deps.md` minus `rector/rector` (already in `require` per §5.1.1 exclusion).
 - `nikic/php-parser` (needed for rule tests / AST traversal).
 
@@ -63,7 +67,7 @@ From `$REPO_INIT_HOME/references/per-category-deps.md#rector-extension`:
 
 - Adds `driftingly/rector-laravel` to `require` (not `require-dev`) so the extension can wire Laravel rector sets internally in its own `config/config.php`. Edit the just-generated `composer.json` to add this.
 
-Single batched `composer require --dev` call. On failure, consult `$REPO_INIT_HOME/references/composer-failure-modes.md`.
+For dev deps: single batched `composer require --dev` call. **Do NOT include `symplify/rule-doc-generator-contracts` or `rector/rector` in the `--dev` batch** — both are in `require`. On failure, consult `$REPO_INIT_HOME/references/composer-failure-modes.md`.
 
 If Laravel-aware: separate `composer require driftingly/rector-laravel` for the `require` side.
 
