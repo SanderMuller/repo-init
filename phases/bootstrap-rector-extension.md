@@ -35,7 +35,7 @@ Confirm derived `__NAMESPACE__` with the user once.
 
 **Skip per-file if:** the file exists at target path AND no literal placeholders remain.
 
-For each file under `$REPO_INIT_HOME/stubs/shared/`, copy to cwd. Substitute placeholders. Compose test-framework variant (Pest or PHPUnit) per `bootstrap-php-package.md` step 4.
+For each file under `$REPO_INIT_HOME/stubs/shared/`, copy to cwd. Substitute placeholders. Compose test-framework variant (Pest or PHPUnit) per `bootstrap-php-package.md` step 4. **Skip `.mcp.json`** — the shared stub ships a Laravel/testbench MCP server config with no equivalent for framework-agnostic rector extensions.
 
 ### 3. Copy rector-extension stubs
 

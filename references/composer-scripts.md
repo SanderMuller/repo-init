@@ -32,7 +32,7 @@ Exact scripts block per category. Phase files write these into the target's `com
 
 ### `laravel-project`
 
-- `"sync-ai": "@php artisan package-boost:sync"` (artisan is available; no testbench wrapper needed in a real Laravel app).
+- `"sync-ai": "vendor/bin/boost sync"` (boost-core's standalone bin, framework-agnostic; pulled transitively via `sandermuller/package-boost-php`). Matches the per-category stubs — no `@php` prefix; `vendor/bin/boost` has its own PHP shebang.
 
 ## Always added for `laravel-package`
 

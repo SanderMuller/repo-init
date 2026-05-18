@@ -19,7 +19,6 @@ None for `php-package`. The category has no Laravel-aware sub-flag. Detect `test
 - [ ] `.editorconfig`
 - [ ] `.gitattributes` (with package-boost managed block)
 - [ ] `.gitignore`
-- [ ] `.mcp.json`
 - [ ] `pint.json`
 - [ ] `phpstan.neon.dist`
 - [ ] `phpstan-baseline.neon`
@@ -27,6 +26,8 @@ None for `php-package`. The category has no Laravel-aware sub-flag. Detect `test
 - [ ] `phpunit.xml` (if test-framework=phpunit) OR `tests/Pest.php` (if pest)
 - [ ] 4 shared workflows + `run-tests.yml` (PHP-only matrix)
 - [ ] `.github/dependabot.yml`
+
+**Per-category exclusion**: `.mcp.json` from the shared stub set is SKIPPED for `php-package`. The canonical `.mcp.json` ships a Laravel/testbench MCP server config (`vendor/bin/testbench boost:mcp`) which has no equivalent for framework-agnostic php-package code. Don't flag MISSING.
 
 **Category-specific (php-package):**
 

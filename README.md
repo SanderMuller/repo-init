@@ -12,11 +12,11 @@ AI playbook + stub library for bootstrapping the canonical Sander / hihaho dev s
 Walks an AI agent (Claude Code, Cursor, GitHub Copilot, …) through **bootstrap**, **audit**, or **upgrade** of a PHP repo against a canonical baseline:
 
 - `pint.json`, `phpstan.neon.dist`, `phpstan-baseline.neon`, `rector.php` — code-quality tooling
-- `.editorconfig`, `.gitattributes` (with the `# >>> package-boost (managed) >>>` block — sentinel name preserved for backward compat; the owning package is now `package-boost-php`), `.gitignore`
-- `.mcp.json` — laravel-boost MCP wiring
-- `.github/workflows/{phpstan,pint-check,rector-check,run-tests,update-changelog}.yml` + `dependabot.yml`
+- `.editorconfig`, `.gitattributes` (with the `# >>> package-boost (managed) >>>` block — sentinel name preserved for backward compat; owned by `package-boost-php`), `.gitignore`
+- `.mcp.json` (Laravel-aware categories only — composer-plugin and rector/phpstan extensions skip it)
+- Shared `.github/workflows/{phpstan,pint-check,rector-check,update-changelog}.yml` + per-category `run-tests.yml` + `dependabot.yml`
 - `tests/Pest.php` or `phpunit.xml` (vendor-driven default)
-- Per-category extras (testbench.yaml, workbench/, ServiceProvider, extension.neon, etc.)
+- Per-category extras (testbench.yaml, workbench/, ServiceProvider, extension.neon, src/Plugin.{shape}.php for composer-plugin, etc.)
 
 ## Install (one-time per machine)
 
@@ -24,7 +24,7 @@ Walks an AI agent (Claude Code, Cursor, GitHub Copilot, …) through **bootstrap
 composer global require sandermuller/repo-init
 ```
 
-The `post-install-cmd` hook propagates the skill into `~/.claude/skills/repo-init/` (and `~/.cursor/skills/`, `~/.agents/skills/`, etc.) via [`sandermuller/boost-core`](https://github.com/SanderMuller/boost-core)'s `boost sync --scope=user` ([shipped in `bebd046b`](https://github.com/SanderMuller/boost-core/commit/bebd046bbcc14d8ca3f7184b911d467b04bc27bb)). From then on, the `repo-init` skill auto-activates in any project. See `references/boost-core-user-scope.md` for the full contract.
+[`sandermuller/boost-core`](https://github.com/SanderMuller/boost-core)'s global-context auto-sync (active under `composer global` since 0.2.0) propagates the `repo-init` skill into `~/.claude/skills/repo-init/`, `~/.cursor/skills/repo-init/`, `~/.agents/skills/repo-init/`, etc. on first install. The skill then auto-activates in any project. See `references/boost-core-user-scope.md` for the full contract.
 
 ## Use
 
@@ -42,7 +42,7 @@ The agent reads the `repo-init` skill, decides intent + category, and opens the 
 composer global update sandermuller/repo-init
 ```
 
-The `post-update-cmd` hook re-syncs the skill.
+boost-core's plugin re-syncs the skill on the same hook.
 
 ## Repo categories supported
 
@@ -56,7 +56,7 @@ The `post-update-cmd` hook re-syncs the skill.
 | `rector-extension` | `type: rector-extension` |
 | `composer-plugin` | `type: composer-plugin` |
 
-Each has its own bootstrap, audit, and upgrade phase file — 18 total. `composer-plugin` (added in 0.3.0) covers framework-agnostic Composer plugins (e.g. boost-core, package-boost-php) with sub-flags for command-provider / event-subscriber shapes.
+Each has its own bootstrap, audit, and upgrade phase file (20 phase files total — 6 audit + 6 upgrade + 8 bootstrap, the extra 2 bootstraps cover `filament-plugin` and `nova-tool` which fall through to `laravel-package` for audit/upgrade). `composer-plugin` (added in 0.3.0) covers framework-agnostic Composer plugins (e.g. boost-core, package-boost-php) with sub-flags for command-provider / event-subscriber shapes.
 
 ## What's NOT in the package
 
@@ -93,15 +93,15 @@ rm -rf ~/.claude/skills/repo-init \
 
 ## Design
 
-See [`SPEC.md`](SPEC.md) for the full design — 40 resolved questions and 4 open. The architecture is the result of multiple codex review rounds (v3 → v4 → v5 → v6) refining the markdown-only + global-install model.
+See [`SPEC.md`](SPEC.md) for the full design (markdown-only + global-install model).
 
 Highlights:
 
-- Single entry point — [`.ai/skills/repo-init/SKILL.md`](.ai/skills/repo-init/SKILL.md).
-- 15 self-contained phase playbooks under [`phases/`](phases/).
-- 14 reference docs under [`references/`](references/) (incl. machine-readable [`per-category-deps.yml`](references/per-category-deps.yml)).
+- Single entry point — [`resources/boost/skills/repo-init/SKILL.md`](resources/boost/skills/repo-init/SKILL.md).
+- 20 self-contained phase playbooks under [`phases/`](phases/).
+- 18 reference docs under [`references/`](references/) (incl. machine-readable [`per-category-deps.yml`](references/per-category-deps.yml)).
 - 5 checklists under [`checklists/`](checklists/).
-- 8 stub trees under [`stubs/`](stubs/) (shared + 7 categories: composer-plugin, filament-plugin, laravel-package, laravel-package-spatie, laravel-project, nova-tool, php-package, phpstan-extension, rector-extension).
+- 12 stub trees under [`stubs/`](stubs/) — `shared/` + 2 test-framework variants + 9 categories (composer-plugin, filament-plugin, laravel-package, laravel-package-spatie, laravel-project, nova-tool, php-package, phpstan-extension, rector-extension).
 
 ## Dependencies
 

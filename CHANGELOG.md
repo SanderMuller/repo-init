@@ -9,6 +9,57 @@ Pre-`1.0.0` releases may introduce breaking changes in MINOR bumps; we surface t
 
 ## [Unreleased]
 
+### Changed
+
+- **README staleness sweep**: corrected post-0.3.0 counts and references.
+  Phase count `15 → 20`, reference count `14 → 18`, stub-tree count `8 → 12`
+  (now lists all 9 categories + shared + 2 test-framework variants).
+  Skill entry-point path `.ai/skills/repo-init/SKILL.md` → canonical
+  `resources/boost/skills/repo-init/SKILL.md`. Install/Update sections
+  describe boost-core's global-context auto-sync (active since 0.2.0)
+  instead of the removed `post-install-cmd` shell-out. `.mcp.json` flagged
+  Laravel-only (composer-plugin / rector-extension / phpstan-extension
+  skip it). Dropped the "v3 → v4 → v5 → v6 codex review rounds" internal
+  process note from the Design section.
+
+### Fixed
+
+- **Stale `php artisan package-boost:sync` refs scrubbed across active docs.**
+  `phases/bootstrap-laravel-project.md` step 9, `phases/upgrade-laravel-project.md`
+  composer-scripts merge + post-upgrade "Run sync" section, `references/composer-scripts.md`
+  `sync-ai` recipe, `checklists/post-upgrade-verification.md` smoke check —
+  all swapped to `vendor/bin/boost sync`. The artisan command was from the
+  predecessor `sandermuller/package-boost` (Laravel service provider);
+  `package-boost-php` is framework-agnostic and registers no artisan command.
+  Surfaced by real-world bootstrap dogfood. SPEC.md still references the
+  old command in historical context — preserved as a planning record.
+- **Audit ↔ bootstrap drift on `.mcp.json` for framework-agnostic
+  categories** (composer-plugin, php-package, phpstan-extension,
+  rector-extension). The shared `.mcp.json` stub ships a Laravel/testbench
+  MCP server config (`vendor/bin/testbench boost:mcp`) with no equivalent
+  for non-Laravel code. Fix in both directions: bootstrap phases for
+  these four categories now skip `.mcp.json` when copying from
+  `stubs/shared/`, and audit phases declare matching per-category
+  exclusions in their MISSING-files sections. Surfaced by real-world
+  audit against a tagged composer-plugin package post-0.3.0; bootstrap
+  side caught by codex review during self-evaluation (without it the
+  audit-only fix would have silently drifted from what bootstrap
+  actually produces).
+- **`boost.php` vs `boost.json` confusion in laravel-project sync docs**
+  (caught by codex review). The doc claimed boost-core auto-sync fires
+  on `composer install/update` "when `boost.php` is at the project root"
+  — but `laravel new --boost` generates `boost.json` (for the unrelated
+  `laravel/boost` package), NOT `boost.php`. `bootstrap-laravel-project.md`
+  step 9 + `upgrade-laravel-project.md` "Run boost-core sync" section now
+  clarify the distinction and point to `composer boost:install --no-interaction`
+  as the one-time setup if auto-sync is desired.
+- **`@php` prefix consistency** in `references/composer-scripts.md` +
+  `phases/upgrade-laravel-project.md`: `sync-ai` script now matches the
+  shipped stubs (`vendor/bin/boost sync`, no `@php` prefix). `vendor/bin/boost`
+  has its own PHP shebang; `@php` is redundant.
+
+## [0.3.0] - 2026-05-18
+
 ### Removed
 
 - **Dropped Laravel 11 support from default constraints** (BREAKING for new

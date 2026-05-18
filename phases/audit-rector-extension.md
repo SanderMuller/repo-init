@@ -15,7 +15,7 @@ Verify detection per `$REPO_INIT_HOME/references/detection-rules.md`: target has
 
 ## MISSING files
 
-**Shared:** same list as audit-laravel-package.md.
+**Shared:** same list as audit-laravel-package.md, MINUS `.mcp.json` (the shared `.mcp.json` stub ships a Laravel/testbench MCP server config with no equivalent for framework-agnostic rector extensions; don't flag MISSING).
 
 **Category-specific (rector-extension):**
 

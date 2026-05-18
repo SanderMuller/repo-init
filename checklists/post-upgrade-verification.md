@@ -33,7 +33,7 @@ Run after every upgrade phase. If anything is red, stop and report to the user b
 
 - [ ] `php artisan --version` runs.
 - [ ] `php artisan test --compact` returns 0 (or pre-existing failures).
-- [ ] `php artisan package-boost:sync` ran without error.
+- [ ] `vendor/bin/boost sync` ran without error (boost-core's standalone bin).
 
 ### `laravel-package`
 

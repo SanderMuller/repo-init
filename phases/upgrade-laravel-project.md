@@ -63,7 +63,7 @@ Same logic as upgrade-laravel-package.md — apply each file's mode from `$REPO_
 
 Per `references/composer-scripts.md`:
 
-- **`scripts`**: insert missing `phpstan`, `phpstan-simplified`, `format`, `rector`, `sync-ai`, `qa`. For `test`, `test-coverage`: laravel-project may already have them from `laravel new`; don't override. Insert `sync-ai` as `@php artisan package-boost:sync` (NOT testbench-routed for laravel-project).
+- **`scripts`**: insert missing `phpstan`, `phpstan-simplified`, `format`, `rector`, `sync-ai`, `qa`. For `test`, `test-coverage`: laravel-project may already have them from `laravel new`; don't override. Insert `sync-ai` as `vendor/bin/boost sync` (boost-core's standalone bin, pulled transitively via `sandermuller/package-boost-php`; framework-agnostic — no artisan command, no `@php` prefix needed).
 - **`scripts.dev`**: if absent, suggest adding the multi-process dev script (concurrent server + queue + pail + vite). This is laravel-project canonical. Show example, ask before inserting.
 - **`config.allow-plugins`**: insert `phpstan/extension-installer: true`, `pestphp/pest-plugin: true` (if pest), `php-http/discovery: true` (Laravel default).
 - **`config.sort-packages`**: set to `true`.
@@ -97,13 +97,13 @@ _ide_helper_models.php
 
 Dedupe — never add a duplicate.
 
-## Run package-boost sync
+## Run boost-core sync
 
 ```bash
-php artisan package-boost:sync
+vendor/bin/boost sync
 ```
 
-(artisan-routed for laravel-project, NOT testbench-routed.)
+(boost-core's standalone bin, pulled transitively via `sandermuller/package-boost-php`. Auto-runs on subsequent `composer install/update` only if `boost.php` exists at the project root — `laravel new --boost` generates `boost.json` for the unrelated `laravel/boost` package, NOT `boost.php`. Run `composer boost:install --no-interaction` once to generate `boost.php` if you want auto-sync; otherwise this command stays manual.)
 
 ## Verification
 

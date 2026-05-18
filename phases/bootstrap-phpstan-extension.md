@@ -32,7 +32,7 @@ Confirm derived `__NAMESPACE__` with the user once.
 
 **Skip per-file if:** the file exists at target path AND no literal placeholders remain.
 
-For each file under `$REPO_INIT_HOME/stubs/shared/`, copy to cwd. Substitute placeholders. **Use `phpunit.xml`, skip `tests/Pest.php`** (phpstan-extension uses PHPUnit per above).
+For each file under `$REPO_INIT_HOME/stubs/shared/`, copy to cwd. Substitute placeholders. **Use `phpunit.xml`, skip `tests/Pest.php`** (phpstan-extension uses PHPUnit per above). **Skip `.mcp.json`** — the shared stub ships a Laravel/testbench MCP server config with no equivalent for framework-agnostic phpstan extensions.
 
 ### 3. Copy phpstan-extension stubs
 

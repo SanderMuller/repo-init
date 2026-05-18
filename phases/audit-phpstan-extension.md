@@ -16,7 +16,7 @@ Verify detection per `$REPO_INIT_HOME/references/detection-rules.md`: target has
 
 ## MISSING files
 
-**Shared:** same list as audit-laravel-package.md but using `phpunit.xml` (never `tests/Pest.php`).
+**Shared:** same list as audit-laravel-package.md but using `phpunit.xml` (never `tests/Pest.php`), MINUS `.mcp.json` (the shared `.mcp.json` stub ships a Laravel/testbench MCP server config with no equivalent for framework-agnostic phpstan extensions; don't flag MISSING).
 
 **Category-specific (phpstan-extension):**
 
