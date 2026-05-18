@@ -1,10 +1,10 @@
 # `.gitattributes` managed-block contract
 
-repo-init writes its `export-ignore` entries INSIDE `sandermuller/package-boost`'s existing managed block, NOT in a separate block.
+repo-init writes its `export-ignore` entries INSIDE `sandermuller/package-boost-php`'s existing managed block, NOT in a separate block. (The sentinel name is `# >>> package-boost (managed) >>>` for historical backward compatibility — every existing repo has this exact sentinel, so the naming convention is locked. The OWNING package is now `package-boost-php`, which uses boost-core's `GitattributesManager` to write the block.)
 
-## What package-boost writes
+## What package-boost-php writes
 
-`package-boost:sync` maintains a block in the target's `.gitattributes`:
+`vendor/bin/boost sync` (via boost-core, pulled in transitively by package-boost-php) maintains a block in the target's `.gitattributes`:
 
 ```
 # >>> package-boost (managed) >>>

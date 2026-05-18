@@ -12,7 +12,7 @@ AI playbook + stub library for bootstrapping the canonical Sander / hihaho dev s
 Walks an AI agent (Claude Code, Cursor, GitHub Copilot, …) through **bootstrap**, **audit**, or **upgrade** of a PHP repo against a canonical baseline:
 
 - `pint.json`, `phpstan.neon.dist`, `phpstan-baseline.neon`, `rector.php` — code-quality tooling
-- `.editorconfig`, `.gitattributes` (with package-boost managed block), `.gitignore`
+- `.editorconfig`, `.gitattributes` (with the `# >>> package-boost (managed) >>>` block — sentinel name preserved for backward compat; the owning package is now `package-boost-php`), `.gitignore`
 - `.mcp.json` — laravel-boost MCP wiring
 - `.github/workflows/{phpstan,pint-check,rector-check,run-tests,update-changelog}.yml` + `dependabot.yml`
 - `tests/Pest.php` or `phpunit.xml` (vendor-driven default)
@@ -44,7 +44,7 @@ composer global update sandermuller/repo-init
 
 The `post-update-cmd` hook re-syncs the skill.
 
-## Repo categories supported (v1)
+## Repo categories supported
 
 | Category | Detection signal |
 |---|---|
@@ -54,8 +54,9 @@ The `post-update-cmd` hook re-syncs the skill.
 | `php-package` | `type: library`, framework-agnostic |
 | `phpstan-extension` | `type: phpstan-extension` |
 | `rector-extension` | `type: rector-extension` |
+| `composer-plugin` | `type: composer-plugin` |
 
-Each has its own bootstrap, audit, and upgrade phase file — 15 total.
+Each has its own bootstrap, audit, and upgrade phase file — 18 total. `composer-plugin` (added in 0.3.0) covers framework-agnostic Composer plugins (e.g. boost-core, package-boost-php) with sub-flags for command-provider / event-subscriber shapes.
 
 ## What's NOT in the package
 
@@ -100,12 +101,12 @@ Highlights:
 - 15 self-contained phase playbooks under [`phases/`](phases/).
 - 14 reference docs under [`references/`](references/) (incl. machine-readable [`per-category-deps.yml`](references/per-category-deps.yml)).
 - 5 checklists under [`checklists/`](checklists/).
-- 6 stub trees under [`stubs/`](stubs/) (shared + 5 categories).
+- 8 stub trees under [`stubs/`](stubs/) (shared + 7 categories: composer-plugin, filament-plugin, laravel-package, laravel-package-spatie, laravel-project, nova-tool, php-package, phpstan-extension, rector-extension).
 
 ## Dependencies
 
-- [`sandermuller/boost-core`](https://github.com/SanderMuller/boost-core) — AI tooling propagation (`boost sync`, with `--scope=user` for global installs).
-- `sandermuller/package-boost` — peer skill/guideline source the boost-core sync consumes.
+- [`sandermuller/package-boost-php`](https://github.com/SanderMuller/package-boost-php) — direct require; ships AI agent skills for PHP package authors.
+- [`sandermuller/boost-core`](https://github.com/SanderMuller/boost-core) — transitive via package-boost-php; Composer plugin engine for `vendor/bin/boost sync` and the `BoostAutoSync::run` callback used in `post-install-cmd` / `post-update-cmd`.
 
 Both pulled in automatically when you `composer global require sandermuller/repo-init`.
 

@@ -52,6 +52,9 @@ Same logic as upgrade-laravel-package.md — apply each file's mode from `$REPO_
 - **`illuminate/*` in `require`**: same — re-route to laravel-package.
 - **`composer.lock` committed**: prompt to `git rm --cached composer.lock`.
 - **`phpunit.xml` (no .dist)**: prompt rename.
+- **PHPUnit cache findings** (if `test-framework=phpunit`): apply `$REPO_INIT_HOME/references/phpunit-config.md` Upgrade-actions section — set `cacheDirectory=".cache/phpunit"`, `rm -rf .phpunit.cache`, `git rm -r --cached .phpunit.cache` if previously committed.
+- **CI path filter drift — `phpstan.yml` missing `composer.json` / `composer.lock`**: insert both lines under the `push.paths` and `pull_request.paths` blocks in `.github/workflows/phpstan.yml`. Match indentation of surrounding entries.
+- **`.gitattributes` missing `.ai/ export-ignore`**: insert `.ai/ export-ignore` line after `.agents/ export-ignore` inside the `# >>> package-boost (managed) >>>` block. Preserves alphabetical ordering.
 - **PHP floor `^8.2`**: prompt bump.
 - **Missing `validate-gitattributes` script**: insert it (via composer.json scripts merge above).
 - **`.lpv` warnings on `vendor/bin/lean-package-validator validate`**: each missing export-ignore line listed in the audit. Prompt user: add to `.lpv` AND to `.gitattributes` (inside the package-boost managed block).

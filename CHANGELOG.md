@@ -9,6 +9,154 @@ Pre-`1.0.0` releases may introduce breaking changes in MINOR bumps; we surface t
 
 ## [Unreleased]
 
+### Removed
+
+- **Dropped Laravel 11 support from default constraints** (BREAKING for new
+  bootstraps of Laravel-aware categories — existing repos untouched).
+  Root cause: `laravel/pao 1.0.5+` declares `conflict: laravel/framework <12.0.0`,
+  which broke the `prefer-lowest` CI matrix leg with `laravel: '11.*'`. Caught
+  by package-boost-laravel peer on first push of a downstream Laravel package.
+  Changes:
+  - 4 Laravel-aware run-tests.yml stubs: `prefer-lowest` matrix leg moved from
+    `{ laravel: '11.*', testbench: '9.*' }` to `{ laravel: '12.*', testbench: '10.*' }`.
+  - 7 stub composer.json + repo-init own composer.json:
+    `orchestra/testbench: ^9.0||^10.0||^11.0` → `^10.0||^11.0`.
+  - Default `illuminate/*` constraint: `^11.0||^12.0||^13.0` → `^12.0||^13.0`.
+    Updated in `references/{version-defaults,per-category-deps,canonical-repos}.md`,
+    `phases/{bootstrap-laravel-package,bootstrap-filament-plugin,bootstrap-nova-tool,audit-laravel-package}.md`,
+    and `resources/boost/skills/repo-init/SKILL.md`.
+  - `references/version-defaults.md` PHPUnit floor: `^11.0||^12.0` → `^12.0` (matches Laravel 12's shipped phpunit).
+  - Existing Laravel 11 repos audited by repo-init are NOT flagged — audit
+    doesn't second-guess the range (per per-category-deps.md). Only NEW
+    bootstraps get the bumped default.
+
+### Fixed
+
+- **`.gitattributes` managed block stubs missing `.ai/ export-ignore`** (codex
+  review surface via package-boost-laravel peer): added `.ai/ export-ignore`
+  to `stubs/{shared,laravel-package,laravel-package-spatie,filament-plugin,nova-tool}/_gitattributes`
+  inside the `# >>> package-boost (managed) >>>` block, right after
+  `.agents/ export-ignore` (alphabetical). Without this, `boost sync`-populated
+  dev skills under `.ai/` leak into the published Composer archive
+  (per `references/gitattributes-managed-block.md` line 11, the reference
+  already documented `.ai/` as part of the canonical block — stubs had drifted).
+  Matching audit rule added across all 5 audit phases; upgrade fix added
+  to all 5 upgrade phases (insert `.ai/ export-ignore` after `.agents/` line).
+- **CI workflow stub path-filter gaps** (codex review surface):
+  - `stubs/shared/.github/workflows/phpstan.yml`: added `composer.json` +
+    `composer.lock` to `push.paths` and `pull_request.paths`. Dep bumps
+    (PHPStan extension updates, framework version changes, autoloaded files)
+    no longer slip past static analysis without triggering a run.
+  - `stubs/{laravel-package,laravel-package-spatie,filament-plugin,nova-tool}/.github/workflows/run-tests.yml`:
+    added `testbench.yaml` + `workbench/**` to both path blocks. A typo in
+    testbench.yaml can no longer merge silently without a test run.
+    `laravel-project` left as-is (apps don't ship testbench.yaml/workbench).
+
+### Added
+
+- **`composer-plugin` is now a first-class category** (6 total). Previously
+  flagged out-of-scope per `references/detection-rules.md` with a "run
+  audit-php-package.md manually" workaround. Now ships:
+  - Decision-table row in `references/detection-rules.md`: `type: composer-plugin` → `composer-plugin`.
+  - Sub-flags: `command-provider` (plugin implements `Capable` + `CommandProvider`),
+    `event-subscriber` (`EventSubscriberInterface`), `boost-skill-provider`
+    (`resources/boost/skills/` present), `runtime-api`
+    (`composer-runtime-api` in require).
+  - `stubs/composer-plugin/`: composer.json (type: composer-plugin,
+    composer-plugin-api ^2.6 in require, composer/composer ^2.6 in
+    require-dev, extra.class, self-allow in config.allow-plugins) + four
+    `src/Plugin.{none,command-provider,event-subscriber,both}.php`
+    variants resolved per `plugin-shape` knob + `src/CommandProvider.php`
+    (copied only for command-provider/both shapes). Deterministic file
+    selection (no post-copy patching). Coordinated with `sandermuller/repo-new`'s
+    wizard implementation.
+  - `phases/bootstrap-composer-plugin.md`: greenfield wizard with
+    `plugin-shape` knob (command-provider / event-subscriber / both / none).
+  - `phases/audit-composer-plugin.md`: read-only category audit. Flags
+    missing `composer-plugin-api`, missing `extra.class`, `extra.class`
+    pointing at nonexistent class, `composer/composer` in `require`
+    instead of `require-dev`, command-provider commands extending wrong
+    parent (Symfony Command instead of Composer BaseCommand — the
+    BaseCommandAdapter pattern from `sandermuller/boost-core` is cited
+    as reference), self-allow missing from `config.allow-plugins`.
+  - `phases/upgrade-composer-plugin.md`: matching fixes.
+  - `references/per-category-deps.{md,yml}`: composer-plugin section with
+    shared-exclusions (drops `orchestra/testbench` and
+    `sandermuller/package-boost`).
+  - `resources/boost/skills/repo-init/SKILL.md`: 5→6 category table +
+    composer-plugin sub-flag notes.
+  - `references/detection-rules.md`: removed `composer-plugin` from
+    "Out-of-scope `type:` values".
+- **Audit verification protocol** for the MISSING dev-deps check.
+  `references/shared-dev-deps.md` gains a MANDATORY protocol section
+  requiring every bullet to get an explicit PRESENT/MISSING verdict
+  (not a skim). Real audits had missed `laravel/pao` because the agent
+  read the structure and assumed compliance. Each `## MISSING dev deps`
+  section in all 6 audit phases now cites the protocol upfront.
+- **CI path-filter audit/upgrade rule** across audit/upgrade phases.
+  Audit flags `phpstan.yml` missing `composer.json`/`composer.lock` in path
+  filters (all 5 categories). Audit also flags `run-tests.yml` missing
+  `testbench.yaml`/`workbench/**` (laravel-package only — covers the
+  spatie/filament/nova fall-through too). Upgrade fixes insert the missing
+  lines under matching indentation.
+- **PHPUnit cache audit/upgrade rule** across all 5 categories (`php-package`,
+  `laravel-package`, `laravel-project`, `phpstan-extension`, `rector-extension`).
+  New `references/phpunit-config.md` defines the canonical `phpunit.xml`
+  cache shape: `cacheDirectory=".cache/phpunit"` (so all tool caches live
+  under `.cache/`, single `.gitignore` entry). Audit flags `.phpunit.cache/`
+  at repo root, missing/wrong `cacheDirectory` attribute, and committed
+  `.phpunit.cache`. Upgrade fixes `cacheDirectory`, removes the leaked dir,
+  and `git rm -r --cached` if previously committed.
+
+### Changed
+
+- **Bumped `sandermuller/package-boost-php` from `^0.2.0` to `^0.3.0`**
+  in repo-init's own composer.json + all 7 stub composer.jsons. Pulls
+  `sandermuller/boost-core: ^0.3.1` transitively, which ships
+  `SanderMuller\BoostCore\Scripts\BoostAutoSync::run` — the Composer
+  script callback that replaces shell-out invocations in
+  `post-install-cmd` / `post-update-cmd`. Verified end-to-end:
+  `composer update` clean, script callback runs without error,
+  boost-core 0.3.1 + package-boost-php 0.3.0 both installed.
+- **Stubs migrated from `sandermuller/package-boost: ^0.15` to
+  `sandermuller/package-boost-php: ^0.3.0`** (rolled up the prior
+  `^0.2.0` migration into the same bump). All 7 stub composer.json files
+  (`php-package`, `laravel-package`, `laravel-package-spatie`, `filament-plugin`,
+  `nova-tool`, `rector-extension`, `phpstan-extension`) plus `references/shared-dev-deps.md`,
+  `references/per-category-deps.yml`, and all 6 audit + 4 upgrade phase bullets
+  renamed. `package-boost` (no -php suffix) was the testbench-based predecessor;
+  `package-boost-php` is the new umbrella that depends on boost-core and ships
+  the standalone `vendor/bin/boost` binary. **Without this**, scaffolded
+  targets would NOT have boost-core in their tree, and downstream tooling
+  (e.g. `sandermuller/repo-new`'s wizard) couldn't swap from
+  `vendor/bin/testbench package-boost:sync` to `vendor/bin/boost sync` —
+  the new bin didn't exist in fresh scaffolds. Caught by repo-new peer
+  during composer-plugin integration coordination. Bug was present in
+  repo-init 0.2.0+ stubs; only repo-init's own composer.json got the
+  migration earlier this session.
+- **Stubs composer scripts swap `vendor/bin/testbench package-boost:sync` →
+  `vendor/bin/boost sync`** for both `post-install-cmd` and `sync-ai`
+  entries across all 7 stub composer.json files. Other testbench commands
+  (`testbench package:purge-skeleton`, `package:discover`, `serve`,
+  `workbench:build`) are unchanged — those are legit testbench-runtime
+  invocations, not AI sync.
+- **Switched from direct `sandermuller/boost-core` require to transitive via
+  `sandermuller/package-boost-php: ^0.2.0`.** boost-core 0.2.0 ships
+  global-context auto-sync (POST_AUTOLOAD_DUMP under `composer global` writes
+  to `~/.{agent}/skills/{package}/`), `BOOST_SKIP_GITIGNORE=1` env opt-out,
+  and `BaseCommandAdapter` restoring the `composer boost:*` plugin path.
+  Removed repo-init's own `post-install-cmd` / `post-update-cmd` scripts —
+  end-user propagation is handled by boost-core's plugin; dogfooders run
+  `vendor/bin/boost sync --scope=user` manually.
+- **Skill moved to canonical package location**: `.ai/skills/repo-init/SKILL.md`
+  → `resources/boost/skills/repo-init/SKILL.md`. `resources/boost/skills/`
+  is what boost-core's `VendorScanner` reads; `.ai/skills/` is for
+  repo-local dev convention skills only.
+- **SKILL.md pre-flight step 3** updated: boost-core 0.2.0 auto-syncs on
+  `composer global require` / `composer global update`. The manual
+  `vendor/bin/boost sync --scope=user` is now a fallback, not the primary
+  path. "Updating repo-init" section updated similarly.
+
 ## [0.2.14] - 2026-05-17
 
 ### Changed

@@ -28,7 +28,7 @@ If the output contains "Could not find package" or any 401 / authentication erro
 - `name` (kebab-case) — optional per target-dir rule.
 - `description` — required.
 - `php` — default `8.3`.
-- `laravel` — default `^11.0||^12.0||^13.0`.
+- `laravel` — default `^12.0||^13.0`. (Laravel 11 support dropped in repo-init 0.3.0 — pao 1.x conflicts with Laravel <12.)
 - `nova` — default `^5.0`. v4 is also supported but the stubs use v5 patterns.
 - `test-framework` — default `pest`.
 - `author-name` / `author-email` — defaults from git config.

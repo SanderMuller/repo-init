@@ -24,7 +24,7 @@
         "laravel/pint": "^1.29",
         "mrpunyapal/rector-pest": "^0.2",
         "nunomaduro/collision": "^8.0",
-        "orchestra/testbench": "^9.0||^10.0||^11.0",
+        "orchestra/testbench": "^10.0||^11.0",
         "pestphp/pest": "^4.0",
         "pestphp/pest-plugin-arch": "^4.0",
         "phpstan/extension-installer": "^1.4",
@@ -34,7 +34,7 @@
         "phpstan/phpstan-strict-rules": "^2.0",
         "rector/rector": "^2.4",
         "rector/type-perfect": "^2.1",
-        "sandermuller/package-boost": "^0.15",
+        "sandermuller/package-boost-php": "^0.3.0",
         "spaze/phpstan-disallowed-calls": "^4.10",
         "stolt/lean-package-validator": "^5.7",
         "symplify/phpstan-extensions": "^12.0",
@@ -53,7 +53,7 @@
     },
     "scripts": {
         "post-install-cmd": [
-            "if [ \"$COMPOSER_DEV_MODE\" = \"1\" ]; then vendor/bin/testbench package-boost:sync 2>/dev/null || true; fi"
+            "if [ \"$COMPOSER_DEV_MODE\" = \"1\" ]; then vendor/bin/boost sync 2>/dev/null || true; fi"
         ],
         "phpstan": "vendor/bin/phpstan analyse --memory-limit=2G",
         "phpstan-simplified": "vendor/bin/phpstan analyse --memory-limit=2G --error-format symplify",
@@ -62,7 +62,7 @@
         "rector": "vendor/bin/rector process",
         "test": "vendor/bin/__TEST_RUNNER__",
         "test-coverage": "vendor/bin/__TEST_RUNNER__ __TEST_COVERAGE_FLAG__",
-        "sync-ai": "vendor/bin/testbench package-boost:sync",
+        "sync-ai": "vendor/bin/boost sync",
         "validate-gitattributes": "vendor/bin/lean-package-validator validate",
         "qa": [
             "@rector",

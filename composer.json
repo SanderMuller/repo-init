@@ -9,8 +9,7 @@
         "laravel",
         "php-package",
         "phpstan-extension",
-        "rector-extension",
-        "package-boost"
+        "rector-extension"
     ],
     "homepage": "https://github.com/sandermuller/repo-init",
     "license": "MIT",
@@ -23,20 +22,26 @@
     ],
     "require": {
         "php": "^8.3",
-        "sandermuller/package-boost": "^0.15",
-        "orchestra/testbench": "^9.0||^10.0||^11.0"
+        "sandermuller/package-boost-php": "^0.3.1",
+        "orchestra/testbench": "^10.0||^11.0"
+    },
+    "require-dev": {
+        "laravel/pao": "^1.0"
     },
     "scripts": {
         "post-install-cmd": [
-            "@php bin/post-install-sync.php"
+            "SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::runWithSummary"
         ],
         "post-update-cmd": [
-            "@php bin/post-install-sync.php"
+            "SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::runWithSummary"
         ]
     },
-    "bin": [
-        "bin/post-install-sync.php"
-    ],
     "minimum-stability": "stable",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "config": {
+        "allow-plugins": {
+            "sandermuller/boost-core": true,
+            "sandermuller/package-boost-php": true
+        }
+    }
 }

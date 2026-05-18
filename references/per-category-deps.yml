@@ -20,7 +20,7 @@ shared:
       - tomasvotruba/cognitive-complexity
       - tomasvotruba/type-coverage
       - nunomaduro/collision
-      - sandermuller/package-boost
+      - sandermuller/package-boost-php
       - orchestra/testbench
   test-framework:
     pest:
@@ -133,6 +133,30 @@ categories:
         require-dev: []
     shared-exclusions:
       - rector/rector  # because added to require
+
+  composer-plugin:
+    mandatory:
+      require:
+        - "composer-plugin-api: ^2.6"
+      require-dev:
+        - "composer/composer: ^2.6"
+    optional:
+      runtime-api:
+        default-inference: plugin uses Composer\InstalledVersions in its own source
+        require:
+          - "composer-runtime-api: ^2.2"
+        require-dev: []
+    shared-exclusions:
+      - orchestra/testbench  # plugins don't fit testbench
+      - sandermuller/package-boost-php  # composer-plugin packages use boost-core directly; package-boost-php is for package authors
+    sub-flags:
+      # Detected from src/, not from composer.json keys. Audit derives.
+      command-provider:
+        detection: extra.class implements Capable AND getCapabilities() returns [CommandProvider::class => ...]
+      event-subscriber:
+        detection: extra.class implements EventSubscriberInterface
+      boost-skill-provider:
+        detection: resources/boost/skills/ dir exists
 
   # Phase 8 LOW: bootstrap-only categories. audit + upgrade fall through to
   # laravel-package phases (these are structurally laravel-packages with

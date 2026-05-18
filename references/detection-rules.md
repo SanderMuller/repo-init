@@ -10,8 +10,9 @@ A flat decision table the agent runs against the target repo's `composer.json`. 
 | 2 | `type: phpstan-extension` OR `extra.phpstan.includes` exists | `phpstan-extension` |
 | 3 | `type: rector-extension` OR `extra.rector.includes` exists | `rector-extension` |
 | 4 | (`type: library` OR missing) AND any of: `extra.laravel.providers` set, `illuminate/*` in `require`, `socialiteproviders/manager` in `require`, `spatie/laravel-package-tools` in `require` | `laravel-package` |
-| 5 | `type: library` AND none of the above | `php-package` |
-| 6 | None match | `unknown` — ask user |
+| 5 | `type: composer-plugin` | `composer-plugin` |
+| 6 | `type: library` AND none of the above | `php-package` |
+| 7 | None match | `unknown` — ask user |
 
 ## Sub-flags (informational; may modify chosen phase)
 
@@ -23,12 +24,14 @@ After the category is decided, also record:
 - **`filament-plugin`** — `filament/filament` in `require` OR `extra.filament` set → route bootstrap to `phases/bootstrap-filament-plugin.md` instead of generic laravel-package bootstrap. Audit / upgrade fall through to laravel-package phases.
 - **`nova-tool`** — `laravel/nova` in `require` → route bootstrap to `phases/bootstrap-nova-tool.md`. Audit / upgrade fall through to laravel-package phases.
 - **`laravel-aware-extension`** (phpstan-extension / rector-extension only) — any `illuminate/*` in `require` → opt-in for Laravel-aware sub-recipe (adds `larastan/larastan` for phpstan extensions, `driftingly/rector-laravel` for rector extensions).
+- **`command-provider`** (composer-plugin only) — plugin class `implements Capable` AND `getCapabilities()` returns `[Composer\Plugin\Capability\CommandProvider::class => ...]` → plugin ships `composer <name>` commands.
+- **`event-subscriber`** (composer-plugin only) — plugin class `implements EventSubscriberInterface` AND defines `getSubscribedEvents()` → plugin hooks Composer script events (POST_AUTOLOAD_DUMP, POST_PACKAGE_INSTALL, etc.).
+- **`boost-skill-provider`** (composer-plugin only) — `resources/boost/skills/` dir present → plugin ships AI agent skills consumable via boost-core's discovery.
 
 ## Out-of-scope `type:` values
 
-If `composer.json` `type:` is one of the following, the repo is out of scope for repo-init's five-category model:
+If `composer.json` `type:` is one of the following, the repo is out of scope for repo-init's six-category model:
 
-- **`composer-plugin`** — composer plugins use composer-internal APIs and don't fit testbench-based testing. Conceptually closest to `php-package` but require `composer/composer` in `require-dev` + `extra.class` autoload entry. No repo-init stub variant; suggest the user run `audit-php-package.md` manually and skip testbench-related checks.
 - **`metapackage`** — pure dependency aggregator; no source/tests/CI.
 - **`drupal-*`, `wordpress-*`, `magento-*`** — out of scope, not PHP-package-shaped.
 

@@ -55,8 +55,8 @@ Check each expected path. If absent, mark MISSING and add to the report.
 
 Read `composer.json`. For each dep in `$REPO_INIT_HOME/references/per-category-deps.md#laravel-package` MANDATORY "Adds to `require`":
 
-- [ ] `illuminate/contracts: ^11.0||^12.0||^13.0` (or narrower)
-- [ ] `illuminate/support: ^11.0||^12.0||^13.0`
+- [ ] `illuminate/contracts: ^12.0||^13.0` (or narrower; Laravel 11 dropped in repo-init 0.3.0 due to pao 1.x conflict)
+- [ ] `illuminate/support: ^12.0||^13.0`
 
 For each confirmed opt-in row:
 
@@ -65,6 +65,8 @@ For each confirmed opt-in row:
 Skip rows where opt-in was declined.
 
 ## MISSING dev deps (must be in `require-dev`)
+
+**Follow `$REPO_INIT_HOME/references/shared-dev-deps.md#audit-verification-protocol-mandatory`.** Every bullet below gets an explicit PRESENT/MISSING verdict. Skimming is the failure mode.
 
 Apply per-category exclusions (`$REPO_INIT_HOME/references/shared-dev-deps.md#per-category-exclusions`) — laravel-package has none.
 
@@ -83,7 +85,7 @@ From `$REPO_INIT_HOME/references/shared-dev-deps.md` (universal):
 - [ ] `tomasvotruba/cognitive-complexity`
 - [ ] `tomasvotruba/type-coverage`
 - [ ] `nunomaduro/collision`
-- [ ] `sandermuller/package-boost`
+- [ ] `sandermuller/package-boost-php`
 - [ ] `orchestra/testbench`
 
 Test-framework split:
@@ -113,6 +115,10 @@ For each file present, look up its merge mode in `$REPO_INIT_HOME/references/upg
 
 - [ ] **`composer.lock` committed in a library**: laravel-package is a library; lockfiles should not be committed (per `references/version-defaults.md` + Composer convention). Flag NON-CANONICAL with the suggestion "`git rm --cached composer.lock` + add to .gitignore".
 - [ ] **`phpunit.xml.dist` committed (with `.dist` suffix)**: canonical baseline as of repo-init 0.2.4 ships `phpunit.xml` (no `.dist` suffix). Flag NON-CANONICAL with the suggestion "`git mv phpunit.xml.dist phpunit.xml` + update CI path-filters + .gitignore + stub composer scripts that reference it".
+- [ ] **PHPUnit cache rules** (if `test-framework=phpunit`): apply `$REPO_INIT_HOME/references/phpunit-config.md` Audit-rule section — flag `.phpunit.cache/` at root, missing/wrong `cacheDirectory` attribute in `phpunit.xml`, committed `.phpunit.cache`.
+- [ ] **CI path filter drift — `phpstan.yml`** (MEDIUM severity): grep `.github/workflows/phpstan.yml` `paths:` blocks under `push` and `pull_request`; both MUST include `composer.json` AND `composer.lock`. Flag NON-CANONICAL if either missing.
+- [ ] **CI path filter drift — `run-tests.yml`** (MEDIUM severity): grep `.github/workflows/run-tests.yml` `paths:` blocks under `push` and `pull_request`; both MUST include `testbench.yaml` AND `workbench/**` (testbench.yaml typos can silently merge without test runs). Flag NON-CANONICAL if either missing.
+- [ ] **`.gitattributes` managed block missing `.ai/ export-ignore`** (MEDIUM severity): per `$REPO_INIT_HOME/references/gitattributes-managed-block.md`, `.ai/` is the boost SOURCE/authoring dir and MUST be in the managed block. Without it, `boost sync`-populated dev skills leak into the published Composer archive. Flag NON-CANONICAL.
 - [ ] **`phpstan/phpstan` in `require-dev` alongside `larastan/larastan`**: §5.3 exclusivity violation. Flag NON-CANONICAL.
 - [ ] **Two managed blocks in `.gitattributes`** (a `# >>> package-boost (managed) >>>` block AND a `# >>> repo-init (managed) >>>` block): suboptimal per `references/gitattributes-managed-block.md` contract; everything should be inside the package-boost block.
 - [ ] **PHP floor `^8.2` (or below) in `require.php`**: repo-init floors at `^8.3`. Suggest bump.
@@ -147,7 +153,7 @@ MISSING (HIGH):
     - rector/type-perfect
     - tomasvotruba/cognitive-complexity
     - spaze/phpstan-disallowed-calls
-    - sandermuller/package-boost
+    - sandermuller/package-boost-php
 
 OUTDATED (MEDIUM):
   Files (2):

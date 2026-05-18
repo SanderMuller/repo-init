@@ -1,0 +1,122 @@
+# Audit: composer-plugin
+
+Read-only check of an existing `composer-plugin` repo (framework-agnostic Composer plugin) against the canonical baseline.
+
+## Pre-flight
+
+Run `$REPO_INIT_HOME/checklists/preflight.md`.
+
+Verify detection per `$REPO_INIT_HOME/references/detection-rules.md`: target has `type: composer-plugin`. If `type:` is `library` or absent, this is `php-package` — re-route to `audit-php-package.md`.
+
+## Opt-in confirmation
+
+Detect sub-flags from the plugin's `src/`:
+
+- **`command-provider`** — auto-`y` if the class named in `extra.class` implements `Composer\Plugin\Capable` AND `getCapabilities()` returns `CommandProvider::class`. Otherwise auto-`N`.
+- **`event-subscriber`** — auto-`y` if the class named in `extra.class` implements `Composer\EventDispatcher\EventSubscriberInterface`. Otherwise auto-`N`.
+- **`boost-skill-provider`** — auto-`y` if `resources/boost/skills/` dir exists. Otherwise auto-`N`.
+- **`runtime-api`** — auto-`y` if `composer-runtime-api` is already in `require` OR source uses `Composer\InstalledVersions`. Otherwise auto-`N`.
+
+Detect `test-framework` from existing deps (`pestphp/pest` vs `phpunit/phpunit`).
+
+## MISSING files
+
+**Shared:**
+
+- [ ] `.editorconfig`
+- [ ] `.gitattributes` (with package-boost managed block)
+- [ ] `.gitignore`
+- [ ] `.mcp.json`
+- [ ] `pint.json`
+- [ ] `phpstan.neon.dist`
+- [ ] `phpstan-baseline.neon`
+- [ ] `rector.php`
+- [ ] `phpunit.xml` (if test-framework=phpunit) OR `tests/Pest.php` (if pest)
+- [ ] 4 shared workflows + `run-tests.yml` (PHP-only matrix, no Laravel axis)
+- [ ] `.github/dependabot.yml`
+
+**Category-specific (composer-plugin):**
+
+- [ ] `composer.json` with `type: composer-plugin`
+- [ ] `composer.json` `extra.class` set to a FQCN
+- [ ] `src/Plugin.php` (or whatever `extra.class` resolves to) — implements `Composer\Plugin\PluginInterface`
+
+## MISSING runtime deps (must be in `require`)
+
+- [ ] `composer-plugin-api: ^2.6` (the contract version the plugin targets). If absent, plugin won't be recognized as a composer plugin by Composer 2.6+. Flag MISSING.
+
+If sub-flag `runtime-api` is `y`:
+
+- [ ] `composer-runtime-api: ^2.2`
+
+## MISSING dev deps (must be in `require-dev`)
+
+**Follow `$REPO_INIT_HOME/references/shared-dev-deps.md#audit-verification-protocol-mandatory`.** Every bullet below gets an explicit PRESENT/MISSING verdict. Skimming is the failure mode.
+
+Apply per-category exclusions for `composer-plugin`: DROP `orchestra/testbench` (plugins don't fit testbench) and DROP `sandermuller/package-boost-php` (plugins use boost-core directly if at all; package-boost-php is for package authors).
+
+From `$REPO_INIT_HOME/references/per-category-deps.md#composer-plugin` MANDATORY:
+
+- [ ] `composer/composer: ^2.6` (for BaseCommand parent class, type hints, test fixtures — dev-only; never promote to `require`)
+
+Plus shared (minus exclusions above):
+
+- [ ] `laravel/pao`
+- [ ] `laravel/pint`
+- [ ] `phpstan/extension-installer`
+- [ ] `phpstan/phpstan` (NEVER also `larastan/larastan` — composer-plugin is framework-agnostic)
+- [ ] `phpstan/phpstan-strict-rules`
+- [ ] `phpstan/phpstan-deprecation-rules`
+- [ ] `phpstan/phpstan-phpunit`
+- [ ] `rector/rector`
+- [ ] `rector/type-perfect`
+- [ ] `spaze/phpstan-disallowed-calls`
+- [ ] `symplify/phpstan-extensions`
+- [ ] `tomasvotruba/cognitive-complexity`
+- [ ] `tomasvotruba/type-coverage`
+- [ ] `nunomaduro/collision`
+- [ ] `stolt/lean-package-validator`
+
+Test-framework split:
+
+- pest: `pestphp/pest`, `pestphp/pest-plugin-arch`, `mrpunyapal/rector-pest`. (NOT `pestphp/pest-plugin-laravel` — this is framework-agnostic.)
+- phpunit: `phpunit/phpunit`.
+
+## OUTDATED files (per merge mode)
+
+Same logic as audit-php-package.md, with composer-plugin stub paths from `$REPO_INIT_HOME/stubs/composer-plugin/`. Apply each file's mode from `$REPO_INIT_HOME/references/upgrade-merge-modes.md`.
+
+## NON-CANONICAL findings
+
+- [ ] `composer.lock` committed (libraries should not commit lockfiles).
+- [ ] **`extra.class` missing** (HIGH severity): Composer rejects the plugin at install time with "no class found". Flag NON-CANONICAL.
+- [ ] **`extra.class` points to a class that does NOT exist in autoload** (HIGH severity): grep PSR-4 mapping + verify file. If class missing or namespace mismatched, plugin won't load.
+- [ ] **`extra.class` resolves to a class that does NOT implement `PluginInterface`** (HIGH severity): Composer rejects at activation.
+- [ ] **`composer/composer` in `require` instead of `require-dev`** (HIGH severity): pulls Composer at runtime into consumers (~5 MB bloat + transitive). Flag NON-CANONICAL; move to require-dev.
+- [ ] **Self-allow missing in `config.allow-plugins`** (MEDIUM severity): if the plugin has itself in `require-dev` for dogfooding (common pattern), or if any other composer-plugin is in deps, those entries MUST be in `config.allow-plugins`. Otherwise `composer install` here errors with "blocked by allow-plugins config". Flag missing entries.
+- [ ] **`command-provider` shape declared but commands extend wrong parent** (HIGH severity, only when sub-flag `command-provider=y`): Composer's CommandProvider capability validates instances are `Composer\Command\BaseCommand`. If commands extend plain `Symfony\Component\Console\Command\Command`, plugin throws "invalid value, we expected an array of Composer\Command\BaseCommand objects" at install. Verify: `getCommands()` returns BaseCommand instances (or adapter-wrapped instances).
+- [ ] **`event-subscriber` shape declared but `getSubscribedEvents()` returns empty array** (LOW severity, only when sub-flag `event-subscriber=y`): plugin will load silently but hook nothing. Flag as suspicious — confirm intent.
+- [ ] **PHPUnit cache rules** (if `test-framework=phpunit`): apply `$REPO_INIT_HOME/references/phpunit-config.md` Audit-rule section — flag `.phpunit.cache/` at root, missing/wrong `cacheDirectory` attribute in `phpunit.xml`, committed `.phpunit.cache`.
+- [ ] **CI path filter drift — `phpstan.yml`** (MEDIUM severity): grep `.github/workflows/phpstan.yml` `paths:` blocks under `push` and `pull_request`; both MUST include `composer.json` AND `composer.lock`. Flag NON-CANONICAL if either missing.
+- [ ] **`.gitattributes` managed block missing `.ai/ export-ignore`** (MEDIUM severity): per `$REPO_INIT_HOME/references/gitattributes-managed-block.md`, `.ai/` is the boost SOURCE/authoring dir and MUST be in the managed block. Without it, `boost sync`-populated dev skills leak into the published Composer archive. Flag NON-CANONICAL.
+- [ ] `larastan/larastan` in `require-dev` for a composer-plugin — Laravel-aware deps don't belong in a framework-agnostic plugin. Flag and ask: "does this plugin actually need Laravel runtime? Most composer plugins don't."
+- [ ] `illuminate/*` in `require` — same. composer-plugin is framework-agnostic by definition; flag as misalignment.
+- [ ] `orchestra/testbench` in `require-dev` — composer-plugin category excludes testbench (no Laravel runtime to bootstrap). Flag NON-CANONICAL; suggest removal.
+- [ ] PHP floor `^8.2` (or below).
+- [ ] Missing `validate-gitattributes` script in `composer.json` — composer-plugin should have it (same lean-archive reasoning as php-package).
+- [ ] `.lpv` exists but no `vendor/bin/lean-package-validator validate` clean.
+- [ ] **`.gitattributes` package-boost managed block MISSING** (HIGH severity): without it, `composer archive` ships local-only files. Flag NON-CANONICAL.
+- [ ] **README badge row MISSING or incomplete** (HIGH severity): the first 30 lines of `README.md` MUST contain the canonical badge set — Packagist version, run-tests CI status, Total Downloads, License — each on its own line, all using `?style=flat-square` on shields.io URLs. Any missing → flag NON-CANONICAL with the specific badge(s) absent.
+
+## EXTRA findings
+
+Informational. Example: plugin ships its own `bin/<binary>` for standalone invocation (e.g. `sandermuller/boost-core` ships `bin/boost`) — legitimate when the plugin also offers a standalone CLI surface. Don't flag. If present alongside `command-provider=y`, note: the standalone bin and the plugin command path should share a CommandRegistry to avoid drift (see boost-core BaseCommandAdapter pattern).
+
+## Report
+
+Same format as audit-php-package.md. Conversation-scoped.
+
+## What's next
+
+- Apply fixes: `phases/upgrade-composer-plugin.md`.
+- Defer / done: stop.

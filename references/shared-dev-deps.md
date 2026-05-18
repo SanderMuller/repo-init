@@ -18,7 +18,7 @@ symplify/phpstan-extensions
 tomasvotruba/cognitive-complexity
 tomasvotruba/type-coverage
 nunomaduro/collision
-sandermuller/package-boost
+sandermuller/package-boost-php
 orchestra/testbench
 ```
 
@@ -39,8 +39,8 @@ Test-framework split (`test-framework=pest|phpunit`):
 - `tomasvotruba/cognitive-complexity` — complexity rules.
 - `tomasvotruba/type-coverage` — enforces 100% type coverage.
 - `nunomaduro/collision` — better error output in CLI.
-- `sandermuller/package-boost` — AI tooling propagation (`.ai/skills/` → agent dirs).
-- `orchestra/testbench` — required by `package-boost:sync` invocation; used by all package categories.
+- `sandermuller/package-boost-php` — AI tooling propagation for package authors (`.ai/skills/` → agent dirs via boost-core's `vendor/bin/boost sync`). Transitively pulls `sandermuller/boost-core` (the Composer plugin engine). Replaces the older testbench-based `sandermuller/package-boost` ^0.15.
+- `orchestra/testbench` — package-category test bootstrap (no longer required for AI sync; boost-core's standalone bin handles that).
 
 ## Per-category exclusions
 
@@ -58,3 +58,16 @@ Note: the shared list above does not directly include bare `phpstan/phpstan`. It
 ## Audit honours exclusions
 
 A `rector-extension` repo with `rector/rector` in `require` and absent from `require-dev` is **correct**, not MISSING. Same for `phpstan/phpstan` in `phpstan-extension`.
+
+## Audit verification protocol (MANDATORY)
+
+**The agent MUST check each package line-by-line, not skim.** Real audits have missed `laravel/pao` (and similar) because the agent read the section structure and assumed compliance instead of verifying each entry.
+
+Required protocol for the `## MISSING dev deps` section of every audit phase:
+
+1. **Read the target's `composer.json` `require-dev` block once.** Extract package names into a set.
+2. **For each bullet in the canonical list** (shared + category-mandatory + test-framework, minus per-category exclusions): explicitly state "PRESENT" or "MISSING" against the extracted set. Don't aggregate ("looks fine") — call each one out by name.
+3. **Print a verification line** in the audit report listing every MISSING entry. If none are missing, print "all required dev-deps present (N/N checked)" with the count.
+4. **Do NOT trust visual scanning.** If the canonical list has 16 entries and you only mentioned 8 in your response, you skipped half. The check is mechanical: 1 bullet = 1 explicit verdict.
+
+This protocol applies regardless of category. Per-category exclusions (above) trim the canonical list BEFORE this check runs — once trimmed, every remaining bullet gets verified.

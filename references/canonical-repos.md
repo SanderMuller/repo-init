@@ -8,7 +8,7 @@ One per category. Each stub in `stubs/` was generated from the corresponding can
 
 What to look at:
 
-- `composer.json` — `extra.laravel.providers`, the multi-version `illuminate/*` range `^11.0||^12.0||^13.0`, the `qa` script chain.
+- `composer.json` — `extra.laravel.providers`, the multi-version `illuminate/*` range `^12.0||^13.0` (Laravel 11 dropped in repo-init 0.3.0), the `qa` script chain.
 - `testbench.yaml` — providers list, dev `APP_KEY`, array stores.
 - `workbench/app/Providers/WorkbenchServiceProvider.php` — the bootstrap helper for Testbench-served preview.
 - `.github/workflows/run-tests.yml` — the matrix structure (PHP × Laravel × stability × redis-client).

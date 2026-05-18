@@ -14,7 +14,7 @@ cd "$REPO_ROOT"
 
 EXIT_CODE=0
 
-CATEGORIES=(laravel-project laravel-package php-package phpstan-extension rector-extension)
+CATEGORIES=(laravel-project laravel-package php-package phpstan-extension rector-extension composer-plugin)
 MODES=(bootstrap audit upgrade)
 
 # Phase 8 LOW categories: bootstrap-only in v0.1 (audit/upgrade fall through to laravel-package phases).
@@ -82,7 +82,7 @@ done
 # phase files, and SKILL.md must document the routing so the agent doesn't
 # guess.
 YML="references/per-category-deps.yml"
-SKILL=".ai/skills/repo-init/SKILL.md"
+SKILL="resources/boost/skills/repo-init/SKILL.md"
 
 if [[ ! -f "$YML" ]]; then
     echo "FAIL: $YML missing — can't verify Phase 8 fall-through contract."

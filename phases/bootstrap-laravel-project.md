@@ -84,7 +84,7 @@ Build the list from `$REPO_INIT_HOME/references/per-category-deps.md#laravel-pro
 - `laravel/pail`
 - `laravel/tinker` (Laravel may already include this — check)
 - `driftingly/rector-laravel`
-- All shared deps from `$REPO_INIT_HOME/references/shared-dev-deps.md` minus anything Laravel installer already pulled. Read the freshly-generated `composer.json` to determine what's already there. Common already-installed by `laravel new`: `laravel/pint`, `nunomaduro/collision`, `phpunit/phpunit` (when test-framework=phpunit). Anything else from the shared list needs explicit `composer require --dev`: `laravel/pao`, `phpstan/extension-installer`, `phpstan/phpstan-strict-rules`, `phpstan/phpstan-deprecation-rules`, `phpstan/phpstan-phpunit`, `rector/rector`, `rector/type-perfect`, `spaze/phpstan-disallowed-calls`, `symplify/phpstan-extensions`, `tomasvotruba/cognitive-complexity`, `tomasvotruba/type-coverage`, `sandermuller/package-boost`.
+- All shared deps from `$REPO_INIT_HOME/references/shared-dev-deps.md` minus anything Laravel installer already pulled. Read the freshly-generated `composer.json` to determine what's already there. Common already-installed by `laravel new`: `laravel/pint`, `nunomaduro/collision`, `phpunit/phpunit` (when test-framework=phpunit). Anything else from the shared list needs explicit `composer require --dev`: `laravel/pao`, `phpstan/extension-installer`, `phpstan/phpstan-strict-rules`, `phpstan/phpstan-deprecation-rules`, `phpstan/phpstan-phpunit`, `rector/rector`, `rector/type-perfect`, `spaze/phpstan-disallowed-calls`, `symplify/phpstan-extensions`, `tomasvotruba/cognitive-complexity`, `tomasvotruba/type-coverage`, `sandermuller/package-boost-php`.
 
 **OPTIONAL (only when opted in):**
 

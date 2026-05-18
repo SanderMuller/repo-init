@@ -61,6 +61,9 @@ Same logic as upgrade-laravel-package.md — apply each file's mode from `$REPO_
 - **`composer.lock` committed**: prompt to remove from git tracking.
 - **`tests/Rules/stubs/` exists but not in classmap**: add to classmap (via merge-keys patch above).
 - **PHP floor `^8.2`**: prompt bump.
+- **PHPUnit cache findings** (phpstan-extension always uses phpunit): apply `$REPO_INIT_HOME/references/phpunit-config.md` Upgrade-actions section — set `cacheDirectory=".cache/phpunit"`, `rm -rf .phpunit.cache`, `git rm -r --cached .phpunit.cache` if previously committed.
+- **CI path filter drift — `phpstan.yml` missing `composer.json` / `composer.lock`**: insert both lines under the `push.paths` and `pull_request.paths` blocks in `.github/workflows/phpstan.yml`.
+- **`.gitattributes` missing `.ai/ export-ignore`**: insert `.ai/ export-ignore` line after `.agents/ export-ignore` inside the `# >>> package-boost (managed) >>>` block.
 
 ## Run package-boost sync
 

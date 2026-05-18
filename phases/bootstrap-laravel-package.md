@@ -16,7 +16,7 @@ Ask the user up-front for any value not already known. Skill (`SKILL.md` "Knobs 
 - `name` (kebab-case) — optional per target-dir rule.
 - `description` — required, one-line summary.
 - `php` — default `8.3`. Accepted: `8.3`, `8.4`, `8.5`. Reject `8.2`.
-- `laravel` — default `^11.0||^12.0||^13.0`. Other options: `^12.0||^13.0`, `^13.0`.
+- `laravel` — default `^12.0||^13.0`. Other options: `^13.0`. (Laravel 11 support dropped in repo-init 0.3.0 because `laravel/pao` 1.x conflicts with Laravel <12.)
 - `test-framework` — default `pest` for `sandermuller`, `phpunit` for `hihaho`.
 - `author-name` / `author-email` — defaults from `git config user.name` / `git config user.email`.
 - `variant` — `sander` (default) or `spatie`. Auto-set to `spatie` if vendor is `hihaho`. If `spatie`, the stub source is `$REPO_INIT_HOME/stubs/laravel-package-spatie/` instead of `$REPO_INIT_HOME/stubs/laravel-package/`.

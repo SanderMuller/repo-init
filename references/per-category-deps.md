@@ -13,6 +13,7 @@ What each category adds on top of the shared list (`shared-dev-deps.md`). Split 
 | `php-package` | `phpstan/phpstan`, `stolt/lean-package-validator` | (no `illuminate/*`) |
 | `phpstan-extension` | (none beyond shared, minus `phpstan/phpstan` per shared exclusion) | `phpstan/phpstan: ^2` |
 | `rector-extension` | (none beyond shared, minus `rector/rector` per §5.1.1) | `rector/rector: ^2`, `symplify/rule-doc-generator-contracts: ^11.2` |
+| `composer-plugin` | `composer/composer: ^2.6` | `composer-plugin-api: ^2.6` (and optionally `composer-runtime-api: ^2.2`) |
 
 `laravel-package` `require` is intentionally minimal — `illuminate/contracts` + `illuminate/support`. Phase file tells the agent to extend per feature (add `illuminate/console`, `illuminate/queue`, `illuminate/redis`, etc. as the package uses them).
 
@@ -61,4 +62,16 @@ Adds three packages to `require-dev`. `symplify/phpstan-rules` is bundled here b
 
 ### `laravel-package` runtime range
 
-`illuminate/*` constraint defaults to `^11.0||^12.0||^13.0` for new packages. Phase file asks the user if they want to restrict (e.g. `^13.0` only). Existing packages keep whatever they had — audit doesn't second-guess the range.
+`illuminate/*` constraint defaults to `^12.0||^13.0` for new packages. Phase file asks the user if they want to restrict (e.g. `^13.0` only). Existing packages keep whatever they had — audit doesn't second-guess the range. Laravel 11 was dropped from the default in repo-init 0.3.0 because `laravel/pao` 1.0.5+ conflicts with `laravel/framework: <12.0.0`.
+
+### `composer-plugin`
+
+Framework-agnostic plugins that hook Composer's lifecycle. Distinguishing characteristics:
+
+- **`require`**: `composer-plugin-api: ^2.6` is the contract version. Plugins targeting Composer 2.6+ APIs use this floor. Optionally also `composer-runtime-api: ^2.2` if the plugin uses `Composer\InstalledVersions` from inside the running app (rare for plugins; common for plugins that ship runtime helpers).
+- **`require-dev`**: `composer/composer: ^2.6` for type hints, test fixtures, and `Composer\Command\BaseCommand` parent classes. This is dev-only — end users have Composer installed; pulling it into runtime bloats vendor by ~5 MB.
+- **`extra.class`**: MUST be set to a FQCN implementing `Composer\Plugin\PluginInterface`. Audit verifies the class exists and implements the interface.
+- **`config.allow-plugins`**: if the plugin declares itself in its own composer.json's `require-dev` (e.g. for dogfooding), the entry SHOULD allow-list itself. Audit flags if any required composer-plugin dependency is NOT in allow-plugins (will fail end-user install with "blocked" error).
+- **Per-category exclusions from shared dev deps**: drop `orchestra/testbench` (testbench is for testing Laravel packages, not Composer plugins); drop `larastan/larastan` (no Laravel runtime); drop `pestphp/pest-plugin-laravel` (no Laravel runtime). The rest of the shared list applies as-is.
+- **Sub-flag `command-provider`**: plugin ships `composer <name>` commands via `Composer\Plugin\Capability\CommandProvider`. Audit verifies provider class declared in `getCapabilities()` returns valid `BaseCommand` instances. If commands also need standalone-bin invocation (`vendor/bin/<plugin>`), they must work without `Composer\*` autoload (adapter pattern; see `sandermuller/boost-core` as reference).
+- **Sub-flag `event-subscriber`**: plugin hooks `ScriptEvents` (POST_AUTOLOAD_DUMP, etc.) via `EventSubscriberInterface`. Audit verifies subscribed event constants exist.

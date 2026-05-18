@@ -12,10 +12,10 @@ Rationale: matches `laravel/pao`'s `^8.3` floor (our strictest shared dep). Exis
 
 ## Laravel (laravel-package only)
 
-- **Default**: `^11.0||^12.0||^13.0`
-- **Other accepted**: `^12.0||^13.0`, `^13.0`
+- **Default**: `^12.0||^13.0`
+- **Other accepted**: `^13.0`
 
-Rationale: matches the range across canonical sander L-packages (queue-insights, fluent-validation, stopwatch). New packages should support all three Laravel majors unless there's a specific reason not to.
+Rationale: Laravel 11 was the previous floor but was dropped in repo-init 0.3.0 because `laravel/pao` 1.0.5+ conflicts with `laravel/framework: <12.0.0`. New packages should support the two current Laravel majors unless there's a specific reason not to.
 
 `laravel-project` doesn't use this knob — Laravel version is whatever `laravel new` installs (current `^13.0`).
 

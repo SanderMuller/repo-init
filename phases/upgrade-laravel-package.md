@@ -44,7 +44,7 @@ Per-category mandatory `require-dev` for `laravel-package`:
 - `laravel/boost` — required for `testbench.yaml` to boot (lists `Laravel\Boost\BoostServiceProvider`). Missing → `boost sync` / `testbench` fatals with `Class "Laravel\Boost\BoostServiceProvider" not found`. Added in repo-init 0.2.5.
 - `driftingly/rector-laravel`
 
-Plus shared dev deps from `$REPO_INIT_HOME/references/shared-dev-deps.md` (universal — `laravel/pao`, `laravel/pint`, `phpstan/extension-installer`, `phpstan/phpstan-strict-rules`, `phpstan/phpstan-deprecation-rules`, `phpstan/phpstan-phpunit`, `rector/rector`, `rector/type-perfect`, `spaze/phpstan-disallowed-calls`, `symplify/phpstan-extensions`, `tomasvotruba/cognitive-complexity`, `tomasvotruba/type-coverage`, `nunomaduro/collision`, `sandermuller/package-boost`, `orchestra/testbench`).
+Plus shared dev deps from `$REPO_INIT_HOME/references/shared-dev-deps.md` (universal — `laravel/pao`, `laravel/pint`, `phpstan/extension-installer`, `phpstan/phpstan-strict-rules`, `phpstan/phpstan-deprecation-rules`, `phpstan/phpstan-phpunit`, `rector/rector`, `rector/type-perfect`, `spaze/phpstan-disallowed-calls`, `symplify/phpstan-extensions`, `tomasvotruba/cognitive-complexity`, `tomasvotruba/type-coverage`, `nunomaduro/collision`, `sandermuller/package-boost-php`, `orchestra/testbench`).
 
 Test-framework split (Pest by default for sander vendor):
 
@@ -87,6 +87,10 @@ For each NON-CANONICAL finding:
 
 - **`composer.lock` committed**: prompt "remove composer.lock from git tracking? `git rm --cached composer.lock` + ensure `composer.lock` line is in `.gitignore`." User can decline.
 - **`phpunit.xml` (without `.dist`)**: prompt "rename `phpunit.xml` → `phpunit.xml`?" Only do this if `phpunit.xml` doesn't already exist (don't clobber).
+- **PHPUnit cache findings** (if `test-framework=phpunit`): apply `$REPO_INIT_HOME/references/phpunit-config.md` Upgrade-actions section — set `cacheDirectory=".cache/phpunit"`, `rm -rf .phpunit.cache`, `git rm -r --cached .phpunit.cache` if previously committed.
+- **CI path filter drift — `phpstan.yml` missing `composer.json` / `composer.lock`**: insert both lines under the `push.paths` and `pull_request.paths` blocks in `.github/workflows/phpstan.yml`.
+- **CI path filter drift — `run-tests.yml` missing `testbench.yaml` / `workbench/**`**: insert both lines under the `push.paths` and `pull_request.paths` blocks in `.github/workflows/run-tests.yml`. Same indentation as surrounding entries.
+- **`.gitattributes` missing `.ai/ export-ignore`**: insert `.ai/ export-ignore` line after `.agents/ export-ignore` inside the `# >>> package-boost (managed) >>>` block.
 - **PHP floor `^8.2`**: prompt "bump `require.php` from `^8.2` to `^8.3`?" Single-line composer.json edit. Warn that this may require Composer to re-resolve deps; suggest `composer update --lock` after.
 - **Two managed blocks in `.gitattributes`**: prompt "merge the `# >>> repo-init (managed) >>>` block into the `# >>> package-boost (managed) >>>` block per the contract in `references/gitattributes-managed-block.md`?" Move repo-init's entries into package-boost's block (dedupe), then remove the standalone repo-init block.
 - **Both `phpstan/phpstan` and `larastan/larastan` in `require-dev`**: prompt "remove `phpstan/phpstan` (transitively provided by larastan)?" `composer remove --dev phpstan/phpstan`.

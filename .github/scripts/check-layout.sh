@@ -18,7 +18,7 @@ EXIT_CODE=0
 
 REQUIRED_PATHS=(
     # Skill + checklists
-    ".ai/skills/repo-init/SKILL.md"
+    "resources/boost/skills/repo-init/SKILL.md"
     "checklists/preflight.md"
     "checklists/per-category-never-touch.md"
     "checklists/post-bootstrap-verification.md"
@@ -58,6 +58,12 @@ REQUIRED_PATHS=(
     "phases/upgrade-phpstan-extension.md"
     "phases/upgrade-rector-extension.md"
 
+    # composer-plugin category (added in 0.3.0)
+    "phases/bootstrap-composer-plugin.md"
+    "phases/audit-composer-plugin.md"
+    "phases/upgrade-composer-plugin.md"
+    "references/phpunit-config.md"
+
     # Stub trees — directories, not files (one sentinel file checked per tree)
     "stubs/shared/pint.json"
     "stubs/laravel-package/composer.json"
@@ -66,6 +72,12 @@ REQUIRED_PATHS=(
     "stubs/phpstan-extension/composer.json"
     "stubs/rector-extension/composer.json"
     "stubs/laravel-project/boost.json"
+    "stubs/composer-plugin/composer.json"
+    "stubs/composer-plugin/src/Plugin.none.php"
+    "stubs/composer-plugin/src/Plugin.command-provider.php"
+    "stubs/composer-plugin/src/Plugin.event-subscriber.php"
+    "stubs/composer-plugin/src/Plugin.both.php"
+    "stubs/composer-plugin/src/CommandProvider.php"
 
     # Phase 8 LOW-priority bootstrap-only categories (added in Phase 8)
     "stubs/filament-plugin/composer.json"

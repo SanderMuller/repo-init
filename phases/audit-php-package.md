@@ -41,6 +41,8 @@ php-package has no mandatory runtime deps from repo-init's side. The user owns t
 
 ## MISSING dev deps (must be in `require-dev`)
 
+**Follow `$REPO_INIT_HOME/references/shared-dev-deps.md#audit-verification-protocol-mandatory`.** Every bullet below gets an explicit PRESENT/MISSING verdict. Skimming is the failure mode (real audits have missed `laravel/pao`).
+
 Apply per-category exclusion: php-package category does NOT include `larastan/larastan` (it's framework-agnostic). Bare `phpstan/phpstan` instead.
 
 From `$REPO_INIT_HOME/references/per-category-deps.md#php-package` MANDATORY:
@@ -63,7 +65,7 @@ Plus shared:
 - [ ] `tomasvotruba/cognitive-complexity`
 - [ ] `tomasvotruba/type-coverage`
 - [ ] `nunomaduro/collision`
-- [ ] `sandermuller/package-boost`
+- [ ] `sandermuller/package-boost-php`
 - [ ] `orchestra/testbench`
 
 Test-framework split:
@@ -79,6 +81,9 @@ Same logic as audit-laravel-package.md, with php-package stub paths. Apply each 
 
 - [ ] `composer.lock` committed (libraries should not commit lockfiles).
 - [ ] **`phpunit.xml.dist` committed (with `.dist` suffix)**: canonical baseline as of repo-init 0.2.4 ships `phpunit.xml` (no `.dist`). Flag NON-CANONICAL.
+- [ ] **PHPUnit cache rules** (if `test-framework=phpunit`): apply `$REPO_INIT_HOME/references/phpunit-config.md` Audit-rule section — flag `.phpunit.cache/` at root, missing/wrong `cacheDirectory` attribute in `phpunit.xml`, committed `.phpunit.cache`.
+- [ ] **CI path filter drift — `phpstan.yml`** (MEDIUM severity): grep `.github/workflows/phpstan.yml` `paths:` blocks under `push` and `pull_request`; both MUST include `composer.json` AND `composer.lock` (dep bumps can silently break static analysis without these). Flag NON-CANONICAL if either missing.
+- [ ] **`.gitattributes` managed block missing `.ai/ export-ignore`** (MEDIUM severity): per `$REPO_INIT_HOME/references/gitattributes-managed-block.md`, `.ai/` is the boost SOURCE/authoring dir and MUST be in the managed block. Without it, `boost sync`-populated dev skills leak into the published Composer archive. Flag NON-CANONICAL.
 - [ ] `larastan/larastan` in `require-dev` for a php-package — Laravel-aware deps in a framework-agnostic category. Flag and ask: "is this actually a `laravel-package`? Re-detect."
 - [ ] `illuminate/*` in `require` — same. Re-route to `audit-laravel-package.md`.
 - [ ] PHP floor `^8.2` (or below).

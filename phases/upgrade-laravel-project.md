@@ -34,7 +34,7 @@ Per-category mandatory `require-dev` for `laravel-project`:
 - `laravel/tinker` (Laravel may ship this already)
 - `driftingly/rector-laravel`
 
-Plus shared dev deps from `$REPO_INIT_HOME/references/shared-dev-deps.md` minus what Laravel installer typically already ships (read freshly-generated composer.json to confirm): `laravel/pao`, `laravel/pint` (already), `phpstan/extension-installer`, `phpstan/phpstan-strict-rules`, `phpstan/phpstan-deprecation-rules`, `phpstan/phpstan-phpunit`, `rector/rector`, `rector/type-perfect`, `spaze/phpstan-disallowed-calls`, `symplify/phpstan-extensions`, `tomasvotruba/cognitive-complexity`, `tomasvotruba/type-coverage`, `nunomaduro/collision` (Laravel ships), `sandermuller/package-boost`, `orchestra/testbench` (typically NOT in laravel-project — skip).
+Plus shared dev deps from `$REPO_INIT_HOME/references/shared-dev-deps.md` minus what Laravel installer typically already ships (read freshly-generated composer.json to confirm): `laravel/pao`, `laravel/pint` (already), `phpstan/extension-installer`, `phpstan/phpstan-strict-rules`, `phpstan/phpstan-deprecation-rules`, `phpstan/phpstan-phpunit`, `rector/rector`, `rector/type-perfect`, `spaze/phpstan-disallowed-calls`, `symplify/phpstan-extensions`, `tomasvotruba/cognitive-complexity`, `tomasvotruba/type-coverage`, `nunomaduro/collision` (Laravel ships), `sandermuller/package-boost-php`, `orchestra/testbench` (typically NOT in laravel-project — skip).
 
 Plus confirmed opt-ins:
 
@@ -73,6 +73,9 @@ Don't touch `extra.laravel.providers` for laravel-project — Laravel uses `extr
 ## Apply NON-CANONICAL fixes (each prompted)
 
 - **`phpunit.xml` (no .dist)**: prompt "rename to `phpunit.xml`?" Only if `.dist` doesn't already exist.
+- **PHPUnit cache findings** (if `test-framework=phpunit`): apply `$REPO_INIT_HOME/references/phpunit-config.md` Upgrade-actions section — set `cacheDirectory=".cache/phpunit"`, `rm -rf .phpunit.cache`, `git rm -r --cached .phpunit.cache` if previously committed.
+- **CI path filter drift — `phpstan.yml` missing `composer.json` / `composer.lock`**: insert both lines under the `push.paths` and `pull_request.paths` blocks in `.github/workflows/phpstan.yml`.
+- **`.gitattributes` missing `.ai/ export-ignore`**: insert `.ai/ export-ignore` line after `.agents/ export-ignore` inside the `# >>> package-boost (managed) >>>` block.
 - **PHP floor `^8.2`**: prompt to bump.
 - **Both larastan + bare phpstan**: prompt to remove `phpstan/phpstan`.
 - **`composer.lock` NOT committed** (rare — Laravel convention is to commit it for apps): prompt to add to git.

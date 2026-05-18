@@ -48,6 +48,8 @@ For laravel-project, runtime deps are the user's Laravel app deps (Filament, Hor
 
 ## MISSING dev deps (must be in `require-dev`)
 
+**Follow `$REPO_INIT_HOME/references/shared-dev-deps.md#audit-verification-protocol-mandatory`.** Every bullet below gets an explicit PRESENT/MISSING verdict. Skimming is the failure mode.
+
 From `$REPO_INIT_HOME/references/per-category-deps.md#laravel-project` MANDATORY:
 
 - [ ] `larastan/larastan`
@@ -71,7 +73,7 @@ Plus shared (`$REPO_INIT_HOME/references/shared-dev-deps.md`) minus what Laravel
 - [ ] `tomasvotruba/cognitive-complexity`
 - [ ] `tomasvotruba/type-coverage`
 - [ ] `nunomaduro/collision` (Laravel ships)
-- [ ] `sandermuller/package-boost`
+- [ ] `sandermuller/package-boost-php`
 - [ ] `orchestra/testbench` — typically NOT in laravel-project (it's a package-dev tool). Skip flagging.
 
 OPTIONAL (only when opt-in confirmed):
@@ -97,6 +99,9 @@ Same logic as `audit-laravel-package.md` §OUTDATED — apply each file's mode f
 ## NON-CANONICAL findings
 
 - [ ] `phpunit.xml` (without `.dist`) — Laravel ships it as `.xml` historically; some hihaho projects renamed to `.dist`. Mild NON-CANONICAL. Suggest rename only if `.dist` not already present.
+- [ ] **PHPUnit cache rules** (if `test-framework=phpunit`): apply `$REPO_INIT_HOME/references/phpunit-config.md` Audit-rule section — flag `.phpunit.cache/` at root, missing/wrong `cacheDirectory` attribute in `phpunit.xml`, committed `.phpunit.cache`.
+- [ ] **CI path filter drift — `phpstan.yml`** (MEDIUM severity): grep `.github/workflows/phpstan.yml` `paths:` blocks under `push` and `pull_request`; both MUST include `composer.json` AND `composer.lock`. Flag NON-CANONICAL if either missing.
+- [ ] **`.gitattributes` managed block missing `.ai/ export-ignore`** (MEDIUM severity): per `$REPO_INIT_HOME/references/gitattributes-managed-block.md`, `.ai/` is the boost SOURCE/authoring dir and MUST be in the managed block. Without it, `boost sync`-populated dev skills leak into the published Composer archive. Flag NON-CANONICAL.
 - [ ] `phpstan/phpstan` in `require-dev` alongside `larastan/larastan`: §5.3 exclusivity violation. NON-CANONICAL.
 - [ ] PHP floor `^8.2` (or below) in `require.php`. NON-CANONICAL.
 - [ ] `composer.lock` NOT committed: for laravel-project the lockfile IS committed (Laravel convention — apps pin deps). If missing, suggest committing.
