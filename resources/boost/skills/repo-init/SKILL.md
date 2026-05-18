@@ -108,7 +108,7 @@ There's nothing to "remove" from the target — repo-init was never installed th
 All documented in phase files; summary:
 
 - **Per-category never-touch list** (`$REPO_INIT_HOME/checklists/per-category-never-touch.md`) — `config/auth*.php`, `app/Policies/`, `.env*`, `.git/`, `vendor/`, `node_modules/`. Always honoured.
-- **Git-dirty guard** (audit + upgrade modes only) — run `git status --porcelain` before any write; skip paths whose 2-character status prefix is one of `M `, ` M`, `MM`, `A `, `??`. Bootstrap exempts itself because cwd-must-be-empty is the precondition.
+- **Git-dirty guard** (audit + upgrade modes only) — run `git status --porcelain` before any write; skip paths whose 2-character status prefix indicates modified/added/untracked state (`MM`, `??`, or a single `M`/`A` in either column). Bootstrap exempts itself because cwd-must-be-empty is the precondition.
 - **larastan vs phpstan exclusivity** — never `composer require` both in the same call. Phase files spell out which is right per category.
 
 ## Updating repo-init
