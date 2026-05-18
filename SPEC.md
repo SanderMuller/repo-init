@@ -287,12 +287,12 @@ Project-local install also requires `vendor/bin/testbench package-boost:sync` (n
 
 For the global install model to work, `sandermuller/package-boost` must support syncing into `~/.claude/skills/` (user level) in addition to its existing project-level sync. The contract:
 
-- New command: `vendor/bin/testbench package-boost:sync --scope=user` (or equivalent).
+- New command: `vendor/bin/boost sync --scope=user` (or equivalent).
 - Reads skills from `vendor/<vendor>/<package>/.ai/skills/`, writes to `~/.claude/skills/`, `~/.cursor/skills/`, etc.
 - Idempotent — re-syncing doesn't duplicate.
 - When invoked from a *global* composer install (`COMPOSER_HOME/vendor/sandermuller/repo-init/`), `--scope=user` is implied if no `--scope` is passed.
 
-repo-init's own post-install hook fires `package-boost:sync --scope=user` automatically after `composer global require sandermuller/repo-init`, so the user doesn't run sync manually. See `references/package-boost-user-scope.md` for the full contract.
+repo-init's own post-install hook fires `package-boost:sync --scope=user` automatically after `composer global require sandermuller/repo-init`, so the user doesn't run sync manually. See `references/boost-core-user-scope.md` for the full contract.
 
 ---
 
@@ -882,7 +882,7 @@ The "dogfood" property therefore reduces to: every stub in `stubs/` was generate
 
 2. **`.gitattributes` managed-block contract with package-boost.** The shared `.gitattributes` stub assumes package-boost will accept entries appended into its managed block by downstream tools. Confirm with the package-boost maintainer and document in `references/gitattributes-managed-block.md`. If rejected, fall back to a separate `# >>> repo-init (managed) >>>` block and downgrade the "NON-CANONICAL: two managed blocks" audit finding.
 
-3. **Package-boost user-scope sync feature.** RQ40 + §3.5 depend on a new `package-boost:sync --scope=user` command. Currently package-boost only syncs into the current project's `.claude/skills/`. Add the user-scope feature (~30 LOC change in package-boost), document the contract in `references/package-boost-user-scope.md`, ship before repo-init v0.1.
+3. **Package-boost user-scope sync feature.** RQ40 + §3.5 depend on a new `package-boost:sync --scope=user` command. Currently package-boost only syncs into the current project's `.claude/skills/`. Add the user-scope feature (~30 LOC change in package-boost), document the contract in `references/boost-core-user-scope.md`, ship before repo-init v0.1.
 
 4. **Skill propagation guarantee.** §10 assumes package-boost copies (not symlinks) skills into `.claude/skills/`. Verify this is still true and document the behaviour as a load-bearing contract.
 
@@ -968,7 +968,7 @@ The "dogfood" property therefore reduces to: every stub in `stubs/` was generate
 
 39. **Workbench scripts always added for `laravel-package`.** **Decision:** Drop `--with-workbench-scripts` flag. §5.4 says "always added". Matches RQ13. **Rationale:** Codex v5 flagged the body/RQ13 contradiction; observed pattern across all canonical sander L-packages is "always present" so the flag was vestigial.
 
-40. **Distribution model — global install (v7).** **Decision:** Default is `composer global require sandermuller/repo-init` (one per machine). Project-local install remains as an escape hatch (§3.4). Skill propagates to `~/.claude/skills/repo-init/` via a new package-boost feature: `vendor/bin/testbench package-boost:sync --scope=user`. Phase/stub/reference paths use absolute `REPO_INIT_HOME = $(composer global config home)/vendor/sandermuller/repo-init`. **Rationale:** Matches `laravel new` mental model. Eliminates per-target install (no `composer init` prelude on greenfield; no per-target vendor pollution; no per-target self-removal). One-time setup, everywhere availability. Requires a small (~30 LOC) feature addition to package-boost (we maintain it). Closes audit-without-install open question (#3 was "audit-without-install" — global install IS audit-without-per-project-install).
+40. **Distribution model — global install (v7).** **Decision:** Default is `composer global require sandermuller/repo-init` (one per machine). Project-local install remains as an escape hatch (§3.4). Skill propagates to `~/.claude/skills/repo-init/` via a new package-boost feature: `vendor/bin/boost sync --scope=user`. Phase/stub/reference paths use absolute `REPO_INIT_HOME = $(composer global config home)/vendor/sandermuller/repo-init`. **Rationale:** Matches `laravel new` mental model. Eliminates per-target install (no `composer init` prelude on greenfield; no per-target vendor pollution; no per-target self-removal). One-time setup, everywhere availability. Requires a small (~30 LOC) feature addition to package-boost (we maintain it). Closes audit-without-install open question (#3 was "audit-without-install" — global install IS audit-without-per-project-install).
 
 41. **Bootstrap phase idempotency (v0.2).** **Decision:** All 5 `bootstrap-<category>.md` phase files are idempotent — each mutating step has a `Skip if:` precondition that makes re-runs a no-op when the post-condition is already met. Read-only steps (pre-flight, verification, print-next-steps) always run. **Rationale:** Enables the `sandermuller/repo-new` CLI (see `specs/repo-new-cli.md`) to do mechanical scaffolding via PHP code, then the agent reads the corresponding bootstrap phase file end-to-end and idempotency guards mean CLI-completed steps are silently skipped. No mid-phase resume contract needed; single-entry-point + self-contained-phase model preserved. Eliminates codex v8 finding #1 (mid-phase handoff was fragile). CI conformance test (`check-bootstrap-idempotency.sh`) guards the contract. **Impact:** repo-init bumps to 0.2.0; `sandermuller/repo-new` requires `^0.2`.
 

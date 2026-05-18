@@ -15,7 +15,7 @@ This is the property that makes "you can `composer global remove sandermuller/re
 In v7's global-install model:
 
 1. User runs `composer global require sandermuller/repo-init`.
-2. `post-install-cmd` fires `vendor/bin/testbench package-boost:sync --scope=user`.
+2. `post-install-cmd` fires `vendor/bin/boost sync --scope=user`.
 3. package-boost reads `vendor/sandermuller/repo-init/.ai/skills/repo-init/SKILL.md` from the global vendor dir.
 4. package-boost **copies** the file to `~/.claude/skills/repo-init/SKILL.md`.
 5. From any future Claude Code session in any project, the skill auto-activates.

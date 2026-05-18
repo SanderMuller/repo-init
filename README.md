@@ -25,7 +25,7 @@ composer global require sandermuller/repo-init
 
 The `post-install-cmd` hook propagates the skill into `~/.claude/skills/repo-init/` (and `~/.cursor/skills/`, `~/.agents/skills/`, etc.) via `sandermuller/package-boost`'s `--scope=user` sync. From then on, the `repo-init` skill auto-activates in any project.
 
-> ⚠️ **Status: requires unreleased package-boost feature.** The user-scope sync (`package-boost:sync --scope=user`) is tracked as repo-init [Open Question #3 in SPEC.md](SPEC.md) — see `references/package-boost-user-scope.md` for the contract. The post-install hook auto-detects the missing feature and falls back to project-scope sync with a clear warning (the skill installs into the current project rather than globally). Once package-boost ships the feature and repo-init tags `0.1.0`, the global path activates automatically with no user action needed.
+> ⚠️ **Status: requires unreleased package-boost feature.** The user-scope sync (`package-boost:sync --scope=user`) is tracked as repo-init [Open Question #3 in SPEC.md](SPEC.md) — see `references/boost-core-user-scope.md` for the contract. The post-install hook auto-detects the missing feature and falls back to project-scope sync with a clear warning (the skill installs into the current project rather than globally). Once package-boost ships the feature and repo-init tags `0.1.0`, the global path activates automatically with no user action needed.
 
 ## Use
 
