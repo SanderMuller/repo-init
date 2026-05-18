@@ -41,6 +41,7 @@ On failure, consult `$REPO_INIT_HOME/references/composer-failure-modes.md`.
 Per-category mandatory `require-dev` for `laravel-package`:
 
 - `larastan/larastan` (NEVER also `phpstan/phpstan` per §5.3 exclusivity)
+- `laravel/boost` — required for `testbench.yaml` to boot (lists `Laravel\Boost\BoostServiceProvider`). Missing → `boost sync` / `testbench` fatals with `Class "Laravel\Boost\BoostServiceProvider" not found`. Added in repo-init 0.2.5.
 - `driftingly/rector-laravel`
 
 Plus shared dev deps from `$REPO_INIT_HOME/references/shared-dev-deps.md` (universal — `laravel/pao`, `laravel/pint`, `phpstan/extension-installer`, `phpstan/phpstan-strict-rules`, `phpstan/phpstan-deprecation-rules`, `phpstan/phpstan-phpunit`, `rector/rector`, `rector/type-perfect`, `spaze/phpstan-disallowed-calls`, `symplify/phpstan-extensions`, `tomasvotruba/cognitive-complexity`, `tomasvotruba/type-coverage`, `nunomaduro/collision`, `sandermuller/package-boost`, `orchestra/testbench`).
