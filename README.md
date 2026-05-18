@@ -24,9 +24,7 @@ Walks an AI agent (Claude Code, Cursor, GitHub Copilot, …) through **bootstrap
 composer global require sandermuller/repo-init
 ```
 
-The `post-install-cmd` hook propagates the skill into `~/.claude/skills/repo-init/` (and `~/.cursor/skills/`, `~/.agents/skills/`, etc.) via `sandermuller/package-boost`'s `--scope=user` sync. From then on, the `repo-init` skill auto-activates in any project.
-
-> ⚠️ **Status: requires unreleased package-boost feature.** The user-scope sync (`package-boost:sync --scope=user`) is tracked as repo-init [Open Question #3 in SPEC.md](SPEC.md) — see `references/boost-core-user-scope.md` for the contract. The post-install hook auto-detects the missing feature and falls back to project-scope sync with a clear warning (the skill installs into the current project rather than globally). Once package-boost ships the feature and repo-init tags `0.1.0`, the global path activates automatically with no user action needed.
+The `post-install-cmd` hook propagates the skill into `~/.claude/skills/repo-init/` (and `~/.cursor/skills/`, `~/.agents/skills/`, etc.) via [`sandermuller/boost-core`](https://github.com/SanderMuller/boost-core)'s `boost sync --scope=user` ([shipped in `bebd046b`](https://github.com/SanderMuller/boost-core/commit/bebd046bbcc14d8ca3f7184b911d467b04bc27bb)). From then on, the `repo-init` skill auto-activates in any project. See `references/boost-core-user-scope.md` for the full contract.
 
 ## Use
 
@@ -71,7 +69,7 @@ If you want to pin a specific repo-init version per project:
 
 ```bash
 composer require --dev sandermuller/repo-init
-vendor/bin/testbench package-boost:sync
+vendor/bin/boost sync
 ```
 
 The project-local install takes precedence over the global one. Remove with `composer remove --dev sandermuller/repo-init`.
@@ -106,8 +104,8 @@ Highlights:
 
 ## Dependencies
 
-- `sandermuller/package-boost` — AI tooling propagation (skill sync).
-- `orchestra/testbench` — required to invoke `package-boost:sync` outside a Laravel app context.
+- [`sandermuller/boost-core`](https://github.com/SanderMuller/boost-core) — AI tooling propagation (`boost sync`, with `--scope=user` for global installs).
+- `sandermuller/package-boost` — peer skill/guideline source the boost-core sync consumes.
 
 Both pulled in automatically when you `composer global require sandermuller/repo-init`.
 
