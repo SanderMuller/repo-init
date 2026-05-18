@@ -21,9 +21,11 @@ Before any phase:
    > Repo-init isn't installed. Run `composer global require sandermuller/repo-init` to install it (one-time, machine-wide). Then ask me again.
    And stop.
 3. **Verify skill is synced to user-level dir**: check `~/.claude/skills/repo-init/SKILL.md` exists. boost-core 0.2.0+ auto-syncs this on `composer global require` / `composer global update` (global-context auto-sync writes to `~/.{agent}/skills/{package}/` for every globally-installed package with `resources/boost/skills/`). If missing — fallback:
+
    ```bash
    cd $REPO_INIT_HOME && vendor/bin/boost sync --scope=user
    ```
+
    (Propagates into `~/.claude/skills/`, `~/.cursor/skills/`, `~/.amp/skills/`, etc.)
 4. Proceed to the routing flow below.
 
@@ -106,7 +108,7 @@ There's nothing to "remove" from the target — repo-init was never installed th
 All documented in phase files; summary:
 
 - **Per-category never-touch list** (`$REPO_INIT_HOME/checklists/per-category-never-touch.md`) — `config/auth*.php`, `app/Policies/`, `.env*`, `.git/`, `vendor/`, `node_modules/`. Always honoured.
-- **Git-dirty guard** (audit + upgrade modes only) — run `git status --porcelain` before any write; skip paths prefixed `M`, ` M`, `MM`, `A`, `??`. Bootstrap exempts itself because cwd-must-be-empty is the precondition.
+- **Git-dirty guard** (audit + upgrade modes only) — run `git status --porcelain` before any write; skip paths whose 2-character status prefix is one of `M `, ` M`, `MM`, `A `, `??`. Bootstrap exempts itself because cwd-must-be-empty is the precondition.
 - **larastan vs phpstan exclusivity** — never `composer require` both in the same call. Phase files spell out which is right per category.
 
 ## Updating repo-init
