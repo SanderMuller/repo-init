@@ -9,6 +9,32 @@ Pre-`1.0.0` releases may introduce breaking changes in MINOR bumps; we surface t
 
 ## [Unreleased]
 
+## [0.2.14] - 2026-05-17
+
+### Changed
+
+- **`--scope=user` shipped — repo-init now uses boost-core's binary.**
+  The deferred feature (was Open Question #3) landed in
+  [`sandermuller/boost-core` commit `bebd046b`](https://github.com/SanderMuller/boost-core/commit/bebd046bbcc14d8ca3f7184b911d467b04bc27bb)
+  as `vendor/bin/boost sync --scope=user`. New
+  `references/boost-core-user-scope.md` documents how repo-init uses it
+  (replaces the old `package-boost-user-scope.md` contract file).
+  `bin/post-install-sync.php` now invokes `vendor/bin/boost sync --scope=user`
+  instead of the never-shipped `vendor/bin/testbench package-boost:sync --scope=user`.
+- Bulk updates across `README.md`, `SPEC.md`, `tests/self-removal-contract.md`,
+  and `.ai/skills/repo-init/SKILL.md` reflect the boost-core attribution.
+
+### Added
+
+- **README badge audit rule** in all 4 audit phase files (HIGH severity).
+  Surfaced via a 20-repo survey: 9/20 SanderMuller PHP repos ship a bare
+  README with no badges at all. Canonical set required: Packagist version,
+  run-tests CI status, Total Downloads, License (each on its own line,
+  shields.io with `?style=flat-square`). Extra badges (PHPStan, Codecov,
+  Laravel Compatibility) are EXTRA-info — never flagged.
+- **phpstan-extension / rector-extension audit phases** get a LOW-severity
+  bullet recommending a `phpstan.yml` workflow badge alongside `run-tests.yml`.
+
 ## [0.2.13] - 2026-05-17
 
 ### Fixed
@@ -91,7 +117,7 @@ Strategy going forward: always import, never inline FQN. `pint --test` +
 ### Fixed
 
 - **N1**: rector.php stubs (7 categories) now `use RectorPest\Set\PestSetList;`
-  + short-form refs (`PestSetList::class`, `PestSetList::PEST_CODE_QUALITY`)
+  plus short-form refs (`PestSetList::class`, `PestSetList::PEST_CODE_QUALITY`)
   instead of inline FQN. Pint's `fully_qualified_strict_types` was rewriting
   the FQN to the import on every run, so `pint --test` flagged the stub
   state as dirty out of the box. Class autoload still gated by
