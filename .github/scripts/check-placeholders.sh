@@ -28,6 +28,8 @@ CANONICAL_PLACEHOLDERS=(
     "__LARAVEL_VERSIONS__"
     "__PHP_VERSION_NEON__"
     "__YEAR__"
+    "__TEST_RUNNER__"
+    "__TEST_COVERAGE_FLAG__"
 )
 
 PLACEHOLDER_DOC="references/placeholder-rules.md"
