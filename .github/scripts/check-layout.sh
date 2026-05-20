@@ -72,6 +72,7 @@ REQUIRED_PATHS=(
 
     # Stub trees — directories, not files (one sentinel file checked per tree)
     "stubs/shared/pint.json"
+    "stubs/shared/boost.php"
     "stubs/laravel-package/composer.json"
     "stubs/laravel-package-spatie/composer.json"
     "stubs/php-package/composer.json"

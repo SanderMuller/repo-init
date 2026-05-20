@@ -7,6 +7,7 @@
 .cache/ export-ignore
 CHANGELOG.md export-ignore
 composer.lock export-ignore
+boost.php export-ignore
 pint.json export-ignore
 AGENTS.md export-ignore
 CLAUDE.md export-ignore

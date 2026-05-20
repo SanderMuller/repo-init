@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Pre-`1.0.0` releases may introduce breaking changes in MINOR bumps; we surface those here clearly.
 
+## [0.6.0] - 2026-05-20
+
+### Added
+
+- **`boost.php` scaffolded by default.** Every newly bootstrapped package now
+  ships a `boost.php` — boost-core's configuration file — pinning the AI agent
+  set to Claude Code, Copilot, and Codex (`Agent::CLAUDE_CODE`, `Agent::COPILOT`,
+  `Agent::CODEX`). Without it boost-core's agent selection is implicit; the
+  pinned config makes a fresh scaffold's `composer boost:sync` deterministic.
+  Ships as `stubs/shared/boost.php` (no placeholders — category-agnostic) and is
+  copied by every package category. `laravel-project` is the one exclusion — it
+  uses `laravel/boost`, not `sandermuller/boost-core`, so a `boost.php` there
+  would be inert. `boost.php` is `export-ignore`d (dev config — kept out of the
+  published Composer archive): entry added to `stubs/shared/_gitattributes`, the
+  4 Laravel-family `_gitattributes` overrides, the `php-package` + `skill-bundle`
+  `.lpv` files, and `references/gitattributes-managed-block.md`. All six
+  package-category audit phases now flag a missing `boost.php` — the line was
+  added to four; `phpstan-extension` / `rector-extension` inherit it via their
+  "same list as audit-laravel-package.md" reference. Upgrade phases copy it via
+  the generic MISSING-file path.
+
 ## [0.5.0] - 2026-05-20
 
 ### Fixed
@@ -635,6 +656,7 @@ Initial release. Global-install model (`composer global require sandermuller/rep
 - 4 Open Questions remaining: `--ai` flag verification on Laravel installer; package-boost user-scope sync feature; skill-copy-not-symlink behavior verification.
 - Independently reviewed via codex in 3 rounds (v3 → v4 → v5 → v6). All findings addressed.
 
+[0.6.0]: https://github.com/sandermuller/repo-init/compare/0.5.0...0.6.0
 [0.5.0]: https://github.com/sandermuller/repo-init/compare/0.4.0...0.5.0
 [0.4.0]: https://github.com/sandermuller/repo-init/compare/0.3.1...0.4.0
 [0.3.1]: https://github.com/sandermuller/repo-init/compare/0.3.0...0.3.1

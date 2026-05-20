@@ -14,6 +14,7 @@ Walks an AI agent (Claude Code, Cursor, GitHub Copilot, …) through **bootstrap
 - `pint.json`, `phpstan.neon.dist`, `phpstan-baseline.neon`, `rector.php` — code-quality tooling
 - `.editorconfig`, `.gitattributes` (with the `# >>> package-boost (managed) >>>` block — sentinel name preserved for backward compat; owned by `package-boost-php`), `.gitignore`
 - `.mcp.json` (Laravel-aware categories only; the framework-agnostic categories — `php-package`, `composer-plugin`, `phpstan-extension`, `rector-extension`, `skill-bundle` — skip it)
+- `boost.php` — boost-core agent config, pinning Claude Code / Copilot / Codex (every category except `laravel-project`, which uses `laravel/boost`)
 - Shared `.github/workflows/{phpstan,pint-check,rector-check,update-changelog}.yml` + per-category `run-tests.yml` + `dependabot.yml`
 - `tests/Pest.php` or `phpunit.xml` (vendor-driven default)
 - Per-category extras (testbench.yaml, workbench/, ServiceProvider, extension.neon, src/Plugin.{shape}.php for composer-plugin, etc.)

@@ -121,6 +121,7 @@ Likely conflicts:
 - `tests/Pest.php` — skip unless user opted into Pest in step 5.
 - `.github/workflows/` — Laravel may have its own (`tests.yml`, etc.); ours adds `phpstan.yml`, `pint-check.yml`, `rector-check.yml`, `update-changelog.yml`. Different filenames → no conflict; just add.
 - `.mcp.json` — `laravel/boost` writes this on install. If absent (user opted out of Boost), copy ours.
+- `boost.php` — **skip; do not copy.** `boost.php` configures `sandermuller/boost-core`, which a `laravel-project` does not carry (it uses `laravel/boost`). A `boost.php` here would be inert. The other categories get it from `stubs/shared/`; `laravel-project` is the one exclusion.
 
 ### 7. Overlay laravel-project-specific stubs
 

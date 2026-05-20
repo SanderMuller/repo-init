@@ -16,6 +16,20 @@ The `post-update-cmd` hook re-syncs the skill into `~/.claude/skills/sandermulle
 
 ---
 
+## 0.5.x → 0.6.0
+
+0.6.0 adds one file to what repo-init scaffolds. Upgrade repo-init itself the usual way:
+
+```bash
+composer global update sandermuller/repo-init
+```
+
+### New: `boost.php` scaffolded by default
+
+Newly bootstrapped packages now ship a `boost.php` — boost-core's config — pinning the AI agent set to Claude Code, Copilot, and Codex. For a package scaffolded before 0.6.0, `audit-<category>.md` flags `boost.php` as MISSING and `upgrade-<category>.md` adds it (with the matching `export-ignore` entry in the `.gitattributes` managed block + `.lpv`). Not breaking — boost-core works without `boost.php` (agent selection is just implicit); the file only makes the agent set explicit and deterministic. `laravel-project` does **not** get a `boost.php` — it uses `laravel/boost`, not `sandermuller/boost-core`.
+
+---
+
 ## 0.4.x → 0.5.0
 
 0.5.0 changes what repo-init **scaffolds** — the stub `composer.json` files and the per-category dependency map. Upgrading repo-init itself is the usual one-liner:

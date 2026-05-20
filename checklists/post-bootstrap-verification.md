@@ -26,7 +26,7 @@ Still applies to `skill-bundle`: Composer integrity (it is a library — lockfil
 
 ## File presence
 
-- [ ] All shared stubs present: `.editorconfig`, `.gitattributes`, `.gitignore`, `.mcp.json`, `pint.json`, `phpstan-baseline.neon`, `phpunit.xml` OR `tests/Pest.php` (per test-framework).
+- [ ] All shared stubs present: `.editorconfig`, `.gitattributes`, `.gitignore`, `boost.php` (all categories except `laravel-project`, which uses `laravel/boost`), `.mcp.json`, `pint.json`, `phpstan-baseline.neon`, `phpunit.xml` OR `tests/Pest.php` (per test-framework).
 - [ ] Baseline OSS meta files present: `README.md`, `LICENSE`, `CHANGELOG.md`, `SECURITY.md`. Missing any of these is a stop condition. README content follows the `readme` skill from `sandermuller/package-boost`; `CHANGELOG.md` uses Keep a Changelog format with an `## [Unreleased]` section seeded but otherwise empty.
 - [ ] `.github/dependabot.yml` and all 4 shared workflows (`phpstan.yml`, `pint-check.yml`, `rector-check.yml`, `update-changelog.yml`) present.
 - [ ] Category-specific `.github/workflows/run-tests.yml` present.

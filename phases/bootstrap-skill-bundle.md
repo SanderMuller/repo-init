@@ -54,7 +54,7 @@ A skill-bundle ships its skills under `resources/boost/skills/<skill-name>/SKILL
 
 **Skip per-file if:** the file already exists at the target path AND its contents match `$REPO_INIT_HOME/stubs/shared/<file>` after placeholder substitution.
 
-Copy from `$REPO_INIT_HOME/stubs/shared/`: `.editorconfig`, `.gitignore`, `_gitattributes` (rename to `.gitattributes`), `pint.json`, `README.md`, `LICENSE`, `CHANGELOG.md`, `SECURITY.md`, and `.github/workflows/{pint-check,update-changelog}.yml` + `.github/dependabot.yml`.
+Copy from `$REPO_INIT_HOME/stubs/shared/`: `.editorconfig`, `.gitignore`, `_gitattributes` (rename to `.gitattributes`), `boost.php`, `pint.json`, `README.md`, `LICENSE`, `CHANGELOG.md`, `SECURITY.md`, and `.github/workflows/{pint-check,update-changelog}.yml` + `.github/dependabot.yml`. (`boost.php` is the boost-core agent config — a skill-bundle carries `boost-core`, so it is copied.)
 
 **Skip** the PHP-toolchain stubs — `phpstan.neon.dist`, `phpstan-baseline.neon`, `rector.php`, `.mcp.json`, `run-tests.yml`, `phpstan.yml`, `rector-check.yml`: a skill-bundle ships no `src/` PHP, so static analysis / rector / testbench-MCP have nothing to act on.
 

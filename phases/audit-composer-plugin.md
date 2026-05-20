@@ -26,6 +26,7 @@ Detect `test-framework` from existing deps (`pestphp/pest` vs `phpunit/phpunit`)
 - [ ] `.editorconfig`
 - [ ] `.gitattributes` (with package-boost managed block)
 - [ ] `.gitignore`
+- [ ] `boost.php` (boost-core agent config — pins claude-code / copilot / codex)
 - [ ] `pint.json`
 - [ ] `phpstan.neon.dist`
 - [ ] `phpstan-baseline.neon`

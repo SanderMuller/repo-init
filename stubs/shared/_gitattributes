@@ -19,6 +19,7 @@
 .kiro/ export-ignore
 .mcp.json export-ignore
 AGENTS.md export-ignore
+boost.php export-ignore
 CLAUDE.md export-ignore
 composer.lock export-ignore
 GEMINI.md export-ignore

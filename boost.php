@@ -1,8 +1,8 @@
-<?php
+<?php declare (strict_types=1);
 
-declare (strict_types=1);
 use SanderMuller\BoostCore\Config\BoostConfig;
 use SanderMuller\BoostCore\Enums\Agent;
+
 /**
  * boost-core configuration.
  *
@@ -12,4 +12,15 @@ use SanderMuller\BoostCore\Enums\Agent;
  *
  * Docs: https://github.com/sandermuller/boost-core
  */
-return BoostConfig::configure()->withAgents([\SanderMuller\BoostCore\Enums\Agent::CLAUDE_CODE, \SanderMuller\BoostCore\Enums\Agent::COPILOT, \SanderMuller\BoostCore\Enums\Agent::CODEX])->withAllowedVendors(['sandermuller/repo-init', 'sandermuller/package-boost-php', 'stolt/lean-package-validator'])->withDisabledEmitters([]);
+return BoostConfig::configure()
+    ->withAgents([
+        Agent::CLAUDE_CODE,
+        Agent::COPILOT,
+        Agent::CODEX,
+    ])
+    ->withAllowedVendors([
+        'sandermuller/repo-init',
+        'sandermuller/package-boost-php',
+        'stolt/lean-package-validator',
+    ])
+    ->withDisabledEmitters([]);

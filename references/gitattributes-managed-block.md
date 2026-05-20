@@ -34,6 +34,7 @@ Inside the same block, repo-init appends:
 .gitignore              export-ignore
 .mcp.json               export-ignore
 .phpunit.cache          export-ignore
+boost.php               export-ignore
 composer.lock           export-ignore
 CHANGELOG.md            export-ignore
 phpstan-baseline.neon   export-ignore

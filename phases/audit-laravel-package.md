@@ -26,6 +26,7 @@ Check each expected path. If absent, mark MISSING and add to the report.
 - [ ] `.editorconfig`
 - [ ] `.gitattributes` (and the `# >>> package-boost (managed) >>>` block exists inside it)
 - [ ] `.gitignore`
+- [ ] `boost.php` (boost-core agent config — pins claude-code / copilot / codex)
 - [ ] `.mcp.json`
 - [ ] `pint.json`
 - [ ] `phpstan.neon.dist`

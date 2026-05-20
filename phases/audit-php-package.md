@@ -19,6 +19,7 @@ None for `php-package`. The category has no Laravel-aware sub-flag. Detect `test
 - [ ] `.editorconfig`
 - [ ] `.gitattributes` (with package-boost managed block)
 - [ ] `.gitignore`
+- [ ] `boost.php` (boost-core agent config — pins claude-code / copilot / codex)
 - [ ] `pint.json`
 - [ ] `phpstan.neon.dist`
 - [ ] `phpstan-baseline.neon`

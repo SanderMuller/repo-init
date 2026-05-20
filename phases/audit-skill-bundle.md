@@ -19,6 +19,7 @@ None for `skill-bundle`. The category has no sub-flags.
 - [ ] `.editorconfig`
 - [ ] `.gitattributes` (with the `# >>> package-boost (managed) >>>` block)
 - [ ] `.gitignore`
+- [ ] `boost.php` (boost-core agent config — pins claude-code / copilot / codex)
 - [ ] `pint.json`
 - [ ] `.github/workflows/pint-check.yml`
 - [ ] `.github/workflows/update-changelog.yml`
