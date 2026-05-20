@@ -20,7 +20,7 @@ Before any phase:
 2. **If `REPO_INIT_HOME/SPEC.md` is missing**: tell the user:
    > Repo-init isn't installed. Run `composer global require sandermuller/repo-init` to install it (one-time, machine-wide). Then ask me again.
    And stop.
-3. **Verify skill is synced to user-level dir**: check `~/.claude/skills/repo-init/SKILL.md` exists. boost-core 0.2.0+ auto-syncs this on `composer global require` / `composer global update` (global-context auto-sync writes to `~/.{agent}/skills/{package}/` for every globally-installed package with `resources/boost/skills/`). If missing — fallback:
+3. **Verify skill is synced to user-level dir**: check `~/.claude/skills/sandermuller__repo-init/SKILL.md` exists. boost-core 0.2.0+ auto-syncs this on `composer global require` / `composer global update` (global-context auto-sync writes to `~/.{agent}/skills/{vendor}__{package}/` for every globally-installed package with `resources/boost/skills/`; boost-core 0.4.0+ namespaces the dir by the full `{vendor}__{package}` slug and auto-migrates the legacy `~/.{agent}/skills/repo-init/` dir on first sync post-upgrade). If missing — fallback:
 
    ```bash
    cd $REPO_INIT_HOME && vendor/bin/boost sync --scope=user

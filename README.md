@@ -24,7 +24,9 @@ Walks an AI agent (Claude Code, Cursor, GitHub Copilot, …) through **bootstrap
 composer global require sandermuller/repo-init
 ```
 
-[`sandermuller/boost-core`](https://github.com/SanderMuller/boost-core)'s global-context auto-sync (active under `composer global` since 0.2.0) propagates the `repo-init` skill into `~/.claude/skills/repo-init/`, `~/.cursor/skills/repo-init/`, `~/.agents/skills/repo-init/`, etc. on first install. The skill then auto-activates in any project. See `references/boost-core-user-scope.md` for the full contract.
+[`sandermuller/boost-core`](https://github.com/SanderMuller/boost-core)'s global-context auto-sync (active under `composer global` since 0.2.0) propagates the `repo-init` skill into `~/.claude/skills/sandermuller__repo-init/`, `~/.cursor/skills/sandermuller__repo-init/`, `~/.agents/skills/sandermuller__repo-init/`, etc. on first install. The skill then auto-activates in any project. See `references/boost-core-user-scope.md` for the full contract.
+
+> **Upgrading from a pre-0.4.0 install?** boost-core 0.4.0 namespaces user-scope skill dirs by the full `vendor__package` slug. On first `composer global update` the legacy `~/.{agent}/skills/repo-init/` dir is auto-migrated to `~/.{agent}/skills/sandermuller__repo-init/`. See [`UPGRADING.md`](UPGRADING.md).
 
 ## Use
 
@@ -84,9 +86,9 @@ composer global remove sandermuller/repo-init
 Optional skill cleanup (the synced user-level skill dirs survive `composer global remove`):
 
 ```bash
-rm -rf ~/.claude/skills/repo-init \
-       ~/.cursor/skills/repo-init \
-       ~/.agents/skills/repo-init
+rm -rf ~/.claude/skills/sandermuller__repo-init \
+       ~/.cursor/skills/sandermuller__repo-init \
+       ~/.agents/skills/sandermuller__repo-init
 ```
 
 (Keep the synced skills if you might re-install later — re-running `composer global require sandermuller/repo-init` re-syncs them, so leaving them in place is harmless.)

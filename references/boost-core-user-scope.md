@@ -10,24 +10,28 @@ repo-init's global-install model (per SPEC RQ40 + Open Question #3) needs a way 
 vendor/bin/boost sync --scope=user
 ```
 
-- `--scope=project` (default): project-local sync — writes to `<cwd>/.claude/skills/`, etc. Existing behaviour.
-- `--scope=user`: writes to `$HOME/.claude/skills/<pkg-suffix>/<skill>.md` and the equivalent dirs for 9 agents (`.cursor`, `.agents`, `.github`, `.junie`, `.kiro`, `.codex`, `.windsurf`, `.aider`).
+- `--scope=project` (default): project-local sync — writes to `<cwd>/.claude/skills/<skill>/SKILL.md`, etc. Existing behaviour; NOT namespaced by package.
+- `--scope=user`: writes to `$HOME/.claude/skills/<vendor>__<package>/<skill>/SKILL.md` and the equivalent dirs for 9 agents (`.cursor`, `.agents`, `.github`, `.junie`, `.kiro`, `.codex`, `.windsurf`, `.aider`).
 
-Each globally-installed package nests under its own `<pkg-suffix>/` subdir so multiple tools (repo-init + future siblings) don't collide.
+Each globally-installed package nests under its own `<vendor>__<package>/` subdir so multiple tools (repo-init + future siblings) don't collide. The `/` in the Composer name is replaced by `__` — a sequence the Composer name spec forbids inside vendor or project parts, so the slug mapping is injective.
+
+> **Changed in boost-core 0.4.0.** Pre-0.4 user-scope paths used the bare package basename (`~/.{agent}/skills/repo-init/`). 0.4.0 namespaces by the full `<vendor>__<package>` slug. boost-core's `UserScopeMigrator` performs a one-time, ownership-checked rename of the legacy dir on first sync post-upgrade. See repo-init `UPGRADING.md`.
+
+When the source skill directory is named after the package basename (repo-init ships its single skill at `resources/boost/skills/repo-init/`), boost-core's `rewriteForUserScope` collapses the redundant level — the user-scope output is `~/.{agent}/skills/sandermuller__repo-init/SKILL.md`, not `.../sandermuller__repo-init/repo-init/SKILL.md`.
 
 ## What user-scope sync does
 
 | Source | Destination |
 |---|---|
-| `$COMPOSER_HOME/vendor/sandermuller/repo-init/resources/boost/skills/<skill>/SKILL.md` | `~/.claude/skills/repo-init/<skill>.md` |
-| Same | `~/.cursor/skills/repo-init/<skill>.md` |
-| Same (× 7 more agents) | `~/.{agent}/skills/repo-init/<skill>.md` |
+| `$COMPOSER_HOME/vendor/sandermuller/repo-init/resources/boost/skills/repo-init/SKILL.md` | `~/.claude/skills/sandermuller__repo-init/SKILL.md` |
+| Same | `~/.cursor/skills/sandermuller__repo-init/SKILL.md` |
+| Same (× 7 more agents) | `~/.{agent}/skills/sandermuller__repo-init/SKILL.md` |
 
 Guidelines (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`) are **NOT** fanned out to `$HOME` — user-home is the wrong place for project-specific instructions.
 
 ## Copy, never symlink
 
-Load-bearing invariant for the self-removal contract (`tests/self-removal-contract.md`). When `composer global remove sandermuller/repo-init` deletes the source vendor dir, the user-scope copy in `~/.claude/skills/repo-init/` must survive. boost-core's `SyncEngine::syncUser()` does a file copy, not a symlink.
+Load-bearing invariant for the self-removal contract (`tests/self-removal-contract.md`). When `composer global remove sandermuller/repo-init` deletes the source vendor dir, the user-scope copy in `~/.claude/skills/sandermuller__repo-init/` must survive. boost-core's `SyncEngine::syncUser()` does a file copy, not a symlink.
 
 ## Idempotency
 

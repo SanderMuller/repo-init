@@ -7,7 +7,7 @@ How to cut a release of `sandermuller/repo-init`.
 - [ ] All integrity CI checks green on `main`.
 - [ ] CHANGELOG.md `[Unreleased]` section has entries; move them to a new versioned section.
 - [ ] `UPGRADING.md` has a section for this version if there are breaking changes.
-- [ ] If `sandermuller/package-boost` was bumped to a new MINOR/MAJOR: verify the `--scope=user` sync contract still holds; smoke-test by `composer global update sandermuller/repo-init` and checking `~/.claude/skills/repo-init/SKILL.md` is up-to-date.
+- [ ] If `sandermuller/package-boost-php` was bumped to a new MINOR/MAJOR: verify the `--scope=user` sync contract still holds; smoke-test by `composer global update sandermuller/repo-init` and checking `~/.claude/skills/sandermuller__repo-init/SKILL.md` is up-to-date.
 - [ ] Stub drift CI is clean (no untracked drift against canonical refs).
 
 ## Versioning rules
@@ -52,7 +52,7 @@ What counts as breaking for repo-init:
 
    ```bash
    composer global require sandermuller/repo-init:X.Y.Z
-   ls -la ~/.claude/skills/repo-init/SKILL.md
+   ls -la ~/.claude/skills/sandermuller__repo-init/SKILL.md
    ```
 
 7. **GitHub release**:
@@ -71,15 +71,15 @@ If a release breaks the install (e.g. `composer global require` errors out):
 2. Cut a `.PATCH+1` with the fix.
 3. Document the yank in CHANGELOG with a `[YANKED]` marker.
 
-## Coordinated bump with `sandermuller/package-boost`
+## Coordinated bump with `sandermuller/package-boost-php`
 
-If the release depends on a new package-boost feature (e.g. the v0.1.0 dependency on `--scope=user` sync):
+If the release depends on a new `package-boost-php` / `boost-core` feature (e.g. the v0.1.0 dependency on `--scope=user` sync, or the 0.4.0 user-scope path namespacing):
 
-1. Ship the package-boost feature first.
-2. Tag package-boost with the new MINOR.
-3. Update repo-init's `composer.json` `require: sandermuller/package-boost` constraint to require the new MINOR.
-4. Commit, tag repo-init.
-5. Verify both install cleanly together: `composer global require sandermuller/repo-init` should pull the right package-boost version.
+1. Ship the `package-boost-php` / `boost-core` feature first.
+2. Tag `package-boost-php` with the new MINOR.
+3. Update repo-init's `composer.json` `require: sandermuller/package-boost-php` constraint to require the new MINOR, then `composer update sandermuller/package-boost-php --with-all-dependencies` so `composer.lock` resolves to it (and pulls `boost-core` transitively).
+4. Commit the `composer.json` + `composer.lock` bump, tag repo-init.
+5. Verify both install cleanly together: `composer global require sandermuller/repo-init` should pull the right `package-boost-php` + `boost-core` versions.
 
 ## Post-release
 

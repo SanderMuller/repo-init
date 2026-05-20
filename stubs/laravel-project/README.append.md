@@ -28,4 +28,4 @@ Run `composer qa` to format + run Rector + PHPStan in sequence.
 
 - `.claude/skills/`, `.cursor/skills/`, etc. are synced from `.ai/skills/` via `sandermuller/package-boost-php` (which depends on `sandermuller/boost-core`).
 - `vendor/bin/boost sync` re-syncs after edits to `.ai/` (or auto-runs on `composer install/update` when `boost.php` is at the project root).
-- Skills include the global-install `repo-init` skill (from `~/.claude/skills/repo-init/`), which can audit/upgrade this repo's tooling against the canonical baseline.
+- Skills include the global-install `repo-init` skill (from `~/.claude/skills/sandermuller__repo-init/`), which can audit/upgrade this repo's tooling against the canonical baseline.

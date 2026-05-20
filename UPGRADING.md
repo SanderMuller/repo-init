@@ -12,7 +12,31 @@ To upgrade:
 composer global update sandermuller/repo-init
 ```
 
-The `post-update-cmd` hook re-syncs the skill into `~/.claude/skills/repo-init/`. If a stub or reference doc shape changed in a way that affects in-flight workflows, re-running `audit` on already-set-up repos will surface the new MISSING / NON-CANONICAL findings.
+The `post-update-cmd` hook re-syncs the skill into `~/.claude/skills/sandermuller__repo-init/`. If a stub or reference doc shape changed in a way that affects in-flight workflows, re-running `audit` on already-set-up repos will surface the new MISSING / NON-CANONICAL findings.
+
+---
+
+## 0.3.x → 0.4.0
+
+**Breaking (user-scope skill path).** `sandermuller/package-boost-php` was bumped to `^0.4.0`, which pulls `sandermuller/boost-core 0.4.0` transitively. boost-core 0.4.0 changes where user-scope skills land:
+
+- **Before:** `~/.{agent}/skills/repo-init/` (bare package basename)
+- **After:** `~/.{agent}/skills/sandermuller__repo-init/` (full `vendor__package` slug — `/` replaced by `__`, a sequence the Composer name spec forbids, so distinct packages never collide)
+
+To upgrade:
+
+```bash
+composer global update sandermuller/repo-init
+```
+
+On the first sync after the upgrade, boost-core's `UserScopeMigrator` performs a **one-time, ownership-checked rename** of the legacy `~/.{agent}/skills/repo-init/` dir to `~/.{agent}/skills/sandermuller__repo-init/` for every enabled agent. It runs only when the legacy dir's contents are provably reproducible from this package's `resources/boost/skills/` tree — if a foreign file is present (a pre-0.2 basename collision with another package), the rename is skipped and the legacy dir is left for manual cleanup.
+
+**What you must do:** nothing in the common case — the migration is automatic. Two exceptions:
+
+- **Hard-coded paths.** If you have scripts, dotfiles, or docs that reference `~/.{agent}/skills/repo-init/` directly, update them to `~/.{agent}/skills/sandermuller__repo-init/`.
+- **Pre-0.2 collision state.** If the auto-migration left a legacy `~/.{agent}/skills/repo-init/` dir in place, inspect it, copy any wanted files into `~/.{agent}/skills/sandermuller__repo-init/`, then `rm -rf ~/.{agent}/skills/repo-init/`.
+
+Project-scope `.claude/skills/<skill>/` paths are **unaffected** — the `__` namespacing applies to user-scope (`$HOME`) sync only.
 
 ---
 

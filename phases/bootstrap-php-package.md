@@ -88,7 +88,7 @@ Single batched call. On failure, consult composer-failure-modes.md.
 
 ### 7. Sync AI assets (project-local, optional)
 
-**Skip if:** target's `.ai/skills/` dir exists AND `.claude/skills/` contains synced content OR (default) `~/.claude/skills/repo-init/` exists from global install.
+**Skip if:** target's `.ai/skills/` dir exists AND `.claude/skills/` contains synced content OR (default) `~/.claude/skills/sandermuller__repo-init/` exists from global install.
 
 Default for php-package is NO project-local AI assets — repo-init's global skill is sufficient. If the user wants this package to ship its own `.ai/skills/` (e.g. it's itself an AI-tooling library), bootstrap-spec opts in via:
 

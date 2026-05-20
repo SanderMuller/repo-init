@@ -140,7 +140,7 @@ On failure, consult `$REPO_INIT_HOME/references/composer-failure-modes.md`.
 **Precondition check (BOTH must pass):**
 
 - Target has the AI agent directories materialized from `package-boost:sync`: at least one of `.claude/`, `.agents/`, `.cursor/`, `.junie/`, `.kiro/` exists in target cwd, AND `AGENTS.md`/`CLAUDE.md` exist at the target root. (`package-boost:sync` is the only step that generates these; missing means sync never ran.)
-- Repo-init's own skill is reachable: EITHER `.claude/skills/repo-init/SKILL.md` in target cwd (project-local install case) OR `~/.claude/skills/repo-init/SKILL.md` (global install case).
+- Repo-init's own skill is reachable: EITHER `.claude/skills/repo-init/SKILL.md` in target cwd (project-local install case) OR `~/.claude/skills/sandermuller__repo-init/SKILL.md` (global install case).
 
 **If precondition met:** skip — AI assets already available.
 

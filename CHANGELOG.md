@@ -7,7 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Pre-`1.0.0` releases may introduce breaking changes in MINOR bumps; we surface those here clearly.
 
-## [Unreleased]
+## [0.4.0] - 2026-05-20
+
+### Changed
+
+- **Bumped `sandermuller/package-boost-php` from `^0.3.1` to `^0.4.0`** in
+  repo-init's own `composer.json`. `composer.lock` now resolves
+  `package-boost-php 0.4.0` + `boost-core 0.4.0` (transitive); `laravel/prompts`
+  moved `v0.3.17 → v0.3.18` in the same update. Verified end-to-end:
+  `composer update` clean, `BoostAutoSync` post-update callback runs without
+  error. The 7 stub `composer.json` files still pin `package-boost-php ^0.3.0`
+  — a separate scaffold-stub bump is tracked independently.
+- **BREAKING (user-scope skill path): `~/.{agent}/skills/repo-init/` →
+  `~/.{agent}/skills/sandermuller__repo-init/`.** boost-core 0.4.0 namespaces
+  user-scope skill dirs by the full `vendor__package` slug (`/` replaced by
+  `__`, a sequence the Composer name spec forbids — so distinct packages can
+  no longer collide on a shared basename). boost-core's `UserScopeMigrator`
+  runs a one-time, ownership-checked rename of the legacy dir on the first
+  `composer global update` after upgrade. Project-scope `.claude/skills/<skill>/`
+  paths are **unaffected** — the `__` namespacing is user-scope (`$HOME`) only.
+  Migration steps in `UPGRADING.md` "0.3.x → 0.4.0".
+- **User-scope path doc sweep.** Migrated every hard-coded
+  `~/.{agent}/skills/repo-init/` reference to the namespaced form across
+  `README.md`, `RELEASING.md`, `SECURITY.md`, `UPGRADING.md`, the `repo-init`
+  skill (`resources/boost/skills/repo-init/SKILL.md`),
+  `references/boost-core-user-scope.md`,
+  `checklists/{self-removal,post-bootstrap-verification}.md`,
+  `tests/self-removal-contract.md`, and the `bootstrap-php-package` /
+  `bootstrap-laravel-package` phases. Project-scope `.claude/skills/repo-init/`
+  references left untouched (those are skill-name paths, not package slugs).
+- New `UPGRADING.md` "0.3.x → 0.4.0" section documenting the breaking path
+  change and the auto-migration.
+
+### Fixed
+
+- **Stale `sandermuller/package-boost` (no `-php` suffix) refs in
+  `RELEASING.md`.** Pre-release checklist + the "Coordinated bump" section now
+  name `package-boost-php` and spell out the
+  `composer update --with-all-dependencies` lockfile step.
+- **Stale `vendor/bin/testbench package-boost:sync` in
+  `checklists/self-removal.md`** project-local removal step → `vendor/bin/boost sync`
+  (the artisan command was the testbench-based predecessor; `package-boost-php`
+  registers no artisan command).
+- **CHANGELOG hygiene.** The `[Unreleased]` block holding already-tagged 0.3.1
+  content is now correctly labelled `[0.3.1]`; the version-compare link
+  references at the bottom (stale since 0.2.3) are complete through 0.4.0.
+
+## [0.3.1] - 2026-05-18
 
 ### Changed
 
@@ -526,7 +572,20 @@ Initial release. Global-install model (`composer global require sandermuller/rep
 - 4 Open Questions remaining: `--ai` flag verification on Laravel installer; package-boost user-scope sync feature; skill-copy-not-symlink behavior verification.
 - Independently reviewed via codex in 3 rounds (v3 → v4 → v5 → v6). All findings addressed.
 
-[Unreleased]: https://github.com/sandermuller/repo-init/compare/0.2.3...HEAD
+[0.4.0]: https://github.com/sandermuller/repo-init/compare/0.3.1...0.4.0
+[0.3.1]: https://github.com/sandermuller/repo-init/compare/0.3.0...0.3.1
+[0.3.0]: https://github.com/sandermuller/repo-init/compare/0.2.14...0.3.0
+[0.2.14]: https://github.com/sandermuller/repo-init/compare/0.2.13...0.2.14
+[0.2.13]: https://github.com/sandermuller/repo-init/compare/0.2.12...0.2.13
+[0.2.12]: https://github.com/sandermuller/repo-init/compare/0.2.11...0.2.12
+[0.2.11]: https://github.com/sandermuller/repo-init/compare/0.2.10...0.2.11
+[0.2.10]: https://github.com/sandermuller/repo-init/compare/0.2.9...0.2.10
+[0.2.9]: https://github.com/sandermuller/repo-init/compare/0.2.8...0.2.9
+[0.2.8]: https://github.com/sandermuller/repo-init/compare/0.2.7...0.2.8
+[0.2.7]: https://github.com/sandermuller/repo-init/compare/0.2.6...0.2.7
+[0.2.6]: https://github.com/sandermuller/repo-init/compare/0.2.5...0.2.6
+[0.2.5]: https://github.com/sandermuller/repo-init/compare/0.2.4...0.2.5
+[0.2.4]: https://github.com/sandermuller/repo-init/compare/0.2.3...0.2.4
 [0.2.3]: https://github.com/sandermuller/repo-init/compare/0.2.2...0.2.3
 [0.2.2]: https://github.com/sandermuller/repo-init/compare/0.2.1...0.2.2
 [0.2.1]: https://github.com/sandermuller/repo-init/compare/0.2.0...0.2.1

@@ -31,6 +31,6 @@ You'll get an acknowledgement within 72 hours. Coordinated disclosure timeline i
 ## Hardening recommendations for users
 
 - Pin `sandermuller/repo-init` to a specific version in `composer.lock` (global or project-local) so a malicious package-boost release can't auto-propagate without your knowledge.
-- Review the propagated skill before letting it auto-activate: `cat ~/.claude/skills/repo-init/SKILL.md`.
+- Review the propagated skill before letting it auto-activate: `cat ~/.claude/skills/sandermuller__repo-init/SKILL.md`.
 - Use the git-dirty guard religiously — never run audit/upgrade against a dirty working tree.
 - Verify the `--with-hihaho-rules` opt-in default is correct for your context (vendor-driven inference may not match your intent for forked / org-specific scenarios).
