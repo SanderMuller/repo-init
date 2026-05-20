@@ -20,8 +20,12 @@ shared:
       - tomasvotruba/cognitive-complexity
       - tomasvotruba/type-coverage
       - nunomaduro/collision
-      - sandermuller/package-boost-php
       - orchestra/testbench
+  # boost-family umbrella is NOT shared — it is assigned per category below:
+  #   framework-agnostic Composer package  -> sandermuller/package-boost-php
+  #   Laravel-specific Composer package    -> sandermuller/package-boost-laravel
+  #   Laravel application                  -> laravel/boost
+  # All three pull sandermuller/boost-core transitively (the skill-sync engine).
   test-framework:
     pest:
       require-dev:
@@ -82,6 +86,7 @@ categories:
         - larastan/larastan
         - laravel/boost  # testbench.yaml loads Laravel\Boost\BoostServiceProvider during package-boost:sync; missing it fatals the sync
         - driftingly/rector-laravel
+        - sandermuller/package-boost-laravel  # Laravel-flavoured boost umbrella; pulls boost-core + package-boost-php transitively
     optional:
       hihaho-package-tools-flavoured:
         default-inference: spatie/laravel-package-tools in require
@@ -99,6 +104,7 @@ categories:
       require-dev:
         - phpstan/phpstan
         - stolt/lean-package-validator
+        - sandermuller/package-boost-php  # framework-agnostic boost umbrella; pulls boost-core transitively
     optional: {}
     shared-exclusions: []
 
@@ -106,7 +112,8 @@ categories:
     mandatory:
       require:
         - "phpstan/phpstan: ^2"
-      require-dev: []
+      require-dev:
+        - sandermuller/package-boost-php  # framework-agnostic boost umbrella; pulls boost-core transitively
     optional:
       laravel-aware:
         default-inference: illuminate/* in require
@@ -124,7 +131,8 @@ categories:
       require:
         - "rector/rector: ^2"
         - "symplify/rule-doc-generator-contracts: ^11.2"
-      require-dev: []
+      require-dev:
+        - sandermuller/package-boost-php  # framework-agnostic boost umbrella; pulls boost-core transitively
     optional:
       laravel-aware:
         default-inference: driftingly/rector-laravel in require OR require-dev
@@ -140,6 +148,7 @@ categories:
         - "composer-plugin-api: ^2.6"
       require-dev:
         - "composer/composer: ^2.6"
+        - sandermuller/package-boost-php  # framework-agnostic boost umbrella; pulls boost-core transitively
     optional:
       runtime-api:
         default-inference: plugin uses Composer\InstalledVersions in its own source
@@ -148,7 +157,6 @@ categories:
         require-dev: []
     shared-exclusions:
       - orchestra/testbench  # plugins don't fit testbench
-      - sandermuller/package-boost-php  # composer-plugin packages use boost-core directly; package-boost-php is for package authors
     sub-flags:
       # Detected from src/, not from composer.json keys. Audit derives.
       command-provider:
@@ -157,6 +165,31 @@ categories:
         detection: extra.class implements EventSubscriberInterface
       boost-skill-provider:
         detection: resources/boost/skills/ dir exists
+
+  # skill-bundle: a distributable package whose product is the AI skills it
+  # ships under resources/boost/skills/. type: library, no src/ PHP code.
+  # Detection: type: library AND sandermuller/boost-core in `require` (runtime).
+  # Full category — own bootstrap/audit/upgrade phases (NOT a fall-through).
+  # NOTE: skill-bundle ships pure-markdown skills and no PHP source — so it
+  # carries NO test runner (no pest, no phpunit) and consumes NO shared dev-dep
+  # block (neither shared.always NOR shared.test-framework.*). Its complete
+  # dependency set is exactly the `mandatory` block below — nothing is merged.
+  skill-bundle:
+    mandatory:
+      require:
+        - sandermuller/boost-core  # runtime require — consumers need it to discover the shipped skills; require-dev is not transitive
+      require-dev:
+        - laravel/pint
+        - stolt/lean-package-validator
+    optional: {}
+    # consumes-shared-dev-deps: false → a consumer/CLI building this category's
+    # dependency list MUST skip BOTH shared.always AND shared.test-framework.*
+    # (incl. pest / pest-laravel / phpunit). The deps come solely from this
+    # category's `mandatory` block above. The key is a sibling of mandatory/
+    # optional; boolean; absent ⇒ true (every other category DOES consume the
+    # shared list + its test-framework block).
+    consumes-shared-dev-deps: false
+    shared-exclusions: []
 
   # Phase 8 LOW: bootstrap-only categories. audit + upgrade fall through to
   # laravel-package phases (these are structurally laravel-packages with
@@ -171,6 +204,7 @@ categories:
         - larastan/larastan
         - laravel/boost  # testbench.yaml loads Laravel\Boost\BoostServiceProvider during package-boost:sync; missing it fatals the sync
         - driftingly/rector-laravel
+        - sandermuller/package-boost-laravel  # Laravel-flavoured boost umbrella; pulls boost-core + package-boost-php transitively
     optional: {}
     suggests:
       # When the plugin uses specific Filament components in tests, the user
@@ -192,6 +226,7 @@ categories:
         - larastan/larastan
         - laravel/boost  # testbench.yaml loads Laravel\Boost\BoostServiceProvider during package-boost:sync; missing it fatals the sync
         - driftingly/rector-laravel
+        - sandermuller/package-boost-laravel  # Laravel-flavoured boost umbrella; pulls boost-core + package-boost-php transitively
     optional: {}
     suggests: []
     shared-exclusions: []

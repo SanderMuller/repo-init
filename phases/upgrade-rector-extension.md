@@ -29,7 +29,7 @@ Single `composer require <list>` (NOT `--dev`):
 
 ## Apply MISSING dev deps
 
-Single `composer require --dev <list>`. Shared list MINUS `rector/rector` (per §5.1.1 — it's in `require`). Plus `nikic/php-parser`.
+Single `composer require --dev <list>`. Shared list MINUS `rector/rector` (per §5.1.1 — it's in `require`). Plus `nikic/php-parser` and `sandermuller/package-boost-php` (the framework-agnostic boost umbrella; pulls `sandermuller/boost-core` transitively).
 
 Test-framework: `pestphp/pest` (+ arch + rector-pest) for pest, OR `phpunit/phpunit` for phpunit.
 
@@ -43,7 +43,7 @@ Same logic as upgrade-laravel-package.md — apply each file's mode from `$REPO_
 
 - **`scripts`**: insert missing entries. For rector-extension, the `qa` chain typically adds `@test` (full QA includes running the rule tests).
 - **`extra.rector.includes`**: ensure `["config/config.php"]` is set. If existing array, ensure the path is in it. Don't replace; add.
-- **`config.allow-plugins`**: `pestphp/pest-plugin: true` (if pest), `phpstan/extension-installer: true`, **`rector/extension-installer: true`** (critical for rector-extension — without it, the extension's `config/config.php` isn't auto-loaded by consumer rector configs).
+- **`config.allow-plugins`**: `pestphp/pest-plugin: true` (if pest), `phpstan/extension-installer: true`, **`rector/extension-installer: true`** (critical for rector-extension — without it, the extension's `config/config.php` isn't auto-loaded by consumer rector configs), `sandermuller/boost-core: true`, `sandermuller/package-boost-php: true` (the last two are MANDATORY — both are `type: composer-plugin` pulled in via the boost umbrella; without them the first non-interactive `composer install` is blocked).
 - **`config.sort-packages`**: `true`.
 - Don't touch `extra.laravel.providers` (rector-extension isn't a Laravel SP).
 

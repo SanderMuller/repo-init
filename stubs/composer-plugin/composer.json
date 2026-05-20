@@ -36,6 +36,7 @@
         "phpstan/phpstan-strict-rules": "^2.0",
         "rector/rector": "^2.4",
         "rector/type-perfect": "^2.1",
+        "sandermuller/package-boost-php": "^0.4.0",
         "spaze/phpstan-disallowed-calls": "^4.10",
         "stolt/lean-package-validator": "^5.7",
         "symplify/phpstan-extensions": "^12.0",
@@ -56,6 +57,12 @@
         "class": "__NAMESPACE_ESCAPED__\\Plugin"
     },
     "scripts": {
+        "post-install-cmd": [
+            "SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::runWithSummary"
+        ],
+        "post-update-cmd": [
+            "SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::runWithSummary"
+        ],
         "phpstan": "vendor/bin/phpstan analyse --memory-limit=2G",
         "phpstan-simplified": "vendor/bin/phpstan analyse --memory-limit=2G --error-format symplify",
         "phpstan-clear-cache": "vendor/bin/phpstan clear-result-cache",
@@ -83,7 +90,9 @@
         "allow-plugins": {
             "__VENDOR__/__PACKAGE__": true,
             "pestphp/pest-plugin": true,
-            "phpstan/extension-installer": true
+            "phpstan/extension-installer": true,
+            "sandermuller/boost-core": true,
+            "sandermuller/package-boost-php": true
         }
     },
     "minimum-stability": "stable",

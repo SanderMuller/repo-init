@@ -33,8 +33,8 @@ Single `composer require` for runtime deps:
 
 Single batched `composer require --dev <list>`. Shared (minus exclusions) + category-mandatory:
 
-- Mandatory: `composer/composer: ^2.6`.
-- Shared list from `references/shared-dev-deps.md`, MINUS: `orchestra/testbench`, `sandermuller/package-boost-php`.
+- Mandatory: `composer/composer: ^2.6`, `sandermuller/package-boost-php` (the framework-agnostic boost umbrella; pulls `sandermuller/boost-core` transitively — composer-plugin is a framework-agnostic Composer package, so it gets it like the other agnostic categories).
+- Shared list from `references/shared-dev-deps.md`, MINUS: `orchestra/testbench`.
 - Plus `phpstan/phpstan` (NEVER `larastan/larastan` — framework-agnostic), `stolt/lean-package-validator`.
 - Test-framework: `pestphp/pest` + arch + rector-pest (pest), OR `phpunit/phpunit` (phpunit). NEVER `pestphp/pest-plugin-laravel` — framework-agnostic.
 
@@ -47,7 +47,7 @@ Same logic as upgrade-php-package.md — apply each file's mode from `$REPO_INIT
 ## Apply composer.json merge-keys patches
 
 - **`scripts`**: insert missing entries per `references/composer-scripts.md`. Include `validate-gitattributes` script. Add `@validate-gitattributes` to `qa` chain.
-- **`config.allow-plugins`**: self-allow entry (`"<vendor>/<package>": true`), `pestphp/pest-plugin: true` (if pest), `phpstan/extension-installer: true`. If any other composer-plugin is in require/require-dev, add those too.
+- **`config.allow-plugins`**: self-allow entry (`"<vendor>/<package>": true`), `pestphp/pest-plugin: true` (if pest), `phpstan/extension-installer: true`, `sandermuller/boost-core: true`, `sandermuller/package-boost-php: true` (the last two are MANDATORY — both are `type: composer-plugin` pulled in via the boost umbrella; without them the first non-interactive `composer install` is blocked). If any other composer-plugin is in require/require-dev, add those too.
 - **`config.sort-packages`**: `true`.
 - **`extra.class`**: required for composer-plugin. Must resolve to a class implementing `PluginInterface`. If missing, insert per MISSING files step above.
 

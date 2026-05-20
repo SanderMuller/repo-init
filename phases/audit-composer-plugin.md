@@ -54,7 +54,7 @@ If sub-flag `runtime-api` is `y`:
 
 **Follow `$REPO_INIT_HOME/references/shared-dev-deps.md#audit-verification-protocol-mandatory`.** Every bullet below gets an explicit PRESENT/MISSING verdict. Skimming is the failure mode.
 
-Apply per-category exclusions for `composer-plugin`: DROP `orchestra/testbench` (plugins don't fit testbench) and DROP `sandermuller/package-boost-php` (plugins use boost-core directly if at all; package-boost-php is for package authors).
+Apply per-category exclusions for `composer-plugin`: DROP `orchestra/testbench` (plugins don't fit testbench). `composer-plugin` is a framework-agnostic Composer package, so it DOES get `sandermuller/package-boost-php` like the other agnostic categories (the pre-0.5.0 exclusion that dropped it was removed in repo-init 0.5.0).
 
 From `$REPO_INIT_HOME/references/per-category-deps.md#composer-plugin` MANDATORY:
 
@@ -76,6 +76,7 @@ Plus shared (minus exclusions above):
 - [ ] `tomasvotruba/cognitive-complexity`
 - [ ] `tomasvotruba/type-coverage`
 - [ ] `nunomaduro/collision`
+- [ ] `sandermuller/package-boost-php`
 - [ ] `stolt/lean-package-validator`
 
 Test-framework split:
@@ -89,6 +90,7 @@ Same logic as audit-php-package.md, with composer-plugin stub paths from `$REPO_
 
 ## NON-CANONICAL findings
 
+- [ ] **`config.allow-plugins` missing the boost plugins** (HIGH severity): `sandermuller/package-boost-php` transitively pulls `sandermuller/boost-core` — a `composer-plugin`. `config.allow-plugins` MUST list BOTH `sandermuller/boost-core` and `sandermuller/package-boost-php` (both are `type: composer-plugin`). Missing either → the first non-interactive `composer install` fails with "blocked by your allow-plugins config". (Distinct from the self-allow rule below.) Flag NON-CANONICAL.
 - [ ] `composer.lock` committed (libraries should not commit lockfiles).
 - [ ] **`extra.class` missing** (HIGH severity): Composer rejects the plugin at install time with "no class found". Flag NON-CANONICAL.
 - [ ] **`extra.class` points to a class that does NOT exist in autoload** (HIGH severity): grep PSR-4 mapping + verify file. If class missing or namespace mismatched, plugin won't load.

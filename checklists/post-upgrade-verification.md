@@ -2,6 +2,10 @@
 
 Run after every upgrade phase. If anything is red, stop and report to the user before declaring the upgrade complete.
 
+## Category note — `skill-bundle`
+
+`skill-bundle` ships pure-markdown skills and no PHP source. For a `skill-bundle` target, **skip** the "Tooling smoke tests" PHPStan / Rector / Tests items (only `vendor/bin/pint --test` applies) and the larastan-vs-phpstan exclusivity check (neither is installed). Composer integrity, Git state, AI tooling sync, and the `skill-bundle` entry under "Per-category extras" still apply.
+
 ## Composer integrity
 
 - [ ] `composer validate` returns 0.
@@ -44,6 +48,13 @@ Run after every upgrade phase. If anything is red, stop and report to the user b
 ### `php-package`
 
 - [ ] `composer validate-gitattributes` returns 0 (or surfaces specific export-ignore lines still needed).
+
+### `skill-bundle`
+
+- [ ] `composer validate-gitattributes` returns 0 (or surfaces specific export-ignore lines still needed).
+- [ ] `sandermuller/boost-core` is in `require` (runtime), NOT `require-dev`.
+- [ ] `config.allow-plugins` lists `sandermuller/boost-core: true`.
+- [ ] `resources/boost/skills/` holds at least one `<skill-name>/SKILL.md`.
 
 ### `phpstan-extension`
 

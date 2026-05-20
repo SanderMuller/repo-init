@@ -26,6 +26,7 @@ BOOTSTRAP_PHASES=(
     phases/bootstrap-php-package.md
     phases/bootstrap-phpstan-extension.md
     phases/bootstrap-rector-extension.md
+    phases/bootstrap-skill-bundle.md
 )
 
 echo "[check-bootstrap-idempotency] verifying ${#BOOTSTRAP_PHASES[@]} bootstrap phase files have idempotency structure..."

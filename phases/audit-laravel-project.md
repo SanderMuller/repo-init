@@ -73,8 +73,9 @@ Plus shared (`$REPO_INIT_HOME/references/shared-dev-deps.md`) minus what Laravel
 - [ ] `tomasvotruba/cognitive-complexity`
 - [ ] `tomasvotruba/type-coverage`
 - [ ] `nunomaduro/collision` (Laravel ships)
-- [ ] `sandermuller/package-boost-php`
 - [ ] `orchestra/testbench` — typically NOT in laravel-project (it's a package-dev tool). Skip flagging.
+
+`laravel-project` carries `laravel/boost` (above) as its boost-family package — NOT `sandermuller/package-boost-php`. `laravel/boost` handles AI guideline + skill sync for Laravel applications; the `sandermuller/package-boost-*` umbrellas are for distributable packages, not apps.
 
 OPTIONAL (only when opt-in confirmed):
 

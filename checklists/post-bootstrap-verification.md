@@ -2,11 +2,21 @@
 
 Run after every bootstrap phase. If anything is red, stop and report to the user before printing the "next steps" prompt.
 
+## Category note — `skill-bundle`
+
+`skill-bundle` ships pure-markdown skills and no PHP source, so several checks below — written for code-bearing categories — do NOT apply and would false-fail. For a `skill-bundle` target, **skip**:
+
+- **File presence**: `.mcp.json`, `phpstan-baseline.neon`, `phpstan.neon.dist`, `rector.php`, `phpunit.xml` / `tests/Pest.php`, `run-tests.yml`, and the `phpstan.yml` / `rector-check.yml` workflows are NOT expected (only `pint-check.yml` + `update-changelog.yml` ship).
+- **Tooling smoke tests**: only `vendor/bin/pint --test` applies — there is no phpstan / rector / pest.
+- **Larastan vs phpstan**: neither is installed — skip the section entirely.
+
+Still applies to `skill-bundle`: Composer integrity (it is a library — lockfile gitignored), the lean meta files (`README.md`, `LICENSE`, `CHANGELOG.md`, `SECURITY.md`, `.editorconfig`, `.gitattributes`, `.gitignore`, `pint.json`, `.github/dependabot.yml`), placeholder substitution, the `resources/boost/skills/` tree, AI tooling sync, and Git state.
+
 ## Composer integrity
 
 - [ ] `composer validate` returns 0.
 - [ ] `composer install` ran cleanly (vendor/ populated, composer.lock generated).
-- [ ] `composer.lock` exists. For `php-package`, `phpstan-extension`, `rector-extension`, `laravel-package` — composer.lock should NOT be committed (the .gitignore excludes it). Verify:
+- [ ] `composer.lock` exists. For `php-package`, `phpstan-extension`, `rector-extension`, `laravel-package`, `composer-plugin`, `skill-bundle` — composer.lock should NOT be committed (the .gitignore excludes it). Verify:
 
   ```bash
   git check-ignore composer.lock && echo "OK: gitignored" || echo "FAIL: lockfile not ignored"

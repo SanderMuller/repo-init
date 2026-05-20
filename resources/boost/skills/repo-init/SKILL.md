@@ -43,7 +43,7 @@ If unclear from the user's prompt, ask.
 
 For bootstrap, ask the user which category. For audit/upgrade, read the target's `composer.json` and follow `$REPO_INIT_HOME/references/detection-rules.md`.
 
-Six categories:
+Seven categories:
 
 | Category | Detection signal |
 |---|---|
@@ -52,6 +52,7 @@ Six categories:
 | `rector-extension` | `type: rector-extension` OR `extra.rector.includes` |
 | `laravel-package` | `type: library` + (`extra.laravel.providers` OR `illuminate/*` OR `socialiteproviders/manager` OR `spatie/laravel-package-tools`) |
 | `composer-plugin` | `type: composer-plugin` |
+| `skill-bundle` | `type: library` + `sandermuller/boost-core` in `require` (ships `resources/boost/skills/`, no `src/`) |
 | `php-package` | `type: library` + none of the above |
 
 Sub-flags for `laravel-package`:

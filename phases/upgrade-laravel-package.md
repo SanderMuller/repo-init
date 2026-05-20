@@ -43,8 +43,9 @@ Per-category mandatory `require-dev` for `laravel-package`:
 - `larastan/larastan` (NEVER also `phpstan/phpstan` per §5.3 exclusivity)
 - `laravel/boost` — required for `testbench.yaml` to boot (lists `Laravel\Boost\BoostServiceProvider`). Missing → `boost sync` / `testbench` fatals with `Class "Laravel\Boost\BoostServiceProvider" not found`. Added in repo-init 0.2.5.
 - `driftingly/rector-laravel`
+- `sandermuller/package-boost-laravel` — the Laravel-flavoured boost umbrella (pulls `sandermuller/boost-core` + `sandermuller/package-boost-php` transitively). Replaced the bare `package-boost-php` for Laravel-category packages in repo-init 0.5.0.
 
-Plus shared dev deps from `$REPO_INIT_HOME/references/shared-dev-deps.md` (universal — `laravel/pao`, `laravel/pint`, `phpstan/extension-installer`, `phpstan/phpstan-strict-rules`, `phpstan/phpstan-deprecation-rules`, `phpstan/phpstan-phpunit`, `rector/rector`, `rector/type-perfect`, `spaze/phpstan-disallowed-calls`, `symplify/phpstan-extensions`, `tomasvotruba/cognitive-complexity`, `tomasvotruba/type-coverage`, `nunomaduro/collision`, `sandermuller/package-boost-php`, `orchestra/testbench`).
+Plus shared dev deps from `$REPO_INIT_HOME/references/shared-dev-deps.md` (universal — `laravel/pao`, `laravel/pint`, `phpstan/extension-installer`, `phpstan/phpstan-strict-rules`, `phpstan/phpstan-deprecation-rules`, `phpstan/phpstan-phpunit`, `rector/rector`, `rector/type-perfect`, `spaze/phpstan-disallowed-calls`, `symplify/phpstan-extensions`, `tomasvotruba/cognitive-complexity`, `tomasvotruba/type-coverage`, `nunomaduro/collision`, `orchestra/testbench`).
 
 Test-framework split (Pest by default for sander vendor):
 
@@ -76,7 +77,7 @@ For each composer.json key documented in `$REPO_INIT_HOME/references/composer-sc
 
 - **`scripts`**: insert each script from `references/composer-scripts.md` (always-present block + workbench block always added for laravel-package) not present in target. Don't override scripts with the same name; prompt the user on conflict.
 - **`extra.laravel.providers`**: insert `__NAMESPACE__\\__PACKAGE_STUDLY__ServiceProvider` if missing. If existing array contains a different provider, ask user whether to add or replace.
-- **`config.allow-plugins`**: insert `pestphp/pest-plugin: true` (when test-framework=pest) and `phpstan/extension-installer: true` (always) if missing.
+- **`config.allow-plugins`**: insert `pestphp/pest-plugin: true` (when test-framework=pest) and `phpstan/extension-installer: true` (always) if missing. Also insert `sandermuller/boost-core: true` and `sandermuller/package-boost-php: true` (MANDATORY — both are `type: composer-plugin` pulled in via `package-boost-laravel`; without them the first non-interactive `composer install` is blocked).
 - **`config.sort-packages`**: set to `true` if absent.
 - **`autoload-dev.psr-4`**: ensure `__NAMESPACE_ESCAPED__\\\\Tests\\\\: tests/` is present. If not, add. Don't override existing entries.
 - **`autoload-dev.psr-4`** (workbench): ensure `Workbench\\\\App\\\\: workbench/app/` is present.

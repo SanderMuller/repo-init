@@ -32,6 +32,7 @@ Single `composer require --dev <list>`. Shared list MINUS bare `phpstan/phpstan`
 
 - `phpunit/phpunit` (canonical for phpstan-extension)
 - `nikic/php-parser`
+- `sandermuller/package-boost-php` (the framework-agnostic boost umbrella; pulls `sandermuller/boost-core` transitively)
 
 If Laravel-aware opt-in:
 
@@ -48,7 +49,7 @@ Same logic as upgrade-laravel-package.md — apply each file's mode from `$REPO_
 - **`scripts`**: insert missing entries. For phpstan-extension, `test` defaults to `vendor/bin/phpunit`.
 - **`extra.phpstan.includes`**: ensure `["extension.neon"]` is set. If existing array, ensure `extension.neon` is in it. Don't replace; add.
 - **`autoload-dev.classmap`**: ensure `tests/Rules/stubs/` is in the classmap. If missing, insert as `["tests/Rules/stubs/"]` (preserving existing entries).
-- **`config.allow-plugins`**: `phpstan/extension-installer: true`.
+- **`config.allow-plugins`**: `phpstan/extension-installer: true`, `sandermuller/boost-core: true`, `sandermuller/package-boost-php: true` (the last two are MANDATORY — both are `type: composer-plugin` pulled in via the boost umbrella; without them the first non-interactive `composer install` is blocked).
 - **`config.sort-packages`**: `true`.
 - Skip `pestphp/pest-plugin` allow-plugin (phpstan-extension uses PHPUnit).
 - Don't touch `extra.laravel.providers` (phpstan-extension isn't a Laravel service provider).

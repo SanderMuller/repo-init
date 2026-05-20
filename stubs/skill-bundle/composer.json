@@ -1,0 +1,55 @@
+{
+    "name": "__VENDOR__/__PACKAGE__",
+    "description": "__DESCRIPTION__",
+    "keywords": [
+        "__VENDOR__",
+        "__PACKAGE__",
+        "ai",
+        "skills",
+        "boost"
+    ],
+    "homepage": "https://github.com/__VENDOR__/__PACKAGE__",
+    "license": "MIT",
+    "type": "library",
+    "authors": [
+        {
+            "name": "__AUTHOR_NAME__",
+            "email": "__AUTHOR_EMAIL__",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "__PHP_VERSION__",
+        "sandermuller/boost-core": "^0.4.0"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.29",
+        "stolt/lean-package-validator": "^5.7"
+    },
+    "scripts": {
+        "post-install-cmd": [
+            "SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::runWithSummary"
+        ],
+        "post-update-cmd": [
+            "SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::runWithSummary"
+        ],
+        "format": "vendor/bin/pint",
+        "validate-gitattributes": "vendor/bin/lean-package-validator validate",
+        "qa": [
+            "@format",
+            "@validate-gitattributes"
+        ],
+        "qa-check": [
+            "vendor/bin/pint --test",
+            "@validate-gitattributes"
+        ]
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "sandermuller/boost-core": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

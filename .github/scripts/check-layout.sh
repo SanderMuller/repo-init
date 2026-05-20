@@ -64,6 +64,12 @@ REQUIRED_PATHS=(
     "phases/upgrade-composer-plugin.md"
     "references/phpunit-config.md"
 
+    # skill-bundle category (added in 0.5.0)
+    "phases/bootstrap-skill-bundle.md"
+    "phases/audit-skill-bundle.md"
+    "phases/upgrade-skill-bundle.md"
+    "stubs/skill-bundle/composer.json"
+
     # Stub trees — directories, not files (one sentinel file checked per tree)
     "stubs/shared/pint.json"
     "stubs/laravel-package/composer.json"

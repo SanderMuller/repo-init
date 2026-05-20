@@ -48,7 +48,7 @@
         "phpstan/phpstan-strict-rules": "^2.0",
         "rector/rector": "^2.4",
         "rector/type-perfect": "^2.1",
-        "sandermuller/package-boost-php": "^0.3.0",
+        "sandermuller/package-boost-laravel": "^0.4.0",
         "spaze/phpstan-disallowed-calls": "^4.10",
         "symplify/phpstan-extensions": "^12.0",
         "tomasvotruba/cognitive-complexity": "^1.1",
@@ -79,7 +79,10 @@
             "@php vendor/bin/testbench serve --ansi"
         ],
         "post-install-cmd": [
-            "if [ \"$COMPOSER_DEV_MODE\" = \"1\" ]; then vendor/bin/boost sync 2>/dev/null || true; fi"
+            "SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::runWithSummary"
+        ],
+        "post-update-cmd": [
+            "SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::runWithSummary"
         ],
         "phpstan": "vendor/bin/phpstan analyse --memory-limit=2G",
         "phpstan-simplified": "vendor/bin/phpstan analyse --memory-limit=2G --error-format symplify",
@@ -112,7 +115,9 @@
         "sort-packages": true,
         "allow-plugins": {
             "pestphp/pest-plugin": true,
-            "phpstan/extension-installer": true
+            "phpstan/extension-installer": true,
+            "sandermuller/boost-core": true,
+            "sandermuller/package-boost-php": true
         }
     },
     "minimum-stability": "stable",

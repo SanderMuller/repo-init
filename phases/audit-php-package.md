@@ -80,6 +80,7 @@ Same logic as audit-laravel-package.md, with php-package stub paths. Apply each 
 
 ## NON-CANONICAL findings
 
+- [ ] **`config.allow-plugins` missing the boost plugins** (HIGH severity): `sandermuller/package-boost-php` transitively pulls `sandermuller/boost-core` — a `composer-plugin`. `config.allow-plugins` MUST list BOTH `sandermuller/boost-core` and `sandermuller/package-boost-php` (both are `type: composer-plugin`). Missing either → the first non-interactive `composer install` fails with "blocked by your allow-plugins config". Flag NON-CANONICAL.
 - [ ] `composer.lock` committed (libraries should not commit lockfiles).
 - [ ] **`phpunit.xml.dist` committed (with `.dist` suffix)**: canonical baseline as of repo-init 0.2.4 ships `phpunit.xml` (no `.dist`). Flag NON-CANONICAL.
 - [ ] **PHPUnit cache rules** (if `test-framework=phpunit`): apply `$REPO_INIT_HOME/references/phpunit-config.md` Audit-rule section — flag `.phpunit.cache/` at root, missing/wrong `cacheDirectory` attribute in `phpunit.xml`, committed `.phpunit.cache`.

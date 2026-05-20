@@ -34,7 +34,7 @@ Per-category mandatory `require-dev` for `laravel-project`:
 - `laravel/tinker` (Laravel may ship this already)
 - `driftingly/rector-laravel`
 
-Plus shared dev deps from `$REPO_INIT_HOME/references/shared-dev-deps.md` minus what Laravel installer typically already ships (read freshly-generated composer.json to confirm): `laravel/pao`, `laravel/pint` (already), `phpstan/extension-installer`, `phpstan/phpstan-strict-rules`, `phpstan/phpstan-deprecation-rules`, `phpstan/phpstan-phpunit`, `rector/rector`, `rector/type-perfect`, `spaze/phpstan-disallowed-calls`, `symplify/phpstan-extensions`, `tomasvotruba/cognitive-complexity`, `tomasvotruba/type-coverage`, `nunomaduro/collision` (Laravel ships), `sandermuller/package-boost-php`, `orchestra/testbench` (typically NOT in laravel-project — skip).
+Plus shared dev deps from `$REPO_INIT_HOME/references/shared-dev-deps.md` minus what Laravel installer typically already ships (read freshly-generated composer.json to confirm): `laravel/pao`, `laravel/pint` (already), `phpstan/extension-installer`, `phpstan/phpstan-strict-rules`, `phpstan/phpstan-deprecation-rules`, `phpstan/phpstan-phpunit`, `rector/rector`, `rector/type-perfect`, `spaze/phpstan-disallowed-calls`, `symplify/phpstan-extensions`, `tomasvotruba/cognitive-complexity`, `tomasvotruba/type-coverage`, `nunomaduro/collision` (Laravel ships), `orchestra/testbench` (typically NOT in laravel-project — skip). `laravel-project` does NOT take `sandermuller/package-boost-php` — `laravel/boost` (above) is its boost-family tool.
 
 Plus confirmed opt-ins:
 
@@ -63,7 +63,7 @@ Same logic as upgrade-laravel-package.md — apply each file's mode from `$REPO_
 
 Per `references/composer-scripts.md`:
 
-- **`scripts`**: insert missing `phpstan`, `phpstan-simplified`, `format`, `rector`, `sync-ai`, `qa`. For `test`, `test-coverage`: laravel-project may already have them from `laravel new`; don't override. Insert `sync-ai` as `vendor/bin/boost sync` (boost-core's standalone bin, pulled transitively via `sandermuller/package-boost-php`; framework-agnostic — no artisan command, no `@php` prefix needed).
+- **`scripts`**: insert missing `phpstan`, `phpstan-simplified`, `format`, `rector`, `qa`. For `test`, `test-coverage`: laravel-project may already have them from `laravel new`; don't override. laravel-project does NOT get a `sync-ai` script — `laravel/boost` owns AI-asset sync for applications (`php artisan boost:update`); there is no `vendor/bin/boost` here.
 - **`scripts.dev`**: if absent, suggest adding the multi-process dev script (concurrent server + queue + pail + vite). This is laravel-project canonical. Show example, ask before inserting.
 - **`config.allow-plugins`**: insert `phpstan/extension-installer: true`, `pestphp/pest-plugin: true` (if pest), `php-http/discovery: true` (Laravel default).
 - **`config.sort-packages`**: set to `true`.
@@ -97,13 +97,15 @@ _ide_helper_models.php
 
 Dedupe — never add a duplicate.
 
-## Run boost-core sync
+## Run laravel/boost sync
+
+`laravel-project` uses `laravel/boost` (not `sandermuller/boost-core`) for AI-asset sync. Laravel Boost v2 installs and updates skills from the packages detected in `composer.json`:
 
 ```bash
-vendor/bin/boost sync
+php artisan boost:update
 ```
 
-(boost-core's standalone bin, pulled transitively via `sandermuller/package-boost-php`. Auto-runs on subsequent `composer install/update` only if `boost.php` exists at the project root — `laravel new --boost` generates `boost.json` for the unrelated `laravel/boost` package, NOT `boost.php`. Run `composer boost:install --no-interaction` once to generate `boost.php` if you want auto-sync; otherwise this command stays manual.)
+If `laravel/boost` isn't installed yet, run `php artisan boost:install` first (or `composer require laravel/boost` then `php artisan boost:install`).
 
 ## Verification
 

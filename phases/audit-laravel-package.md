@@ -85,7 +85,6 @@ From `$REPO_INIT_HOME/references/shared-dev-deps.md` (universal):
 - [ ] `tomasvotruba/cognitive-complexity`
 - [ ] `tomasvotruba/type-coverage`
 - [ ] `nunomaduro/collision`
-- [ ] `sandermuller/package-boost-php`
 - [ ] `orchestra/testbench`
 
 Test-framework split:
@@ -98,6 +97,7 @@ Category-mandatory:
 - [ ] `larastan/larastan` (NEVER also `phpstan/phpstan` per §5.3 exclusivity — if both present, flag both: `phpstan/phpstan` is EXTRA, `larastan/larastan` is correct).
 - [ ] `laravel/boost` — required for `testbench.yaml` to boot, which lists `Laravel\Boost\BoostServiceProvider`. Missing → `package-boost:sync` and any testbench-based command fatals with `Class "Laravel\Boost\BoostServiceProvider" not found`. Added in repo-init 0.2.5.
 - [ ] `driftingly/rector-laravel`
+- [ ] `sandermuller/package-boost-laravel` — the Laravel-flavoured boost umbrella (pulls `sandermuller/boost-core` + `sandermuller/package-boost-php` transitively). Replaced the bare `sandermuller/package-boost-php` for Laravel-category packages in repo-init 0.5.0.
 
 `livewire/livewire` is `suggest only` — never flagged.
 
@@ -113,6 +113,7 @@ For each file present, look up its merge mode in `$REPO_INIT_HOME/references/upg
 
 ## NON-CANONICAL findings
 
+- [ ] **`config.allow-plugins` missing the boost plugins** (HIGH severity): a `composer.json` that requires a boost umbrella (`sandermuller/package-boost-php` or `sandermuller/package-boost-laravel`) transitively pulls `sandermuller/boost-core` — a `composer-plugin`. `config.allow-plugins` MUST list BOTH `sandermuller/boost-core` and `sandermuller/package-boost-php` (both are `type: composer-plugin`). Missing either → the first non-interactive `composer install` fails with "blocked by your allow-plugins config". Flag NON-CANONICAL.
 - [ ] **`composer.lock` committed in a library**: laravel-package is a library; lockfiles should not be committed (per `references/version-defaults.md` + Composer convention). Flag NON-CANONICAL with the suggestion "`git rm --cached composer.lock` + add to .gitignore".
 - [ ] **`phpunit.xml.dist` committed (with `.dist` suffix)**: canonical baseline as of repo-init 0.2.4 ships `phpunit.xml` (no `.dist` suffix). Flag NON-CANONICAL with the suggestion "`git mv phpunit.xml.dist phpunit.xml` + update CI path-filters + .gitignore + stub composer scripts that reference it".
 - [ ] **PHPUnit cache rules** (if `test-framework=phpunit`): apply `$REPO_INIT_HOME/references/phpunit-config.md` Audit-rule section — flag `.phpunit.cache/` at root, missing/wrong `cacheDirectory` attribute in `phpunit.xml`, committed `.phpunit.cache`.
@@ -153,7 +154,7 @@ MISSING (HIGH):
     - rector/type-perfect
     - tomasvotruba/cognitive-complexity
     - spaze/phpstan-disallowed-calls
-    - sandermuller/package-boost-php
+    - sandermuller/package-boost-laravel
 
 OUTDATED (MEDIUM):
   Files (2):

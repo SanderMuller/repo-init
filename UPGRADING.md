@@ -16,6 +16,40 @@ The `post-update-cmd` hook re-syncs the skill into `~/.claude/skills/sandermulle
 
 ---
 
+## 0.4.x → 0.5.0
+
+0.5.0 changes what repo-init **scaffolds** — the stub `composer.json` files and the per-category dependency map. Upgrading repo-init itself is the usual one-liner:
+
+```bash
+composer global update sandermuller/repo-init
+```
+
+### If you have a repo scaffolded by repo-init < 0.5.0
+
+Run `audit-<category>.md` then `upgrade-<category>.md` against it. Two findings will surface:
+
+- **Blocking — `config.allow-plugins` missing the boost plugins.** Pre-0.5.0 stubs shipped a `composer.json` that requires a boost umbrella but never allow-listed `sandermuller/boost-core` (a `composer-plugin` pulled in transitively). The result: `composer install --no-interaction` aborts with "blocked by your allow-plugins config". The upgrade phase adds `sandermuller/boost-core` + `sandermuller/package-boost-php` to `config.allow-plugins`. **This is the highest-priority fix** — apply it even if you skip everything else.
+- **`post-install-cmd` modernization.** The old POSIX-shell `post-install-cmd` (`if [ "$COMPOSER_DEV_MODE" = "1" ]; then ...`) is Windows-broken. The upgrade phase replaces it with boost-core's `BoostAutoSync::runWithSummary` callback and adds the missing `post-update-cmd`.
+
+### Boost-family dependency remap (BREAKING for new scaffolds)
+
+The boost umbrella is no longer a single shared dev-dep. It is now assigned per category:
+
+| Category | Boost-family dep |
+|---|---|
+| `php-package`, `phpstan-extension`, `rector-extension`, `composer-plugin` | `sandermuller/package-boost-php` |
+| `laravel-package`, `filament-plugin`, `nova-tool` | `sandermuller/package-boost-laravel` |
+| `laravel-project` | `laravel/boost` (Laravel's own AI tooling) |
+| `skill-bundle` | `sandermuller/boost-core` directly, in runtime `require` |
+
+Existing repos are not force-migrated — audit surfaces the drift; upgrade applies it on confirmation. A `laravel-package` previously carrying `sandermuller/package-boost-php` is migrated to `sandermuller/package-boost-laravel`.
+
+### New `skill-bundle` category
+
+0.5.0 adds a 7th category for distributable packages whose product is AI agent skills (`type: library`, `sandermuller/boost-core` in runtime `require`, ships `resources/boost/skills/`, no `src/`). It has its own bootstrap / audit / upgrade phases. Existing categories are unaffected.
+
+---
+
 ## 0.3.x → 0.4.0
 
 **Breaking (user-scope skill path).** `sandermuller/package-boost-php` was bumped to `^0.4.0`, which pulls `sandermuller/boost-core 0.4.0` transitively. boost-core 0.4.0 changes where user-scope skills land:

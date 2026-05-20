@@ -51,7 +51,7 @@ substitute() {
 
 echo "[check-stub-composer-validity] validating each stub composer.json..."
 
-for stub_dir in stubs/laravel-package stubs/laravel-package-spatie stubs/php-package stubs/phpstan-extension stubs/rector-extension stubs/filament-plugin stubs/nova-tool stubs/composer-plugin; do
+for stub_dir in stubs/laravel-package stubs/laravel-package-spatie stubs/php-package stubs/phpstan-extension stubs/rector-extension stubs/filament-plugin stubs/nova-tool stubs/composer-plugin stubs/skill-bundle; do
     stub_json="$stub_dir/composer.json"
 
     if [[ ! -f "$stub_json" ]]; then

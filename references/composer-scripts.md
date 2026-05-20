@@ -2,7 +2,9 @@
 
 Exact scripts block per category. Phase files write these into the target's `composer.json` `scripts` key. Upgrade phases patch in missing entries via the `merge-keys` mode (`upgrade-merge-modes.md`).
 
-## Always present (every category)
+## Baseline scripts (code-bearing categories)
+
+This block is the baseline for the five **code-bearing** categories (`php-package`, `laravel-package`, `phpstan-extension`, `rector-extension`, `composer-plugin`). Two categories deviate: `laravel-project` drops `sync-ai` (see its section below); `skill-bundle` ships a lean subset (see "`skill-bundle` scripts" below).
 
 ```json
 {
@@ -14,14 +16,19 @@ Exact scripts block per category. Phase files write these into the target's `com
     "rector": "vendor/bin/rector process",
     "test": "vendor/bin/pest",
     "test-coverage": "vendor/bin/pest --coverage",
-    "sync-ai": "vendor/bin/testbench package-boost:sync",
+    "sync-ai": "vendor/bin/boost sync",
     "qa": ["@rector", "@format", "@phpstan-simplified"],
     "post-install-cmd": [
-      "if [ \"$COMPOSER_DEV_MODE\" = \"1\" ]; then vendor/bin/testbench package-boost:sync 2>/dev/null || true; fi"
+      "SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::runWithSummary"
+    ],
+    "post-update-cmd": [
+      "SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::runWithSummary"
     ]
   }
 }
 ```
+
+`post-install-cmd` / `post-update-cmd` invoke boost-core's PHP script callback (`SanderMuller\BoostCore\Scripts\BoostAutoSync::runWithSummary`) — not a POSIX-shell conditional (Windows-broken) and not the testbench artisan command (the framework-agnostic `package-boost-php` registers none). The callback is autoloadable because every category's `composer.json` pulls `sandermuller/boost-core` — via a boost umbrella, or directly (`skill-bundle`).
 
 ## Substitutions
 
@@ -32,7 +39,7 @@ Exact scripts block per category. Phase files write these into the target's `com
 
 ### `laravel-project`
 
-- `"sync-ai": "vendor/bin/boost sync"` (boost-core's standalone bin, framework-agnostic; pulled transitively via `sandermuller/package-boost-php`). Matches the per-category stubs — no `@php` prefix; `vendor/bin/boost` has its own PHP shebang.
+- **No `sync-ai` script.** `laravel-project` carries `laravel/boost` (Laravel's own AI tooling), not `sandermuller/boost-core` — there is no `vendor/bin/boost`. AI-asset sync for an application is `php artisan boost:install` / `boost:update` (see `bootstrap-laravel-project.md` / `upgrade-laravel-project.md`). Drop `sync-ai` from the baseline block for this category.
 
 ## Always added for `laravel-package`
 
@@ -67,6 +74,23 @@ Note: `post-autoload-dump` is an array — Composer runs each entry in order. If
 ```
 
 Add `@validate-gitattributes` to the `qa` chain.
+
+## `skill-bundle` scripts (replaces the baseline)
+
+`skill-bundle` ships pure-markdown skills and no PHP source, so it does NOT take the baseline block. Its complete `scripts` set — no `phpstan` / `rector` / `test` / `test-coverage` / `sync-ai` (no PHP toolchain, no test runner):
+
+```json
+{
+  "scripts": {
+    "post-install-cmd": ["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::runWithSummary"],
+    "post-update-cmd": ["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::runWithSummary"],
+    "format": "vendor/bin/pint",
+    "validate-gitattributes": "vendor/bin/lean-package-validator validate",
+    "qa": ["@format", "@validate-gitattributes"],
+    "qa-check": ["vendor/bin/pint --test", "@validate-gitattributes"]
+  }
+}
+```
 
 ## Conditional additions
 

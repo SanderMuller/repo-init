@@ -27,7 +27,7 @@ Skipped — php-package has no repo-init-mandated runtime deps.
 Single batched `composer require --dev <list>`. Shared + category-mandatory:
 
 - Shared list from `references/shared-dev-deps.md`.
-- Mandatory: `phpstan/phpstan` (NEVER `larastan/larastan` — framework-agnostic), `stolt/lean-package-validator`.
+- Mandatory: `phpstan/phpstan` (NEVER `larastan/larastan` — framework-agnostic), `stolt/lean-package-validator`, `sandermuller/package-boost-php` (the framework-agnostic boost umbrella; pulls `sandermuller/boost-core` transitively).
 
 Test-framework: `pestphp/pest` + arch + rector-pest (pest), OR `phpunit/phpunit` (phpunit). Never pull `pestphp/pest-plugin-laravel` for php-package — framework-agnostic.
 
@@ -42,7 +42,7 @@ Same logic as upgrade-laravel-package.md — apply each file's mode from `$REPO_
 ## Apply composer.json merge-keys patches
 
 - **`scripts`**: insert missing entries per `references/composer-scripts.md`. Include `validate-gitattributes` script — php-package canonical. Add `@validate-gitattributes` to the `qa` chain.
-- **`config.allow-plugins`**: `pestphp/pest-plugin: true` (if pest), `phpstan/extension-installer: true`.
+- **`config.allow-plugins`**: `pestphp/pest-plugin: true` (if pest), `phpstan/extension-installer: true`, `sandermuller/boost-core: true`, `sandermuller/package-boost-php: true` (the last two are MANDATORY — both are `type: composer-plugin` pulled in via the boost umbrella; without them the first non-interactive `composer install` is blocked).
 - **`config.sort-packages`**: `true`.
 - Don't touch `extra` (php-package has no canonical extra keys from repo-init).
 

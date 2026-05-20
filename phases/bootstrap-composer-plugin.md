@@ -93,7 +93,8 @@ From `$REPO_INIT_HOME/references/per-category-deps.md#composer-plugin`:
 **Plus shared deps** (`$REPO_INIT_HOME/references/shared-dev-deps.md`) — MINUS the per-category exclusions:
 
 - DROP `orchestra/testbench` (plugins don't fit testbench).
-- DROP `sandermuller/package-boost-php` (use boost-core directly if the plugin needs AI sync, but most plugins don't; package-boost-php is the package-author wrapper, wrong layer for plugins).
+
+`composer-plugin` keeps `sandermuller/package-boost-php` (it's a framework-agnostic Composer package — the boost umbrella applies; the stub `composer.json` already carries it). The pre-0.5.0 exclusion that dropped it was removed.
 
 Single batched call.
 

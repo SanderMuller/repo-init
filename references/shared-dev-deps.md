@@ -18,9 +18,10 @@ symplify/phpstan-extensions
 tomasvotruba/cognitive-complexity
 tomasvotruba/type-coverage
 nunomaduro/collision
-sandermuller/package-boost-php
 orchestra/testbench
 ```
+
+The boost-family umbrella (`sandermuller/package-boost-php` / `package-boost-laravel`) is **NOT** in this shared list — it is assigned per category. See `per-category-deps.md` → "boost-family umbrella".
 
 Test-framework split (`test-framework=pest|phpunit`):
 
@@ -39,8 +40,9 @@ Test-framework split (`test-framework=pest|phpunit`):
 - `tomasvotruba/cognitive-complexity` — complexity rules.
 - `tomasvotruba/type-coverage` — enforces 100% type coverage.
 - `nunomaduro/collision` — better error output in CLI.
-- `sandermuller/package-boost-php` — AI tooling propagation for package authors (`.ai/skills/` → agent dirs via boost-core's `vendor/bin/boost sync`). Transitively pulls `sandermuller/boost-core` (the Composer plugin engine). Replaces the older testbench-based `sandermuller/package-boost` ^0.15.
 - `orchestra/testbench` — package-category test bootstrap (no longer required for AI sync; boost-core's standalone bin handles that).
+
+The boost-family umbrella is assigned **per category** — see the line above the "Why these" heading and, for the full mapping + the `config.allow-plugins` rule, `per-category-deps.md` → "boost-family umbrella" (its single source of truth).
 
 ## Per-category exclusions
 

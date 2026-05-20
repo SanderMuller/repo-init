@@ -14,7 +14,7 @@ cd "$REPO_ROOT"
 
 EXIT_CODE=0
 
-CATEGORIES=(laravel-project laravel-package php-package phpstan-extension rector-extension composer-plugin)
+CATEGORIES=(laravel-project laravel-package php-package phpstan-extension rector-extension composer-plugin skill-bundle)
 MODES=(bootstrap audit upgrade)
 
 # Phase 8 LOW categories: bootstrap-only in v0.1 (audit/upgrade fall through to laravel-package phases).
@@ -30,7 +30,7 @@ REQUIRED_UPGRADE="checklists/preflight.md checklists/per-category-never-touch.md
 # patterns; but they still must cite preflight + detection + deps + placeholders).
 REQUIRED_BOOTSTRAP_ONLY="checklists/preflight.md checklists/post-bootstrap-verification.md references/detection-rules.md references/per-category-deps.md references/composer-failure-modes.md references/placeholder-rules.md"
 
-echo "[check-phase-coverage] checking 15 v1 phase files + 2 Phase 8 bootstrap-only..."
+echo "[check-phase-coverage] checking every (category × mode) phase file + 2 Phase 8 bootstrap-only..."
 
 for category in "${CATEGORIES[@]}"; do
     for mode in "${MODES[@]}"; do

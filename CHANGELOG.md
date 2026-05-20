@@ -7,6 +7,69 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Pre-`1.0.0` releases may introduce breaking changes in MINOR bumps; we surface those here clearly.
 
+## [0.5.0] - 2026-05-20
+
+### Fixed
+
+- **BLOCKING — scaffolded packages failed their first non-interactive
+  `composer install`.** All 7 stub `composer.json` files that carry a
+  boost-family dependency (`filament-plugin`, `laravel-package`,
+  `laravel-package-spatie`, `nova-tool`, `php-package`, `phpstan-extension`,
+  `rector-extension`) were missing `sandermuller/boost-core` from
+  `config.allow-plugins`. `boost-core` is a `composer-plugin` pulled in
+  transitively by the boost umbrella, so `composer install --no-interaction`
+  aborted with "blocked by your allow-plugins config". All 8 stubs
+  (incl. `composer-plugin`) now allow-list both `sandermuller/boost-core`
+  and `sandermuller/package-boost-php`. Surfaced by a real-world scaffold of
+  `sandermuller/boost-skills`. Matching HIGH-severity audit rule added to the
+  5 package-category audit phases; matching upgrade-phase fix.
+- **POSIX-shell `post-install-cmd` in all 7 stubs.** The old
+  `if [ "$COMPOSER_DEV_MODE" = "1" ]; then vendor/bin/boost sync ...; fi`
+  form is Windows-broken and predates boost-core's PHP script callback.
+  Replaced across all 8 stubs (+ `composer-plugin`, which had none) and
+  `references/composer-scripts.md` with
+  `SanderMuller\BoostCore\Scripts\BoostAutoSync::runWithSummary` for both
+  `post-install-cmd` and `post-update-cmd` (the latter was missing entirely).
+
+### Added
+
+- **`skill-bundle` is now a first-class category** (7th full category — own
+  bootstrap / audit / upgrade phases). Covers distributable Composer packages
+  whose product is AI agent skills: `type: library`, `sandermuller/boost-core`
+  in runtime `require` (consumers need it to discover the shipped skills),
+  ships `resources/boost/skills/`, no `src/` PHP. Detected by `boost-core` in
+  `require` — the discriminator from `php-package`. Ships:
+  - `stubs/skill-bundle/` — lean `composer.json` (boost-core in `require`;
+    `laravel/pint` + `stolt/lean-package-validator` in `require-dev`; no PHP
+    toolchain, no test runner — it ships pure-markdown skills) + `.lpv`.
+  - `phases/{bootstrap,audit,upgrade}-skill-bundle.md`.
+  - `references/detection-rules.md` row 6; `references/per-category-deps.{yml,md}`
+    section; `resources/boost/skills/repo-init/SKILL.md` 6→7 category table.
+  - CI: `check-layout.sh`, `check-phase-coverage.sh`, `check-stub-composer-validity.sh`
+    updated for the new category.
+
+### Changed
+
+- **BREAKING — boost-family dependency remapped per category.** The boost
+  umbrella was previously `sandermuller/package-boost-php` in the shared
+  dev-dep list for every category. It is now assigned by category:
+  - `php-package`, `phpstan-extension`, `rector-extension`, `composer-plugin`
+    → `sandermuller/package-boost-php`
+  - `laravel-package` (+ `filament-plugin`, `nova-tool`) →
+    `sandermuller/package-boost-laravel`
+  - `laravel-project` → `laravel/boost` only (Laravel's own AI tooling —
+    handles application-level skill sync via `php artisan boost:install` /
+    `boost:update`; the `bootstrap-` / `upgrade-laravel-project` sync steps
+    were rewritten off boost-core's `vendor/bin/boost`).
+  Applied across the 7 stub `composer.json` files, `per-category-deps.{yml,md}`,
+  `shared-dev-deps.md`, and all 6 audit + 6 upgrade phases.
+- **`composer-plugin` now gets `sandermuller/package-boost-php`.** The 0.3.0
+  `shared-exclusions` entry that dropped it was removed — `composer-plugin` is
+  a framework-agnostic Composer package and takes the umbrella like the other
+  agnostic categories.
+- Stub `package-boost-php` constraint bumped `^0.3.0` → `^0.4.0`; the
+  Laravel-category stubs now pin `sandermuller/package-boost-laravel: ^0.4.0`.
+
 ## [0.4.0] - 2026-05-20
 
 ### Changed
@@ -572,6 +635,7 @@ Initial release. Global-install model (`composer global require sandermuller/rep
 - 4 Open Questions remaining: `--ai` flag verification on Laravel installer; package-boost user-scope sync feature; skill-copy-not-symlink behavior verification.
 - Independently reviewed via codex in 3 rounds (v3 → v4 → v5 → v6). All findings addressed.
 
+[0.5.0]: https://github.com/sandermuller/repo-init/compare/0.4.0...0.5.0
 [0.4.0]: https://github.com/sandermuller/repo-init/compare/0.3.1...0.4.0
 [0.3.1]: https://github.com/sandermuller/repo-init/compare/0.3.0...0.3.1
 [0.3.0]: https://github.com/sandermuller/repo-init/compare/0.2.14...0.3.0

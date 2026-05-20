@@ -71,6 +71,7 @@ For each file present, apply the merge mode from `$REPO_INIT_HOME/references/upg
 
 ## NON-CANONICAL findings
 
+- [ ] **`config.allow-plugins` missing the boost plugins** (HIGH severity): `sandermuller/package-boost-php` transitively pulls `sandermuller/boost-core` — a `composer-plugin`. `config.allow-plugins` MUST list BOTH `sandermuller/boost-core` and `sandermuller/package-boost-php` (both are `type: composer-plugin`). Missing either → the first non-interactive `composer install` fails with "blocked by your allow-plugins config". Flag NON-CANONICAL.
 - [ ] `rector/rector` in `require-dev` instead of `require` — should be in `require` for rector-extension. Flag.
 - [ ] `rector/rector` in BOTH `require` and `require-dev` — Composer rejects; should never happen.
 - [ ] Missing `rector/extension-installer` in `config.allow-plugins` — auto-discovery breaks without it.

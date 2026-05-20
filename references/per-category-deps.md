@@ -9,11 +9,12 @@ What each category adds on top of the shared list (`shared-dev-deps.md`). Split 
 | Category | Adds to `require-dev` | Adds to `require` |
 |---|---|---|
 | `laravel-project` | `larastan/larastan`, `laravel/boost`, `laravel/pail`, `laravel/tinker`, `driftingly/rector-laravel` | (the `laravel new` baseline) |
-| `laravel-package` | `larastan/larastan`, `driftingly/rector-laravel` | `illuminate/contracts`, `illuminate/support` at `__LARAVEL_VERSIONS__` |
-| `php-package` | `phpstan/phpstan`, `stolt/lean-package-validator` | (no `illuminate/*`) |
-| `phpstan-extension` | (none beyond shared, minus `phpstan/phpstan` per shared exclusion) | `phpstan/phpstan: ^2` |
-| `rector-extension` | (none beyond shared, minus `rector/rector` per §5.1.1) | `rector/rector: ^2`, `symplify/rule-doc-generator-contracts: ^11.2` |
-| `composer-plugin` | `composer/composer: ^2.6` | `composer-plugin-api: ^2.6` (and optionally `composer-runtime-api: ^2.2`) |
+| `laravel-package` | `larastan/larastan`, `driftingly/rector-laravel`, `sandermuller/package-boost-laravel` | `illuminate/contracts`, `illuminate/support` at `__LARAVEL_VERSIONS__` |
+| `php-package` | `phpstan/phpstan`, `stolt/lean-package-validator`, `sandermuller/package-boost-php` | (no `illuminate/*`) |
+| `phpstan-extension` | `sandermuller/package-boost-php` (minus `phpstan/phpstan` per shared exclusion) | `phpstan/phpstan: ^2` |
+| `rector-extension` | `sandermuller/package-boost-php` (minus `rector/rector` per §5.1.1) | `rector/rector: ^2`, `symplify/rule-doc-generator-contracts: ^11.2` |
+| `composer-plugin` | `composer/composer: ^2.6`, `sandermuller/package-boost-php` | `composer-plugin-api: ^2.6` (and optionally `composer-runtime-api: ^2.2`) |
+| `skill-bundle` | `laravel/pint`, `stolt/lean-package-validator` | `sandermuller/boost-core` (runtime) |
 
 `laravel-package` `require` is intentionally minimal — `illuminate/contracts` + `illuminate/support`. Phase file tells the agent to extend per feature (add `illuminate/console`, `illuminate/queue`, `illuminate/redis`, etc. as the package uses them).
 
@@ -41,6 +42,33 @@ Before walking deps, the audit phase confirms opt-ins. Where possible, infer the
 For bootstrap, opt-ins come from user input directly (see SKILL.md "Knobs to collect").
 
 ## Notes on specific rows
+
+### boost-family umbrella (per category, NOT shared)
+
+The `sandermuller/boost-*` umbrella is assigned **per category**, not via the shared dev-deps list:
+
+| Category shape | Boost-family dep (`require-dev`) |
+|---|---|
+| Framework-agnostic Composer package — `php-package`, `phpstan-extension`, `rector-extension`, `composer-plugin` | `sandermuller/package-boost-php` |
+| Laravel-specific Composer package — `laravel-package` (+ `filament-plugin`, `nova-tool`) | `sandermuller/package-boost-laravel` |
+| Laravel application — `laravel-project` | `laravel/boost` |
+| Skill-distribution package — `skill-bundle` | `sandermuller/boost-core` directly, in runtime `require` |
+
+All three umbrellas pull `sandermuller/boost-core` (the skill-sync engine, a `composer-plugin`) transitively; `package-boost-laravel` also pulls `package-boost-php`. Because `boost-core` and `package-boost-php` are `type: composer-plugin`, every scaffolded `composer.json` MUST list both in `config.allow-plugins` — otherwise the first non-interactive `composer install` fails with a blocked-plugin error. Audit flags missing entries; see each category's audit phase.
+
+`composer-plugin` GETS `package-boost-php` like the other framework-agnostic categories — the pre-0.5.0 `shared-exclusions` entry that dropped it was removed.
+
+`skill-bundle` is the exception: its product *is* AI skills, so it depends on `sandermuller/boost-core` (the engine) directly in runtime `require` — not via an umbrella, and not in `require-dev` (consumers need boost-core present to discover the shipped skills). Its `config.allow-plugins` lists `sandermuller/boost-core` only (no `package-boost-php`).
+
+### `skill-bundle`
+
+A distributable Composer package whose deliverable is the AI agent skills it ships under `resources/boost/skills/<skill-name>/SKILL.md`. Distinguishing characteristics:
+
+- **`type: library`**, no `src/` PHP code. Detected by `sandermuller/boost-core` in runtime `require` (see `detection-rules.md`).
+- **`require`**: `sandermuller/boost-core` — runtime, so consumers receive it transitively and can sync the skills.
+- **`require-dev`**: the lean set only — `laravel/pint`, `stolt/lean-package-validator`. A skill-bundle ships pure-markdown skills and no PHP source, so it carries **no test runner** (no `pest`, no `phpunit`) and consumes **no** shared dev-dep block — neither the shared list (PHPStan / Rector packs) nor the shared test-framework block. In the yml, `consumes-shared-dev-deps: false` marks this — the category's full dep set is its own `mandatory` block.
+- **`config.allow-plugins`**: `sandermuller/boost-core: true` only (it is a `composer-plugin`).
+- Skips the PHP-toolchain stubs (`phpstan.neon.dist`, `rector.php`, `.mcp.json`, `run-tests.yml`, `phpstan.yml`, `rector-check.yml`).
 
 ### `phpstan-extension` Laravel-aware
 
