@@ -78,6 +78,17 @@ categories:
           - "roave/security-advisories: dev-latest"
     shared-exclusions:
       - sandermuller/boost-skills  # boost-skills' skills sync via boost-core; laravel-project uses laravel/boost, not boost-core — so boost-skills would be inert here
+    # shared-stub-skip: stubs/shared/ files this category does NOT plain-copy
+    # (handled specially, or not applicable). DENYLIST — absent ⇒ copy all of
+    # stubs/shared/. Paths are stub-relative and PRE-rename (`_gitattributes`,
+    # not `.gitattributes`); a trailing `/` marks a directory prefix.
+    shared-stub-skip:
+      - _gitattributes      # managed-block merge into Laravel's — not a plain copy
+      - .gitignore          # append-only merge into Laravel's
+      - phpunit.xml         # Laravel ships its own
+      - README.md           # laravel-project appends via README.append.md
+      - boost.php           # laravel-project uses laravel/boost, not boost-core
+      - tests/              # Laravel ships its own test suite
 
   laravel-package:
     mandatory:
@@ -193,6 +204,16 @@ categories:
     # shared list + its test-framework block).
     consumes-shared-dev-deps: false
     shared-exclusions: []
+    # shared-stub-skip — see laravel-project above for the key's contract.
+    # skill-bundle ships pure-markdown skills and no PHP toolchain, so it skips
+    # the PHPStan / Rector / MCP / phpunit shared stubs.
+    shared-stub-skip:
+      - .github/workflows/phpstan.yml
+      - .github/workflows/rector-check.yml
+      - .mcp.json
+      - phpstan-baseline.neon
+      - phpunit.xml
+      - tests/
 
   # Phase 8 LOW: bootstrap-only categories. audit + upgrade fall through to
   # laravel-package phases (these are structurally laravel-packages with

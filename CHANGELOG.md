@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Pre-`1.0.0` releases may introduce breaking changes in MINOR bumps; we surface those here clearly.
 
+## [0.8.0] - 2026-05-21
+
+### Added
+
+- **`shared-stub-skip` key in `per-category-deps.yml`.** A per-category
+  denylist of `stubs/shared/` files a category does not plain-copy when it
+  overlays the shared stub tree — the machine-readable parallel of the skip
+  prose already in the bootstrap phases. Lets a CLI scaffolder
+  (`sandermuller/repo-new`) honour the skips from one source of truth and
+  retire its hardcoded skip denylists. Entries are stub-relative and
+  PRE-rename (`_gitattributes`, not `.gitattributes`); a trailing `/` marks a
+  directory. Populated for `laravel-project` (Laravel ships its own
+  equivalents; `boost.php` is boost-core-only) and `skill-bundle` (no PHP
+  toolchain). Documented in `references/per-category-deps.md`.
+
 ## [0.7.0] - 2026-05-21
 
 ### Added
@@ -695,6 +710,7 @@ Initial release. Global-install model (`composer global require sandermuller/rep
 - 4 Open Questions remaining: `--ai` flag verification on Laravel installer; package-boost user-scope sync feature; skill-copy-not-symlink behavior verification.
 - Independently reviewed via codex in 3 rounds (v3 → v4 → v5 → v6). All findings addressed.
 
+[0.8.0]: https://github.com/sandermuller/repo-init/compare/0.7.0...0.8.0
 [0.7.0]: https://github.com/sandermuller/repo-init/compare/0.6.0...0.7.0
 [0.6.0]: https://github.com/sandermuller/repo-init/compare/0.5.0...0.6.0
 [0.5.0]: https://github.com/sandermuller/repo-init/compare/0.4.0...0.5.0
