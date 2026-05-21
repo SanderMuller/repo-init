@@ -20,7 +20,9 @@ return BoostConfig::configure()
     ])
     ->withAllowedVendors([
         'sandermuller/repo-init',
+        'sandermuller/boost-skills',
         'sandermuller/package-boost-php',
         'stolt/lean-package-validator',
     ])
+    ->withTags('php', 'github')
     ->withDisabledEmitters([]);
