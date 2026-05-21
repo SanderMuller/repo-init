@@ -34,6 +34,10 @@ Scaffold stubs now pin `sandermuller/package-boost-php` / `sandermuller/package-
 
 `laravel-project` gets none of this — it uses `laravel/boost`, not `sandermuller/boost-core`.
 
+### New: `shared-stub-skip` key in `per-category-deps.yml`
+
+`references/per-category-deps.yml` gained a `shared-stub-skip` key — a per-category denylist of `stubs/shared/` files a category does not plain-copy. Nothing to do: it does not change what repo-init scaffolds; it only exposes the existing skip behaviour in a machine-readable form for CLI tooling built on `per-category-deps.yml`.
+
 ---
 
 ## 0.5.x → 0.6.0
