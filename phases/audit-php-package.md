@@ -69,6 +69,7 @@ Plus shared:
 - [ ] `nunomaduro/collision`
 - [ ] `sandermuller/package-boost-php`
 - [ ] `orchestra/testbench`
+- [ ] `sandermuller/boost-skills`
 
 Test-framework split:
 

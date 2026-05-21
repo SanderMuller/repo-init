@@ -14,7 +14,7 @@ What each category adds on top of the shared list (`shared-dev-deps.md`). Split 
 | `phpstan-extension` | `sandermuller/package-boost-php` (minus `phpstan/phpstan` per shared exclusion) | `phpstan/phpstan: ^2` |
 | `rector-extension` | `sandermuller/package-boost-php` (minus `rector/rector` per §5.1.1) | `rector/rector: ^2`, `symplify/rule-doc-generator-contracts: ^11.2` |
 | `composer-plugin` | `composer/composer: ^2.6`, `sandermuller/package-boost-php` | `composer-plugin-api: ^2.6` (and optionally `composer-runtime-api: ^2.2`) |
-| `skill-bundle` | `laravel/pint`, `stolt/lean-package-validator` | `sandermuller/boost-core` (runtime) |
+| `skill-bundle` | `laravel/pint`, `sandermuller/boost-skills`, `stolt/lean-package-validator` | `sandermuller/boost-core` (runtime) |
 
 `laravel-package` `require` is intentionally minimal — `illuminate/contracts` + `illuminate/support`. Phase file tells the agent to extend per feature (add `illuminate/console`, `illuminate/queue`, `illuminate/redis`, etc. as the package uses them).
 
@@ -66,7 +66,7 @@ A distributable Composer package whose deliverable is the AI agent skills it shi
 
 - **`type: library`**, no `src/` PHP code. Detected by `sandermuller/boost-core` in runtime `require` (see `detection-rules.md`).
 - **`require`**: `sandermuller/boost-core` — runtime, so consumers receive it transitively and can sync the skills.
-- **`require-dev`**: the lean set only — `laravel/pint`, `stolt/lean-package-validator`. A skill-bundle ships pure-markdown skills and no PHP source, so it carries **no test runner** (no `pest`, no `phpunit`) and consumes **no** shared dev-dep block — neither the shared list (PHPStan / Rector packs) nor the shared test-framework block. In the yml, `consumes-shared-dev-deps: false` marks this — the category's full dep set is its own `mandatory` block.
+- **`require-dev`**: `laravel/pint`, `sandermuller/boost-skills`, `stolt/lean-package-validator`. A skill-bundle ships pure-markdown skills and no PHP source, so it carries **no test runner** (no `pest`, no `phpunit`) and does not consume the shared dev-dep block — neither the PHPStan / Rector packs nor the shared test-framework block. In the yml, `consumes-shared-dev-deps: false` marks that; `sandermuller/boost-skills` is hand-listed in its `mandatory.require-dev` (the one shared library a skill bundle still wants), so the three above are its full dep set.
 - **`config.allow-plugins`**: `sandermuller/boost-core: true` only (it is a `composer-plugin`).
 - Skips the PHP-toolchain stubs (`phpstan.neon.dist`, `rector.php`, `.mcp.json`, `run-tests.yml`, `phpstan.yml`, `rector-check.yml`).
 

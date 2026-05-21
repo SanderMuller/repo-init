@@ -38,7 +38,7 @@ Still applies to `skill-bundle`: Composer integrity (it is a library — lockfil
 Grep for unsubstituted placeholders:
 
 ```bash
-grep -r '__VENDOR__\|__PACKAGE__\|__NAMESPACE__\|__AUTHOR_\|__PHP_VERSION\|__LARAVEL_VERSIONS__\|__DESCRIPTION__' . --include='*.json' --include='*.php' --include='*.md' --include='*.neon' --include='*.yml' 2>/dev/null
+grep -r '__VENDOR__\|__PACKAGE__\|__NAMESPACE__\|__AUTHOR_\|__PHP_VERSION\|__LARAVEL_VERSIONS__\|__DESCRIPTION__\|__SKILL_TAGS__' . --include='*.json' --include='*.php' --include='*.md' --include='*.neon' --include='*.yml' 2>/dev/null
 ```
 
 - [ ] No hits. If hits, the agent missed a substitution; revisit step 3 of the bootstrap phase.

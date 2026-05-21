@@ -16,6 +16,26 @@ The `post-update-cmd` hook re-syncs the skill into `~/.claude/skills/sandermulle
 
 ---
 
+## 0.6.x → 0.7.0
+
+0.7.0 changes what repo-init scaffolds — new packages ship `sandermuller/boost-skills` and a tag-configured `boost.php`. Upgrade repo-init itself:
+
+```bash
+composer global update sandermuller/repo-init
+```
+
+### New: boost-skills + the skill-tag picker
+
+A newly bootstrapped package now gets `sandermuller/boost-skills` (in `require-dev` and the `boost.php` `withAllowedVendors()`), and the bootstrap flow interactively prompts for which skill tags to activate (`php` / `frontend` / `github` / `jira`) — written into `boost.php` as `->withTags(...)`. For a package scaffolded before 0.7.0, `audit-<category>.md` flags `sandermuller/boost-skills` as MISSING and `upgrade-<category>.md` installs it; the tag set is then a manual `boost.php` edit or a `composer boost:install` re-run. Not breaking.
+
+### Stub constraints → boost 0.5.0 family
+
+Scaffold stubs now pin `sandermuller/package-boost-php` / `sandermuller/package-boost-laravel` at `^0.5.0` (and `skill-bundle`'s direct `sandermuller/boost-core` at `^0.5.0`). boost-core 0.5.0 is required for the `withTags()` API. Existing repos: `audit` surfaces the constraint drift, `upgrade` applies it.
+
+`laravel-project` gets none of this — it uses `laravel/boost`, not `sandermuller/boost-core`.
+
+---
+
 ## 0.5.x → 0.6.0
 
 0.6.0 adds one file to what repo-init scaffolds. Upgrade repo-init itself the usual way:

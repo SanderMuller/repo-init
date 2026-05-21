@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Pre-`1.0.0` releases may introduce breaking changes in MINOR bumps; we surface those here clearly.
 
+## [0.7.0] - 2026-05-21
+
+### Added
+
+- **`sandermuller/boost-skills` scaffolded by default + an interactive
+  skill-tag picker.** Every newly bootstrapped package now ships
+  `sandermuller/boost-skills` (the shared dev-workflow skill library —
+  code-review, bug-fixing, write-spec, evaluate, …) as a `require-dev`
+  dependency and a `withAllowedVendors()` entry in the generated `boost.php`.
+  Bootstrap gained an interactive step: the user is walked through which
+  `boost-skills` tags to activate — `php`, `frontend`, `github`, `jira` —
+  written into `boost.php` as `->withTags(...)`. Picking none still yields the
+  universal boost-skills skills; each tag adds its capability-specific set
+  (`php` → backend-quality / pre-release, `jira` → the jira-* skills, …). A new
+  `__SKILL_TAGS__` placeholder carries the chosen tags into the stub. Wired
+  through `stubs/shared/boost.php`, the 9 stub `composer.json` files,
+  `references/{placeholder-rules,per-category-deps.md,per-category-deps.yml,shared-dev-deps}.md`,
+  the `repo-init` skill's knob list, the audit phases, and `check-placeholders.sh`.
+  `laravel-project` is excluded — it uses `laravel/boost`, not
+  `sandermuller/boost-core`, so boost-skills would not sync there.
+
+### Changed
+
+- **Scaffold stubs bumped to the boost 0.5.0 family.** The 9 stub
+  `composer.json` files move `sandermuller/package-boost-php` /
+  `sandermuller/package-boost-laravel` `^0.4.0 → ^0.5.0` (umbrella categories)
+  and `sandermuller/boost-core` `^0.4.0 → ^0.5.0` (`skill-bundle`, direct dep).
+  boost-core 0.5.0 is the floor for the `withTags()` API the skill-tag picker
+  emits.
+
+### Fixed
+
+- **`stubs/laravel-project/README.append.md` AI-tooling section.** It still
+  described the boost-core toolchain (`package-boost-php`, `vendor/bin/boost sync`,
+  `boost.php` auto-sync) — stale since the 0.5.0 boost-family remap moved
+  `laravel-project` onto `laravel/boost`. Rewritten to describe `laravel/boost`:
+  `php artisan boost:install` / `boost:update`, `boost.json`, composer.json-detected
+  skills.
+
 ## [0.6.0] - 2026-05-20
 
 ### Added
@@ -656,6 +695,7 @@ Initial release. Global-install model (`composer global require sandermuller/rep
 - 4 Open Questions remaining: `--ai` flag verification on Laravel installer; package-boost user-scope sync feature; skill-copy-not-symlink behavior verification.
 - Independently reviewed via codex in 3 rounds (v3 → v4 → v5 → v6). All findings addressed.
 
+[0.7.0]: https://github.com/sandermuller/repo-init/compare/0.6.0...0.7.0
 [0.6.0]: https://github.com/sandermuller/repo-init/compare/0.5.0...0.6.0
 [0.5.0]: https://github.com/sandermuller/repo-init/compare/0.4.0...0.5.0
 [0.4.0]: https://github.com/sandermuller/repo-init/compare/0.3.1...0.4.0

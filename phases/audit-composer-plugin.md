@@ -78,6 +78,7 @@ Plus shared (minus exclusions above):
 - [ ] `tomasvotruba/type-coverage`
 - [ ] `nunomaduro/collision`
 - [ ] `sandermuller/package-boost-php`
+- [ ] `sandermuller/boost-skills`
 - [ ] `stolt/lean-package-validator`
 
 Test-framework split:

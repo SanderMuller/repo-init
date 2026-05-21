@@ -7,14 +7,19 @@ use SanderMuller\BoostCore\Enums\Agent;
 
 /**
  * boost-core configuration — which AI agents `composer boost:sync` writes to,
- * and which dependency vendors' shipped skills/guidelines are synced.
+ * which dependency vendors' shipped skills are synced, and which skill tags
+ * are active.
  *
  * `withAllowedVendors()` is an explicit allowlist: a dependency's skills sync
- * ONLY if its package name is listed here. Both boost umbrellas are listed
- * below — your package installs at most one of them; any not installed is a
+ * ONLY if its package name is listed here. The boost umbrellas + the
+ * `sandermuller/boost-skills` skill library are listed below — your package
+ * installs whichever umbrella its category uses; any not installed is a
  * harmless no-op. Add other skill-shipping dependency vendors as you adopt them.
  *
- * Re-run `composer boost:install` to change agents/vendors interactively, or
+ * `withTags()` filters `sandermuller/boost-skills`: with no tags you still get
+ * the universal skills; each tag adds its capability-specific set (e.g. `php`
+ * adds backend-quality / pre-release, `jira` adds the jira-* skills). Re-run
+ * `composer boost:install` to change agents/vendors/tags interactively, or
  * hand-edit this file; then run `composer boost:sync`.
  *
  * Docs: https://github.com/sandermuller/boost-core
@@ -26,7 +31,9 @@ return BoostConfig::configure()
         Agent::CODEX,
     ])
     ->withAllowedVendors([
+        'sandermuller/boost-skills',
         'sandermuller/package-boost-laravel',
         'sandermuller/package-boost-php',
     ])
+    ->withTags(__SKILL_TAGS__)
     ->withDisabledEmitters([]);

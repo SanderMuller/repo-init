@@ -21,6 +21,7 @@ shared:
       - tomasvotruba/type-coverage
       - nunomaduro/collision
       - orchestra/testbench
+      - sandermuller/boost-skills  # the boost-skills skill library; synced via boost-core. Excluded for laravel-project (no boost-core). skill-bundle hand-lists it (consumes-shared-dev-deps: false).
   # boost-family umbrella is NOT shared — it is assigned per category below:
   #   framework-agnostic Composer package  -> sandermuller/package-boost-php
   #   Laravel-specific Composer package    -> sandermuller/package-boost-laravel
@@ -75,7 +76,8 @@ categories:
         require: []
         require-dev:
           - "roave/security-advisories: dev-latest"
-    shared-exclusions: []  # nothing dropped from shared list
+    shared-exclusions:
+      - sandermuller/boost-skills  # boost-skills' skills sync via boost-core; laravel-project uses laravel/boost, not boost-core — so boost-skills would be inert here
 
   laravel-package:
     mandatory:
@@ -180,6 +182,7 @@ categories:
         - sandermuller/boost-core  # runtime require — consumers need it to discover the shipped skills; require-dev is not transitive
       require-dev:
         - laravel/pint
+        - sandermuller/boost-skills  # hand-listed: skill-bundle skips the shared block (consumes-shared-dev-deps: false) but still wants the boost-skills library
         - stolt/lean-package-validator
     optional: {}
     # consumes-shared-dev-deps: false → a consumer/CLI building this category's

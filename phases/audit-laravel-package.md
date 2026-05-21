@@ -87,6 +87,7 @@ From `$REPO_INIT_HOME/references/shared-dev-deps.md` (universal):
 - [ ] `tomasvotruba/type-coverage`
 - [ ] `nunomaduro/collision`
 - [ ] `orchestra/testbench`
+- [ ] `sandermuller/boost-skills`
 
 Test-framework split:
 

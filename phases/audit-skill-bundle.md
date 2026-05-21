@@ -46,6 +46,7 @@ From `$REPO_INIT_HOME/references/per-category-deps.md#skill-bundle` MANDATORY:
 From `$REPO_INIT_HOME/references/per-category-deps.md#skill-bundle` MANDATORY `require-dev`:
 
 - [ ] `laravel/pint`
+- [ ] `sandermuller/boost-skills`
 - [ ] `stolt/lean-package-validator`
 
 A skill-bundle ships no PHP source — it carries no test runner (no `pestphp/pest` / `phpunit/phpunit`) and the shared dev-dep list (PHPStan / Rector packs) does not apply. Only the two above are mandatory.

@@ -30,6 +30,7 @@ CANONICAL_PLACEHOLDERS=(
     "__YEAR__"
     "__TEST_RUNNER__"
     "__TEST_COVERAGE_FLAG__"
+    "__SKILL_TAGS__"
 )
 
 PLACEHOLDER_DOC="references/placeholder-rules.md"

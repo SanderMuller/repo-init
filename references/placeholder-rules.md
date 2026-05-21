@@ -21,6 +21,9 @@ Exact derivation rules for the placeholders used in `stubs/`. No agent guessing.
 | `__YEAR__` | current year, four digits | `2026` |
 | `__TEST_RUNNER__` | per `--test-framework=`, the binary basename | `pest` or `phpunit` |
 | `__TEST_COVERAGE_FLAG__` | per `--test-framework=`, the `test-coverage` script flag | `--coverage` (pest) or `--coverage-html=coverage` (phpunit) |
+| `__SKILL_TAGS__` | per the bootstrap skill-tag picker; a comma-separated list of quoted `sandermuller/boost-skills` tag strings, or empty | `'php', 'jira'` (or empty) |
+
+`__SKILL_TAGS__` is unique: it substitutes into a variadic call — `->withTags(__SKILL_TAGS__)` in `stubs/shared/boost.php`. The substitution is the bare argument list (`'php', 'jira'`) with NO surrounding brackets; an empty pick yields `->withTags()`, a valid no-op. Only `stubs/shared/boost.php` uses it.
 
 ## StudlyCase rule
 
