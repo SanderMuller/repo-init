@@ -59,6 +59,7 @@ From shared (`$REPO_INIT_HOME/references/shared-dev-deps.md`):
 - [ ] `nunomaduro/collision`
 - [ ] `sandermuller/package-boost-php`
 - [ ] `orchestra/testbench`
+- [ ] `sandermuller/boost-skills`
 - [ ] `phpunit/phpunit` (test-framework=phpunit, the default for phpstan-extension)
 - [ ] `nikic/php-parser` (rule tests + AST traversal)
 

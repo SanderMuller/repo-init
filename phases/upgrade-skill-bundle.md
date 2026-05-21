@@ -30,7 +30,7 @@ On failure, consult `$REPO_INIT_HOME/references/composer-failure-modes.md`.
 
 ## Apply MISSING dev deps
 
-Single batched `composer require --dev <list>`. Category-mandatory: `laravel/pint`, `stolt/lean-package-validator`. A skill-bundle ships no PHP source — it carries no test runner, and the PHPStan / Rector shared dev-dep packs are NOT installed.
+Single batched `composer require --dev <list>`. Category-mandatory: `laravel/pint`, `sandermuller/boost-skills`, `stolt/lean-package-validator`. A skill-bundle ships no PHP source — it carries no test runner, and the PHPStan / Rector shared dev-dep packs are NOT installed; `sandermuller/boost-skills` is the one shared library it still takes (hand-listed because `skill-bundle` opts out of the shared dev-dep block).
 
 On failure, consult `$REPO_INIT_HOME/references/composer-failure-modes.md`.
 

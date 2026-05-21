@@ -58,6 +58,7 @@ From shared:
 - [ ] `nunomaduro/collision`
 - [ ] `sandermuller/package-boost-php`
 - [ ] `orchestra/testbench`
+- [ ] `sandermuller/boost-skills`
 - [ ] `nikic/php-parser` (AST traversal in rule tests)
 
 Test-framework split:
