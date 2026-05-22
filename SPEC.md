@@ -187,23 +187,36 @@ The package itself ships only:
 {
     "name": "sandermuller/repo-init",
     "type": "library",
-    "description": "AI playbook + stub library for bootstrapping the canonical Sander/hihaho repo setup",
+    "description": "AI playbook + stub library for bootstrapping the canonical Sander/hihaho repo setup. Install globally: `composer global require sandermuller/repo-init`.",
     "require": {
         "php": "^8.3",
-        "sandermuller/package-boost": "^0.15",
-        "orchestra/testbench": "^9.0||^10.0||^11.0"
+        "sandermuller/boost-core": "^0.5.0"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.29",
+        "sandermuller/boost-skills": "^1.0",
+        "sandermuller/package-boost-php": "^0.5.0",
+        "stolt/lean-package-validator": "^5.7"
     },
     "scripts": {
-        "post-install-cmd": [
-            "if [ \"$COMPOSER_DEV_MODE\" = \"1\" ]; then vendor/bin/testbench package-boost:sync 2>/dev/null || true; fi"
-        ]
+        "post-install-cmd": ["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::runWithSummary"],
+        "post-update-cmd": ["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::runWithSummary"]
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "sandermuller/boost-core": true,
+            "sandermuller/package-boost-php": true
+        }
     }
 }
 ```
 
-`sandermuller/package-boost` AND `orchestra/testbench` are in `require` (not `require-dev`) so they install alongside repo-init when the target adds `composer require --dev sandermuller/repo-init`. This is what makes `vendor/bin/testbench package-boost:sync` callable IMMEDIATELY after install — without it, the §3.3 sync step would fail with "binary not found" because testbench isn't in the target's deps until the §7 bootstrap step that installs shared dev deps. Repo-init being dev-only means its `require` deps are themselves dev-only in the target (Composer pulls them in only when the parent dep is `--dev`).
+`repo-init` is a `type: library` package distributed via **global install** (`composer global require sandermuller/repo-init`; see §3.3 and RQ40) — never as a `--dev` dependency of a target repo. Its sole runtime dependency is `sandermuller/boost-core`, the skill-sync engine. `boost-core` is a `composer-plugin`; under a global install its global-context auto-sync propagates the `repo-init` skill into `~/.{agent}/skills/sandermuller__repo-init/` automatically, so the skill is available in every project with no per-target installation.
 
-Both are listed in §5.1 shared dev deps too — that's fine, Composer dedupes on package name and the version constraints overlap. The target's `composer.json` ends up with one entry for each in `require-dev` post-bootstrap.
+Everything else sits in `require-dev` — `laravel/pint`, `sandermuller/boost-skills`, `sandermuller/package-boost-php`, `stolt/lean-package-validator` — repo-init's own maintenance tooling, not shipped to consumers. `config.allow-plugins` allow-lists both composer-plugins (`boost-core`, `package-boost-php`).
+
+An early draft instead placed `orchestra/testbench` + `sandermuller/package-boost` in `require`, so they would ride along when a target ran `composer require --dev sandermuller/repo-init`. That project-local model is superseded — see RQ35 and the v7 distribution decision in RQ40.
 
 ---
 
@@ -420,9 +433,10 @@ Always:
     "rector": "vendor/bin/rector process",
     "test": "vendor/bin/pest",
     "test-coverage": "vendor/bin/pest --coverage",
-    "sync-ai": "vendor/bin/testbench package-boost:sync",
+    "sync-ai": "vendor/bin/boost sync",
     "qa": ["@rector", "@format", "@phpstan-simplified"],
-    "post-install-cmd": ["if [ \"$COMPOSER_DEV_MODE\" = \"1\" ]; then vendor/bin/testbench package-boost:sync 2>/dev/null || true; fi"]
+    "post-install-cmd": ["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::runWithSummary"],
+    "post-update-cmd": ["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::runWithSummary"]
   }
 }
 ```
@@ -430,7 +444,7 @@ Always:
 Substitutions:
 
 - `test`/`test-coverage` → `vendor/bin/phpunit` when `test-framework=phpunit`
-- `sync-ai` → `@php artisan package-boost:sync` for `laravel-project`
+- `sync-ai` is dropped for `laravel-project` (it uses `laravel/boost`, not `boost-core`; AI assets sync via `php artisan boost:install` / `boost:update`)
 
 Always added for `laravel-package` (per RQ13 — the `--with-workbench-scripts` flag from earlier drafts is dropped; observed across all canonical sander L-packages):
 
@@ -910,9 +924,9 @@ The "dogfood" property therefore reduces to: every stub in `stubs/` was generate
 
 10. **`category_confidence`.** **Decision:** Dropped. Audit phase records `detection_rule` (which row of §4 matched) instead. **Rationale:** Detector is deterministic; confidence was invented.
 
-11. **Testbench in dev deps.** **Decision:** Always added. **Rationale:** `package-boost:sync` runs through testbench across every category.
+11. **Testbench in dev deps.** **Decision:** Always added. **Rationale:** `package-boost:sync` runs through testbench across every category. **Superseded (v7):** AI-asset sync no longer runs through testbench — `boost-core` ships a standalone `vendor/bin/boost` bin. `orchestra/testbench` stays in the shared dev-dep list as the **package test bootstrap**, and `composer-plugin` excludes it (no Laravel runtime). See `references/shared-dev-deps.md`.
 
-12. **Conditional post-install hook.** **Decision:** Always added — `if [ $COMPOSER_DEV_MODE = "1" ]; then vendor/bin/testbench package-boost:sync 2>/dev/null || true; fi`. **Rationale:** Auto-syncs AI assets after dev installs; matches the laravel-x402-mcp pattern.
+12. **Conditional post-install hook.** **Decision:** Always added — `if [ $COMPOSER_DEV_MODE = "1" ]; then vendor/bin/testbench package-boost:sync 2>/dev/null || true; fi`. **Rationale:** Auto-syncs AI assets after dev installs; matches the laravel-x402-mcp pattern. **Superseded (v7):** the POSIX-shell hook is Windows-broken and is replaced — `post-install-cmd` and `post-update-cmd` now both invoke the boost-core PHP callback `SanderMuller\BoostCore\Scripts\BoostAutoSync::runWithSummary`. See §5.4 and `references/composer-scripts.md`.
 
 13. **Workbench scripts.** **Decision:** Always added for `laravel-package`. **Rationale:** All canonical sander L-packages have them.
 
@@ -944,7 +958,7 @@ The "dogfood" property therefore reduces to: every stub in `stubs/` was generate
 
 27. **Composer failure handling.** **Decision:** `references/composer-failure-modes.md` enumerates common failures with the resolution playbook; phase steps that run composer commands cite this reference. **Rationale:** Resolves codex v3 #8 (composer-resolution failure paths missing).
 
-28. **Testbench in shared dev deps for non-Laravel categories.** **Decision:** Keep it. **Rationale:** `package-boost:sync` runs through Testbench in every package context (it's how boost's commands resolve outside a Laravel app); there is no alternative invocation today. Cost of one extra dev dep is small; we prefer uniform tooling to per-category conditional install paths. Codex v3 #9 acknowledged but accepted.
+28. **Testbench in shared dev deps for non-Laravel categories.** **Decision:** Keep it. **Rationale:** `package-boost:sync` runs through Testbench in every package context (it's how boost's commands resolve outside a Laravel app); there is no alternative invocation today. Cost of one extra dev dep is small; we prefer uniform tooling to per-category conditional install paths. Codex v3 #9 acknowledged but accepted. **Superseded (v7):** boost-core's standalone `vendor/bin/boost` bin resolves outside a Laravel app without testbench, so testbench is no longer the AI-sync invocation path. It remains in the shared list as the package test bootstrap; `composer-plugin` excludes it (see RQ11).
 
 29. **Greenfield install locus for package categories.** **Decision:** Bootstrap phase prelude (§3.3.1) — `mkdir <name>`, `cd`, `composer init --no-interaction --type=library`, `composer require --dev sandermuller/repo-init`, then proceed with bootstrap. For `laravel-project`, `laravel new <name>` replaces the mkdir + composer-init steps; the require step still runs after. **Rationale:** Resolves codex v4 #1 — package always installs INTO the target dir we're about to scaffold (preserves the RQ21 stays-installed-in-target invariant). Adds 3 prelude steps but they're mechanical and the alternative (parent-dir clutter or global install) is worse.
 
@@ -958,7 +972,7 @@ The "dogfood" property therefore reduces to: every stub in `stubs/` was generate
 
 34. **No dep in both `require` AND `require-dev` (extended to all categories).** **Decision:** §5.1.1 extended to drop `phpstan/phpstan` from shared deps for `phpstan-extension` (matching the existing `rector/rector` exclusion for `rector-extension`). §5.2 rewritten so optional/conditional rows never duplicate scope — `phpstan-extension` Laravel-aware adds `larastan/larastan` to `require-dev` and `illuminate/support` to `require` only (not both). `rector-extension` Laravel-aware adds `driftingly/rector-laravel` to `require` only. **Rationale:** Resolves codex v5 #1 — composer rejects duplicate scope; spec must consistently enforce.
 
-35. **Bootstrap sync executability — `orchestra/testbench` in repo-init's own `require`.** **Decision:** Repo-init's own `composer.json` declares `orchestra/testbench` in `require` (alongside `sandermuller/package-boost`). When the target installs `composer require --dev sandermuller/repo-init`, testbench installs alongside as a transitive dev dep, so `vendor/bin/testbench package-boost:sync` works immediately at §3.3 step 2 without waiting for the bootstrap phase to install the shared dev deps. **Rationale:** Resolves codex v5 #2 — propagation path is now executable from the very first call.
+35. **Bootstrap sync executability — `orchestra/testbench` in repo-init's own `require`.** **Decision:** Repo-init's own `composer.json` declares `orchestra/testbench` in `require` (alongside `sandermuller/package-boost`). When the target installs `composer require --dev sandermuller/repo-init`, testbench installs alongside as a transitive dev dep, so `vendor/bin/testbench package-boost:sync` works immediately at §3.3 step 2 without waiting for the bootstrap phase to install the shared dev deps. **Rationale:** Resolves codex v5 #2 — propagation path is now executable from the very first call. **Superseded by RQ40 (v7):** repo-init is installed **globally**, never as a target's `--dev` dependency, so nothing rides along into a target's `vendor/`. Its `composer.json` `require` carries only `php` + `sandermuller/boost-core`; `orchestra/testbench` was removed and `sandermuller/package-boost-php` moved to `require-dev` (repo-init's own maintenance tooling). Skill propagation is boost-core's global-context auto-sync at `composer global require` time — see §2 and §3.3.
 
 36. **`name` semantics unified.** **Decision:** `name` is OPTIONAL across §3.1, §3.3.1, §7, and RQ2. The single target-dir rule (declared once in §3.3.1, referenced from §7) is: positional `name` → create `./<name>/` and cd; no `name` → target is cwd (must be empty modulo `.git/`). If cwd-empty precondition fails, agent stops and asks for a `name`. **Rationale:** Resolves codex v5 #3 — §3.1 required-knob list, §3.3.1 mkdir step, and §7 generic step now all agree. Matches `laravel new` UX (both forms accepted).
 
