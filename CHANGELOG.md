@@ -7,7 +7,122 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Pre-`1.0.0` releases may introduce breaking changes in MINOR bumps; we surface those here clearly.
 
-## [0.7.0] - 2026-05-21
+## [0.8.0](https://github.com/sandermuller/repo-init/compare/0.7.0...0.8.0) - 2026-05-22
+
+0.8.0 aligns repo-init's scaffold + audit/upgrade phases + its own toolchain with the `sandermuller/boost-core` 0.6.0 family migration (boost-core dropped its Composer plugin and is now `type: library`; the umbrella packages bumped with it). Breaking for **new scaffolds** — existing repos surface the drift through `audit-<category>.md` and apply it through `upgrade-<category>.md`.
+
+### Install / update flow changes
+
+`composer global require sandermuller/repo-init` no longer auto-syncs the `repo-init` skill on its own — boost-core 0.6.0 removed the install-time plugin (Pattern C). The sync is now a one-line manual command after every install/update:
+
+```bash
+composer global require sandermuller/repo-init
+composer global exec -- boost sync --scope=user --all
+
+```
+The `composer global exec --` form runs `boost` from Composer's global `vendor/bin/` regardless of the user's current directory; the literal `--` stops Composer from interpreting boost's flags as its own. `--scope=user --all` publishes every globally-installed package's `resources/boost/skills/` into `~/.{agent}/skills/<vendor>__<package>/`. See `references/boost-core-user-scope.md` for the full contract.
+
+### Added
+
+#### `sandermuller/boost-skills ^1.0` for repo-init's own dev workflow
+
+repo-init now uses the shared `sandermuller/boost-skills` library (code-review, bug-fixing, write-spec, evaluate, pre-release, …) as its own dev tooling instead of hand-maintained `.ai/skills/` copies. boost-core syncs the 11 generic skills from the vendor package; the 12 stale local copies are deleted (`.ai/skills/{ai-guidelines,autoresearch,backend-quality,bug-fixing,code-review,codex-review,evaluate,implement-spec,pr-review-feedback,pre-release,write-spec,profile-app}`). `boost.php` gains `->withTags('php', 'github')` so the 4 tagged boost-skills skills (autoresearch, backend-quality, pr-review-feedback, pre-release) sync.
+
+#### `update-changelog.yml` workflow
+
+`CHANGELOG.md` is now auto-maintained: on release publish, `stefanzweifel/changelog-updater-action` prepends the GitHub release body under a new `## [X.Y.Z]` section and updates the compare links. Do not hand-edit `CHANGELOG.md` — drop the entries you want into the release body and the workflow handles the rest. Cut a release with the drafted notes file, not `--generate-notes`:
+
+```bash
+gh release create X.Y.Z --notes-file internal/release-notes-X.Y.Z.md
+
+```
+repo-init already shipped this workflow as a stub for scaffolded packages (`stubs/shared/.github/workflows/update-changelog.yml`); it now also runs on repo-init itself. `CONTRIBUTING.md` + `RELEASING.md` updated to match.
+
+### Changed (breaking for new scaffolds)
+
+#### Scaffolded composer.json — boost-core 0.6.0 family pins
+
+All 9 scaffold categories now pin against the new family. Tier table:
+
+| Tier | Categories | Old pin | New pin |
+|---|---|---|---|
+| `skill-bundle` | `skill-bundle` (direct boost-core dep) | `boost-core ^0.5.0` | `boost-core ^0.6.0` |
+| package-boost-php | `php-package` / `phpstan-extension` / `rector-extension` / `composer-plugin` | `package-boost-php ^0.5.0` | `package-boost-php ^0.7.0` |
+| package-boost-laravel | `laravel-package` / `laravel-package-spatie` / `filament-plugin` / `nova-tool` | `package-boost-laravel ^0.5.0` | `package-boost-laravel ^0.7.0` |
+
+`laravel-project` is unaffected — it uses `laravel/boost`, not `sandermuller/boost-core`.
+
+#### Scaffolded `config.allow-plugins` — drop `sandermuller/boost-core`
+
+boost-core 0.6.0 is `type: library`, no longer a composer-plugin. Every scaffolded `config.allow-plugins` block drops the `sandermuller/boost-core: true` entry. `sandermuller/package-boost-php: true` STAYS — it remains `type: composer-plugin` through 0.7.0+ (it ships its own `package-boost-php:lean` / `:gitattributes` Composer commands). `sandermuller/package-boost-laravel` has always been `type: library` and was never correctly listed in allow-plugins.
+
+The audit phases' allow-plugins rule flipped:
+
+- *Was*: missing `sandermuller/boost-core` in `config.allow-plugins` = HIGH-severity NON-CANONICAL.
+- *Now*: present `sandermuller/boost-core` in `config.allow-plugins` = MEDIUM-severity stale entry (Composer ignores it, harmless but unnecessary); missing `sandermuller/package-boost-php` (only) = HIGH-severity.
+
+#### Scaffolded `post-install-cmd` / `post-update-cmd` → `BoostAutoSync::run`
+
+Auto-firing hooks should be silent-on-no-op. boost-core's docblock is explicit: `run()` is for auto-firing hooks (`post-install/update-cmd`); `runWithSummary()` is for user-invoked scripts (`composer sync-ai`) where silence would read as a no-op. Every scaffolded `composer.json` now wires `::run` (not `::runWithSummary`) into the two auto-firing hooks. From boost-core 0.6.0, `run()` prints the one-line sync summary only when `wrote>0` — silent on routine no-op installs, visible on real syncs. Existing repos: `audit-<category>.md` flags a stale `::runWithSummary` in those hooks; `upgrade-<category>.md` replaces with `::run`.
+
+#### `BaseCommandAdapter` citation dropped from composer-plugin phase docs
+
+boost-core 0.6.0 removed its `BaseCommandAdapter` class. `phases/{audit,bootstrap,upgrade}-composer-plugin.md` previously cited it as a reference pattern for plugins shipping Composer commands. That citation is gone — the native pattern stands alone: plugins extend `Composer\Command\BaseCommand` directly. The adapter idiom solved boost-core's standalone-bin + plugin dual-surface problem specifically; it is not a general fix path.
+
+#### `composer boost:*` plugin commands → `vendor/bin/boost <cmd>`
+
+The `composer boost:install` / `composer boost:sync` plugin commands are gone with boost-core 0.6.0. Use the standalone bin:
+
+```bash
+# In a project (cwd is the package, vendor/ present):
+vendor/bin/boost install        # was: composer boost:install
+vendor/bin/boost sync           # was: composer boost:sync
+
+# After `composer global require` (any cwd):
+composer global exec -- boost sync --scope=user --all   # new: global skill refresh
+
+```
+`stubs/shared/boost.php` + repo-init's own `boost.php` docblocks updated accordingly.
+
+#### repo-init aligned to its own `skill-bundle` baseline
+
+repo-init's own repo now matches the canonical baseline it scaffolds for `skill-bundle` packages: `boost-core` directly in `require` (`^0.6.0`), `package-boost-php` / `pint` / `lean-package-validator` / `boost-skills` in `require-dev`, `.editorconfig` + `.gitattributes` + `.lpv` + `pint.json` + `.github/dependabot.yml` + `.github/workflows/pint-check.yml` added. `orchestra/testbench` dropped from `require` — superseded by the v7 global-install model (SPEC §538). `composer.lock` continues to be gitignored (`type: library`).
+
+#### SPEC.md reconciled with the v7 global-install architecture
+
+§2 composer.json example, §204 prose, §5.4 scripts block, and RQ11 / RQ12 / RQ28 / RQ35 carry "Superseded (v7)" notes alongside the original decisions — history preserved, current state explicit.
+
+### Fixed
+
+#### Documentation: post-global-install sync command path
+
+The new install/update flow originally documented `vendor/bin/boost sync --scope=user --all` immediately after `composer global require/update`. After a global require the shell stays in the user's current cwd — not the Composer global vendor dir — so `vendor/bin/boost` resolves to no file there. Switched every post-global-install invocation to `composer global exec -- boost sync --scope=user --all` (README, UPGRADING, SPEC, `references/boost-core-user-scope.md`). Project-local `vendor/bin/boost install` / `sync` references kept where the cwd genuinely is a Composer package.
+
+#### `laravel-project` scaffold AI-tooling section
+
+(0.7.0 follow-up — `stubs/laravel-project/README.append.md` already corrected to `laravel/boost` in 0.7.0; called out here for completeness — see 0.7.0 changelog.)
+
+### Migration notes
+
+Upgrade repo-init itself:
+
+```bash
+composer global update sandermuller/repo-init
+composer global exec -- boost sync --scope=user --all
+
+```
+For an existing scaffolded repo:
+
+1. `audit-<category>.md` surfaces the family drift: stale `boost-core` in `allow-plugins`, `::runWithSummary` in `post-install/update-cmd`, old boost-family constraints, stale `BaseCommandAdapter` citations (composer-plugin only).
+2. `upgrade-<category>.md` applies the fix on confirmation.
+
+`composer install` for a freshly-scaffolded repo on the new family floor requires `--no-plugins` for the *transition update* if the lockfile still pins pre-0.6.0 boost-core (which is a plugin needing allow-listing that the new composer.json no longer grants). After the update, allow-plugins is correctly empty for boost-core and normal `composer install` works.
+
+`laravel-project` is unaffected — it uses `laravel/boost`, not `sandermuller/boost-core`.
+
+**Full Changelog**: https://github.com/SanderMuller/repo-init/compare/0.7.0...0.8.0
+
+## [0.7.0](https://github.com/sandermuller/repo-init/compare/0.6.0...0.7.0) - 2026-05-21
 
 ### Added
 
@@ -56,7 +171,7 @@ Pre-`1.0.0` releases may introduce breaking changes in MINOR bumps; we surface t
   `php artisan boost:install` / `boost:update`, `boost.json`, composer.json-detected
   skills.
 
-## [0.6.0] - 2026-05-20
+## [0.6.0](https://github.com/sandermuller/repo-init/compare/0.5.0...0.6.0) - 2026-05-20
 
 ### Added
 
@@ -77,7 +192,7 @@ Pre-`1.0.0` releases may introduce breaking changes in MINOR bumps; we surface t
   "same list as audit-laravel-package.md" reference. Upgrade phases copy it via
   the generic MISSING-file path.
 
-## [0.5.0] - 2026-05-20
+## [0.5.0](https://github.com/sandermuller/repo-init/compare/0.4.0...0.5.0) - 2026-05-20
 
 ### Fixed
 
@@ -117,6 +232,7 @@ Pre-`1.0.0` releases may introduce breaking changes in MINOR bumps; we surface t
     section; `resources/boost/skills/repo-init/SKILL.md` 6→7 category table.
   - CI: `check-layout.sh`, `check-phase-coverage.sh`, `check-stub-composer-validity.sh`
     updated for the new category.
+  
 
 ### Changed
 
@@ -131,8 +247,9 @@ Pre-`1.0.0` releases may introduce breaking changes in MINOR bumps; we surface t
     handles application-level skill sync via `php artisan boost:install` /
     `boost:update`; the `bootstrap-` / `upgrade-laravel-project` sync steps
     were rewritten off boost-core's `vendor/bin/boost`).
-  Applied across the 7 stub `composer.json` files, `per-category-deps.{yml,md}`,
-  `shared-dev-deps.md`, and all 6 audit + 6 upgrade phases.
+    Applied across the 7 stub `composer.json` files, `per-category-deps.{yml,md}`,
+    `shared-dev-deps.md`, and all 6 audit + 6 upgrade phases.
+  
 - **`composer-plugin` now gets `sandermuller/package-boost-php`.** The 0.3.0
   `shared-exclusions` entry that dropped it was removed — `composer-plugin` is
   a framework-agnostic Composer package and takes the umbrella like the other
@@ -140,7 +257,7 @@ Pre-`1.0.0` releases may introduce breaking changes in MINOR bumps; we surface t
 - Stub `package-boost-php` constraint bumped `^0.3.0` → `^0.4.0`; the
   Laravel-category stubs now pin `sandermuller/package-boost-laravel: ^0.4.0`.
 
-## [0.4.0] - 2026-05-20
+## [0.4.0](https://github.com/sandermuller/repo-init/compare/0.3.1...0.4.0) - 2026-05-20
 
 ### Changed
 
@@ -186,7 +303,7 @@ Pre-`1.0.0` releases may introduce breaking changes in MINOR bumps; we surface t
   content is now correctly labelled `[0.3.1]`; the version-compare link
   references at the bottom (stale since 0.2.3) are complete through 0.4.0.
 
-## [0.3.1] - 2026-05-18
+## [0.3.1](https://github.com/sandermuller/repo-init/compare/0.3.0...0.3.1) - 2026-05-18
 
 ### Changed
 
@@ -237,7 +354,7 @@ Pre-`1.0.0` releases may introduce breaking changes in MINOR bumps; we surface t
   shipped stubs (`vendor/bin/boost sync`, no `@php` prefix). `vendor/bin/boost`
   has its own PHP shebang; `@php` is redundant.
 
-## [0.3.0] - 2026-05-18
+## [0.3.0](https://github.com/sandermuller/repo-init/compare/0.2.14...0.3.0) - 2026-05-18
 
 ### Removed
 
@@ -259,6 +376,7 @@ Pre-`1.0.0` releases may introduce breaking changes in MINOR bumps; we surface t
   - Existing Laravel 11 repos audited by repo-init are NOT flagged — audit
     doesn't second-guess the range (per per-category-deps.md). Only NEW
     bootstraps get the bumped default.
+  
 
 ### Fixed
 
@@ -281,6 +399,7 @@ Pre-`1.0.0` releases may introduce breaking changes in MINOR bumps; we surface t
     added `testbench.yaml` + `workbench/**` to both path blocks. A typo in
     testbench.yaml can no longer merge silently without a test run.
     `laravel-project` left as-is (apps don't ship testbench.yaml/workbench).
+  
 
 ### Added
 
@@ -317,6 +436,7 @@ Pre-`1.0.0` releases may introduce breaking changes in MINOR bumps; we surface t
     composer-plugin sub-flag notes.
   - `references/detection-rules.md`: removed `composer-plugin` from
     "Out-of-scope `type:` values".
+  
 - **Audit verification protocol** for the MISSING dev-deps check.
   `references/shared-dev-deps.md` gains a MANDATORY protocol section
   requiring every bullet to get an explicit PRESENT/MISSING verdict
@@ -387,7 +507,7 @@ Pre-`1.0.0` releases may introduce breaking changes in MINOR bumps; we surface t
   `vendor/bin/boost sync --scope=user` is now a fallback, not the primary
   path. "Updating repo-init" section updated similarly.
 
-## [0.2.14] - 2026-05-17
+## [0.2.14](https://github.com/sandermuller/repo-init/compare/0.2.13...0.2.14) - 2026-05-17
 
 ### Changed
 
@@ -413,7 +533,7 @@ Pre-`1.0.0` releases may introduce breaking changes in MINOR bumps; we surface t
 - **phpstan-extension / rector-extension audit phases** get a LOW-severity
   bullet recommending a `phpstan.yml` workflow badge alongside `run-tests.yml`.
 
-## [0.2.13] - 2026-05-17
+## [0.2.13](https://github.com/sandermuller/repo-init/compare/0.2.12...0.2.13) - 2026-05-17
 
 ### Fixed
 
@@ -422,7 +542,7 @@ Pre-`1.0.0` releases may introduce breaking changes in MINOR bumps; we surface t
   dogfood where the sub-agent had to hand-write `.lpv` instead of copying
   the stub. Lean-package-validator would warn on the duplicate.
 
-## [0.2.12] - 2026-05-17
+## [0.2.12](https://github.com/sandermuller/repo-init/compare/0.2.11...0.2.12) - 2026-05-17
 
 Surfaced via an audit pass over 9 SanderMuller PHP repos against the
 canonical baseline. Two spec bugs + three audit gaps fixed; the same
@@ -455,7 +575,7 @@ audit now flags every drift correctly.
   `magento-*` `type:` values. Audit now stops cleanly with "category out
   of scope" instead of trying to fit them into the five-category model.
 
-## [0.2.11] - 2026-05-17
+## [0.2.11](https://github.com/sandermuller/repo-init/compare/0.2.10...0.2.11) - 2026-05-17
 
 ### Fixed
 
@@ -467,7 +587,7 @@ audit now flags every drift correctly.
   and filament-plugin SP stubs intentionally unchanged: their `boot()` /
   custom-signature `register()` aren't overrides of the parent ServiceProvider.
 
-## [0.2.10] - 2026-05-17
+## [0.2.10](https://github.com/sandermuller/repo-init/compare/0.2.9...0.2.10) - 2026-05-17
 
 ### Fixed
 
@@ -490,7 +610,7 @@ Three follow-ups from peer's strict-verify dogfood of 0.2.9:
 Strategy going forward: always import, never inline FQN. `pint --test` +
 `rector --dry-run` now exit 0 on a fresh scaffold.
 
-## [0.2.9] - 2026-05-17
+## [0.2.9](https://github.com/sandermuller/repo-init/compare/0.2.8...0.2.9) - 2026-05-17
 
 ### Fixed
 
@@ -517,7 +637,7 @@ Strategy going forward: always import, never inline FQN. `pint --test` +
   `@phpstan-simplified`, `@test`. Complements existing `qa` which is
   mutating (`rector process` + `pint`) and meant for local fix-up.
 
-## [0.2.8] - 2026-05-17
+## [0.2.8](https://github.com/sandermuller/repo-init/compare/0.2.7...0.2.8) - 2026-05-17
 
 ### Changed
 
@@ -543,18 +663,16 @@ Symptoms: `package-boost:sync` fatals with
 `Class "Laravel\Boost\BoostServiceProvider" not found`; both pest+phpunit
 deps installed; `tests/Pest.php` present despite `--test-framework=phpunit`.
 
-## [0.2.7] - 2026-05-17
+## [0.2.7](https://github.com/sandermuller/repo-init/compare/0.2.6...0.2.7) - 2026-05-17
 
 ### Fixed
 
-- `stubs/{laravel-package, laravel-package-spatie, filament-plugin,
-  nova-tool}/rector.php` — `withSets([...])` block mixed `LaravelSetList`
+- `stubs/{laravel-package, laravel-package-spatie, filament-plugin, nova-tool}/rector.php` — `withSets([...])` block mixed `LaravelSetList`
   and `PestSetList` entries; earlier conditional-wrap missed this 7-entry
-  variant. Now: `array_merge([laravel-sets], class_exists(PestSetList) ?
-  [pest-sets] : [])` so phpunit-only scaffolds don't fatal on
+  variant. Now: `array_merge([laravel-sets], class_exists(PestSetList) ? [pest-sets] : [])` so phpunit-only scaffolds don't fatal on
   `Class "PestSetList" not found`.
 
-## [0.2.6] - 2026-05-17
+## [0.2.6](https://github.com/sandermuller/repo-init/compare/0.2.5...0.2.6) - 2026-05-17
 
 ### Fixed
 
@@ -565,7 +683,7 @@ deps installed; `tests/Pest.php` present despite `--test-framework=phpunit`.
   chosen `--test-framework` was only half-applied. `phpstan-extension` +
   `rector-extension` remain phpunit-hardcoded by spec.
 
-## [0.2.5] - 2026-05-17
+## [0.2.5](https://github.com/sandermuller/repo-init/compare/0.2.4...0.2.5) - 2026-05-17
 
 ### Fixed
 
@@ -579,7 +697,7 @@ deps installed; `tests/Pest.php` present despite `--test-framework=phpunit`.
   `per-category-deps.yml` and the per-category stub `composer.json` so
   fresh scaffolds + audits both surface it.
 
-## [0.2.4] - 2026-05-17
+## [0.2.4](https://github.com/sandermuller/repo-init/compare/0.2.3...0.2.4) - 2026-05-17
 
 Critical packaging fix plus the round-3/4 dogfood-surfaced parity fixes.
 
@@ -615,7 +733,7 @@ Critical packaging fix plus the round-3/4 dogfood-surfaced parity fixes.
   with placeholder substitution.
 - `stubs/laravel-project/.github/workflows/run-tests.yml` (PHP-only matrix).
 
-## [0.2.3] - 2026-05-17
+## [0.2.3](https://github.com/sandermuller/repo-init/compare/0.2.2...0.2.3) - 2026-05-17
 
 Dogfooded via `sandermuller/repo-new` CLI scaffolding both a fictional `php-package` AND `laravel-project`. Two real data bugs surfaced in `per-category-deps.yml`:
 
@@ -624,13 +742,13 @@ Dogfooded via `sandermuller/repo-new` CLI scaffolding both a fictional `php-pack
 - **`pestphp/pest-plugin-laravel` constraint** bumped to `^4.1` (only ^4.1+ supports Laravel 13). Previously unconstrained → resolved to old versions incompatible with Laravel 13's `^13.x` framework.
 - **`laravel-project` mandatory `require-dev` documentation** explicitly notes that CLI implementations MUST filter or move packages Laravel already shipped. Laravel 13+ ships `laravel/tinker` in `require` historically (was `require-dev`); a blanket `composer require --dev` errors with "currently present in the require key". The fix is two-step: `composer remove --no-update <pkg>` then `composer require --dev <list>` so packages end up in the right scope. Documented inline in per-category-deps.yml.
 
-## [0.2.2] - 2026-05-17
+## [0.2.2](https://github.com/sandermuller/repo-init/compare/0.2.1...0.2.2) - 2026-05-17
 
 ### Fixed
 
 - **`run-tests.yml` watches the right PHPUnit config file.** All 7 category stubs (`stubs/<cat>/.github/workflows/run-tests.yml`) had path filter watching `phpunit.xml`, but scaffold ships `phpunit.xml`. Result: PHPUnit config changes in generated repos wouldn't trigger CI. Fixed across `php-package`, `laravel-package`, `laravel-package-spatie`, `phpstan-extension`, `rector-extension`, `filament-plugin`, `nova-tool`. Surfaced by codex post-fix review of 0.2.1.
 
-## [0.2.1] - 2026-05-17
+## [0.2.1](https://github.com/sandermuller/repo-init/compare/0.2.0...0.2.1) - 2026-05-17
 
 Dogfood-surfaced bug fixes from scaffolding sandermuller/repo-new via the agent path.
 
@@ -643,7 +761,7 @@ Dogfood-surfaced bug fixes from scaffolding sandermuller/repo-new via the agent 
 
 Both surfaced during the dogfood scaffold of `sandermuller/repo-new` (a future package whose CLI is designed in `specs/repo-new-cli.md`). The validator bug existed because the shipped `.gitattributes` was max-everything (covering all categories' file sets). The idempotency wording bug was a subtle slip in the v0.2 rework — the spec was correct in intent but the implementation hint was missing.
 
-## [0.2.0] - 2026-05-17
+## [0.2.0](https://github.com/sandermuller/repo-init/compare/0.1.0...0.2.0) - 2026-05-17
 
 Bootstrap phase idempotency rework. Enables forthcoming `sandermuller/repo-new` CLI to do mechanical scaffolding without conflicting with the agent path.
 
@@ -669,7 +787,7 @@ Bootstrap phase idempotency rework. Enables forthcoming `sandermuller/repo-new` 
 - Phase file structure is backwards-compatible: a fresh repo run (no prior state) follows the same step list as before. Skip preconditions just add up-front guards that NEVER fire on fresh runs.
 - repo-init `^0.1` consumers can upgrade to `0.2` with no migration. Their existing repos are unaffected (audit/upgrade phase files unchanged).
 
-## [0.1.0] - 2026-05-17
+## [0.1.0](https://github.com/sandermuller/repo-init/releases/tag/0.1.0) - 2026-05-17
 
 Initial release. Global-install model (`composer global require sandermuller/repo-init`).
 
@@ -704,26 +822,3 @@ Initial release. Global-install model (`composer global require sandermuller/rep
 - 40 Resolved Questions documenting every architectural decision + rationale.
 - 4 Open Questions remaining: `--ai` flag verification on Laravel installer; package-boost user-scope sync feature; skill-copy-not-symlink behavior verification.
 - Independently reviewed via codex in 3 rounds (v3 → v4 → v5 → v6). All findings addressed.
-
-[0.7.0]: https://github.com/sandermuller/repo-init/compare/0.6.0...0.7.0
-[0.6.0]: https://github.com/sandermuller/repo-init/compare/0.5.0...0.6.0
-[0.5.0]: https://github.com/sandermuller/repo-init/compare/0.4.0...0.5.0
-[0.4.0]: https://github.com/sandermuller/repo-init/compare/0.3.1...0.4.0
-[0.3.1]: https://github.com/sandermuller/repo-init/compare/0.3.0...0.3.1
-[0.3.0]: https://github.com/sandermuller/repo-init/compare/0.2.14...0.3.0
-[0.2.14]: https://github.com/sandermuller/repo-init/compare/0.2.13...0.2.14
-[0.2.13]: https://github.com/sandermuller/repo-init/compare/0.2.12...0.2.13
-[0.2.12]: https://github.com/sandermuller/repo-init/compare/0.2.11...0.2.12
-[0.2.11]: https://github.com/sandermuller/repo-init/compare/0.2.10...0.2.11
-[0.2.10]: https://github.com/sandermuller/repo-init/compare/0.2.9...0.2.10
-[0.2.9]: https://github.com/sandermuller/repo-init/compare/0.2.8...0.2.9
-[0.2.8]: https://github.com/sandermuller/repo-init/compare/0.2.7...0.2.8
-[0.2.7]: https://github.com/sandermuller/repo-init/compare/0.2.6...0.2.7
-[0.2.6]: https://github.com/sandermuller/repo-init/compare/0.2.5...0.2.6
-[0.2.5]: https://github.com/sandermuller/repo-init/compare/0.2.4...0.2.5
-[0.2.4]: https://github.com/sandermuller/repo-init/compare/0.2.3...0.2.4
-[0.2.3]: https://github.com/sandermuller/repo-init/compare/0.2.2...0.2.3
-[0.2.2]: https://github.com/sandermuller/repo-init/compare/0.2.1...0.2.2
-[0.2.1]: https://github.com/sandermuller/repo-init/compare/0.2.0...0.2.1
-[0.2.0]: https://github.com/sandermuller/repo-init/compare/0.1.0...0.2.0
-[0.1.0]: https://github.com/sandermuller/repo-init/releases/tag/0.1.0
