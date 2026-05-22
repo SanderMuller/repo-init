@@ -1,0 +1,34 @@
+# This file was partly modified by the lean package validator (http://git.io/lean-package-validator).
+
+* text=auto eol=lf
+
+*.css diff=css
+*.html diff=html
+*.md diff=markdown
+*.php diff=php
+
+# >>> package-boost (managed) >>>
+.agents/ export-ignore
+.claude/ export-ignore
+.editorconfig export-ignore
+.gitattributes export-ignore
+.github/ export-ignore
+.gitignore export-ignore
+.idea/ export-ignore
+.lpv export-ignore
+.markdownlint.json export-ignore
+AGENTS.md export-ignore
+boost.php export-ignore
+CHANGELOG.md export-ignore
+CLAUDE.md export-ignore
+composer.lock export-ignore
+CONTRIBUTING.md export-ignore
+pint.json export-ignore
+RELEASING.md export-ignore
+SECURITY.md export-ignore
+specs/ export-ignore
+specs/repo-new-cli.md export-ignore
+tests/ export-ignore
+tests/self-removal-contract.md export-ignore
+UPGRADING.md export-ignore
+# <<< package-boost (managed) <<<

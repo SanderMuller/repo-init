@@ -5,6 +5,7 @@ namespace __NAMESPACE__;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Nova\Events\ServingNova;
+use Laravel\Nova\Http\Middleware\Authenticate;
 use Laravel\Nova\Nova;
 
 final class __PACKAGE_STUDLY__ServiceProvider extends ServiceProvider
@@ -27,7 +28,7 @@ final class __PACKAGE_STUDLY__ServiceProvider extends ServiceProvider
             return;
         }
 
-        Nova::router(['nova', \Laravel\Nova\Http\Middleware\Authenticate::class], '__PACKAGE__')
+        Nova::router(['nova', Authenticate::class], '__PACKAGE__')
             ->group(__DIR__ . '/../routes/inertia.php');
     }
 

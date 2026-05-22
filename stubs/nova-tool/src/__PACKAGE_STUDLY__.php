@@ -2,6 +2,8 @@
 
 namespace __NAMESPACE__;
 
+use Illuminate\Http\Request;
+use Laravel\Nova\Menu\MenuSection;
 use Laravel\Nova\Tool;
 
 final class __PACKAGE_STUDLY__ extends Tool
@@ -12,9 +14,9 @@ final class __PACKAGE_STUDLY__ extends Tool
         // Nova::script('__PACKAGE__', __DIR__ . '/../dist/js/tool.js');
     }
 
-    public function menu(\Illuminate\Http\Request $request): \Laravel\Nova\Menu\MenuSection
+    public function menu(Request $request): MenuSection
     {
-        return \Laravel\Nova\Menu\MenuSection::make('__PACKAGE_STUDLY__')
+        return MenuSection::make('__PACKAGE_STUDLY__')
             ->path('/__PACKAGE__')
             ->icon('chart-bar');
     }

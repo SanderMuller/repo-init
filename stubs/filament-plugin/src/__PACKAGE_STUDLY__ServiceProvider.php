@@ -49,6 +49,6 @@ final class __PACKAGE_STUDLY__ServiceProvider extends ServiceProvider implements
     public static function make(): static
     {
         /** @phpstan-ignore-next-line — static used to support `Filament\Panel::plugin(YourPlugin::make())` consumer call */
-        return new static();
+        return new self();
     }
 }
