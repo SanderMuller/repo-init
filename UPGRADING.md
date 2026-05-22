@@ -37,7 +37,7 @@ The second command is new and required after every global update: boost-core 0.6
 |---|---|---|
 | `skill-bundle` (direct `boost-core`) | `^0.5.0` | `^0.6.0` |
 | `php-package` / `phpstan-extension` / `rector-extension` / `composer-plugin` | `package-boost-php ^0.5.0` | `package-boost-php ^0.7.0` |
-| `laravel-package` / `laravel-package-spatie` / `filament-plugin` / `nova-tool` | `package-boost-laravel ^0.5.0` | **pending** — package-boost-laravel's `boost-core ^0.6` release is in flight; the laravel-family stubs stay on `^0.5.0` in this release and bump in a follow-up batch when that release lands |
+| `laravel-package` / `laravel-package-spatie` / `filament-plugin` / `nova-tool` | `package-boost-laravel ^0.5.0` | `package-boost-laravel ^0.7.0` (0.7.0 is the `boost-core ^0.6` release; pbl is `type: library` — it never had an `allow-plugins` entry to remove) |
 
 `laravel-project` is unaffected — it uses `laravel/boost`, not `sandermuller/boost-core`.
 

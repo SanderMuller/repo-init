@@ -77,7 +77,7 @@ For each composer.json key documented in `$REPO_INIT_HOME/references/composer-sc
 
 - **`scripts`**: insert each script from `references/composer-scripts.md` (always-present block + workbench block always added for laravel-package) not present in target. Don't override scripts with the same name; prompt the user on conflict.
 - **`extra.laravel.providers`**: insert `__NAMESPACE__\\__PACKAGE_STUDLY__ServiceProvider` if missing. If existing array contains a different provider, ask user whether to add or replace.
-- **`config.allow-plugins`**: insert `pestphp/pest-plugin: true` (when test-framework=pest) and `phpstan/extension-installer: true` (always) if missing. Also insert `sandermuller/boost-core: true` and `sandermuller/package-boost-php: true` (MANDATORY — both are `type: composer-plugin` pulled in via `package-boost-laravel`; without them the first non-interactive `composer install` is blocked).
+- **`config.allow-plugins`**: insert `pestphp/pest-plugin: true` (when test-framework=pest) and `phpstan/extension-installer: true` (always) if missing. Also insert `sandermuller/package-boost-php: true` (MANDATORY — still `type: composer-plugin` post boost-core 0.6.0; without it the first non-interactive `composer install` is blocked). NO `sandermuller/boost-core` entry — boost-core 0.6.0 is `type: library`; if a pre-0.6.0 scaffold left `sandermuller/boost-core: true` in place, remove it (Composer ignores it, harmless but stale). `sandermuller/package-boost-laravel` is `type: library` and was never a plugin — if present, remove it too.
 - **`config.sort-packages`**: set to `true` if absent.
 - **`autoload-dev.psr-4`**: ensure `__NAMESPACE_ESCAPED__\\\\Tests\\\\: tests/` is present. If not, add. Don't override existing entries.
 - **`autoload-dev.psr-4`** (workbench): ensure `Workbench\\\\App\\\\: workbench/app/` is present.
@@ -96,13 +96,13 @@ For each NON-CANONICAL finding:
 - **Two managed blocks in `.gitattributes`**: prompt "merge the `# >>> repo-init (managed) >>>` block into the `# >>> package-boost (managed) >>>` block per the contract in `references/gitattributes-managed-block.md`?" Move repo-init's entries into package-boost's block (dedupe), then remove the standalone repo-init block.
 - **Both `phpstan/phpstan` and `larastan/larastan` in `require-dev`**: prompt "remove `phpstan/phpstan` (transitively provided by larastan)?" `composer remove --dev phpstan/phpstan`.
 
-## Run package-boost sync to refresh AI assets
+## Run boost-core sync to refresh AI assets
 
 ```bash
-vendor/bin/testbench package-boost:sync
+vendor/bin/boost sync
 ```
 
-Ensures `.claude/skills/`, `.cursor/skills/`, etc. reflect the latest `.ai/skills/` content (relevant if the user added or updated skills as part of this upgrade).
+Ensures `.claude/skills/`, `.cursor/skills/`, etc. reflect the latest `.ai/skills/` content (relevant if the user added or updated skills as part of this upgrade). boost-core 0.6.0 removed the plugin path; the standalone `vendor/bin/boost` bin is the canonical sync entry point.
 
 ## Verification
 
