@@ -14,7 +14,7 @@ composer global update sandermuller/repo-init
 
 The `post-update-cmd` hook re-syncs the skill into `~/.claude/skills/sandermuller__repo-init/`. If a stub or reference doc shape changed in a way that affects in-flight workflows, re-running `audit` on already-set-up repos will surface the new MISSING / NON-CANONICAL findings.
 
-> **From 0.8.0 onward** there is no install-time auto-sync — boost-core 0.6.0 removed the Composer plugin. After every `composer global update sandermuller/repo-init`, run `vendor/bin/boost sync --scope=user --all` to refresh the user-scope skill dirs. See the `0.7.x → 0.8.0` section below.
+> **From 0.8.0 onward** there is no install-time auto-sync — boost-core 0.6.0 removed the Composer plugin. After every `composer global update sandermuller/repo-init`, run `composer global exec -- boost sync --scope=user --all` to refresh the user-scope skill dirs. See the `0.7.x → 0.8.0` section below.
 
 ---
 
@@ -26,10 +26,10 @@ boost-core 0.6.0 (BREAKING) removed its Composer plugin and is now `type: librar
 
 ```bash
 composer global update sandermuller/repo-init
-vendor/bin/boost sync --scope=user --all
+composer global exec -- boost sync --scope=user --all
 ```
 
-The second command is new and required after every global update: boost-core 0.6 removed the install-time auto-sync. `boost sync --scope=user --all` publishes every installed package's `resources/boost/skills/` into the user-scope agent dirs (`~/.{agent}/skills/<vendor>__<package>/`).
+The second command is new and required after every global update: boost-core 0.6 removed the install-time auto-sync. `composer global exec -- boost sync --scope=user --all` runs boost from Composer's global `vendor/bin/` (regardless of your current directory) and publishes every globally-installed package's `resources/boost/skills/` into the user-scope agent dirs (`~/.{agent}/skills/<vendor>__<package>/`).
 
 ### Scaffold constraint bumps
 
@@ -63,9 +63,12 @@ boost-core 0.6.0 removed its `BaseCommandAdapter` class. The composer-plugin pha
 The `composer boost:install` / `composer boost:sync` plugin commands are gone. Use the standalone bin instead:
 
 ```bash
+# In a project (cwd is the package, vendor/ present):
 vendor/bin/boost install        # was: composer boost:install
 vendor/bin/boost sync           # was: composer boost:sync
-vendor/bin/boost sync --scope=user --all   # new: global skill refresh
+
+# After `composer global require` (any cwd — runs from Composer's global vendor/bin):
+composer global exec -- boost sync --scope=user --all   # new: global skill refresh
 ```
 
 ---

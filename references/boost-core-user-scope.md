@@ -7,7 +7,7 @@ repo-init's global-install model (per SPEC RQ40 + Open Question #3) needs a way 
 ## Command surface
 
 ```bash
-vendor/bin/boost sync --scope=user --all
+composer global exec -- boost sync --scope=user --all
 ```
 
 - `--scope=project` (default): project-local sync — writes to `<cwd>/.claude/skills/<skill>/SKILL.md`, etc. NOT namespaced by package.
@@ -50,14 +50,14 @@ Two-step install (one-time per machine):
 
 ```bash
 composer global require sandermuller/repo-init
-vendor/bin/boost sync --scope=user --all
+composer global exec -- boost sync --scope=user --all
 ```
 
 Two-step update (after each version bump):
 
 ```bash
 composer global update sandermuller/repo-init
-vendor/bin/boost sync --scope=user --all
+composer global exec -- boost sync --scope=user --all
 ```
 
 repo-init is a pure-markdown package — it ships no bin and no `post-install-cmd` that fires for a globally-required dependency (Composer script hooks fire only for the root package, not for required dependencies). Post-0.6.0 there is no install-time auto-sync mechanism for a passive skill-distribution package; the user-invoked `boost sync --scope=user --all` is the canonical sync trigger. See SPEC RQ1 (zero-PHP-code) for why repo-init does not ship a bin.

@@ -24,10 +24,10 @@ Walks an AI agent (Claude Code, Cursor, GitHub Copilot, …) through **bootstrap
 
 ```bash
 composer global require sandermuller/repo-init
-vendor/bin/boost sync --scope=user --all
+composer global exec -- boost sync --scope=user --all
 ```
 
-The second command publishes the `repo-init` skill (and any other globally-installed [`sandermuller/boost-core`](https://github.com/SanderMuller/boost-core) consumer's skills) into `~/.claude/skills/sandermuller__repo-init/`, `~/.cursor/skills/sandermuller__repo-init/`, `~/.agents/skills/sandermuller__repo-init/`, etc. The skill then auto-activates in any project. Re-run `vendor/bin/boost sync --scope=user --all` after each `composer global update` to refresh. See `references/boost-core-user-scope.md` for the full contract.
+The second command publishes the `repo-init` skill (and any other globally-installed [`sandermuller/boost-core`](https://github.com/SanderMuller/boost-core) consumer's skills) into `~/.claude/skills/sandermuller__repo-init/`, `~/.cursor/skills/sandermuller__repo-init/`, `~/.agents/skills/sandermuller__repo-init/`, etc. The skill then auto-activates in any project. Re-run `composer global exec -- boost sync --scope=user --all` after each `composer global update` to refresh. (The `composer global exec --` form runs `boost` from Composer's global `vendor/bin/` regardless of your current directory; the literal `--` separator stops Composer from interpreting `boost`'s flags as its own.) See `references/boost-core-user-scope.md` for the full contract.
 
 > **Changed in boost-core 0.6.0.** Before 0.6.0 boost-core was a Composer plugin and auto-synced on every `composer global` install/update. 0.6.0 removed the plugin (boost-core is now `type: library`); the sync is the one-line manual command above instead.
 
@@ -49,7 +49,7 @@ The agent reads the `repo-init` skill, decides intent + category, and opens the 
 
 ```bash
 composer global update sandermuller/repo-init
-vendor/bin/boost sync --scope=user --all
+composer global exec -- boost sync --scope=user --all
 ```
 
 The second line is required: boost-core 0.6.0 removed the auto-sync plugin, so refreshing the user-scope skill dirs is a manual command after every update.
