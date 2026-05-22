@@ -27,7 +27,7 @@
     "require-dev": {
         "laravel/pint": "^1.29",
         "sandermuller/boost-skills": "^1.0",
-        "sandermuller/package-boost-php": "^0.5.0",
+        "sandermuller/package-boost-php": "^0.5.0 || ^0.6.0",
         "stolt/lean-package-validator": "^5.7"
     },
     "scripts": {
