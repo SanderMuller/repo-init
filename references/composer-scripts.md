@@ -19,16 +19,16 @@ This block is the baseline for the five **code-bearing** categories (`php-packag
     "sync-ai": "vendor/bin/boost sync",
     "qa": ["@rector", "@format", "@phpstan-simplified"],
     "post-install-cmd": [
-      "SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::runWithSummary"
+      "SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"
     ],
     "post-update-cmd": [
-      "SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::runWithSummary"
+      "SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"
     ]
   }
 }
 ```
 
-`post-install-cmd` / `post-update-cmd` invoke boost-core's PHP script callback (`SanderMuller\BoostCore\Scripts\BoostAutoSync::runWithSummary`) — not a POSIX-shell conditional (Windows-broken) and not the testbench artisan command (the framework-agnostic `package-boost-php` registers none). The callback is autoloadable because every category's `composer.json` pulls `sandermuller/boost-core` — via a boost umbrella, or directly (`skill-bundle`).
+`post-install-cmd` / `post-update-cmd` invoke boost-core's PHP script callback (`SanderMuller\BoostCore\Scripts\BoostAutoSync::run`) — not a POSIX-shell conditional (Windows-broken) and not the testbench artisan command (the framework-agnostic `package-boost-php` registers none). The callback is autoloadable because every category's `composer.json` pulls `sandermuller/boost-core` — via a boost umbrella, or directly (`skill-bundle`).
 
 ## Substitutions
 
@@ -82,8 +82,8 @@ Add `@validate-gitattributes` to the `qa` chain.
 ```json
 {
   "scripts": {
-    "post-install-cmd": ["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::runWithSummary"],
-    "post-update-cmd": ["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::runWithSummary"],
+    "post-install-cmd": ["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"],
+    "post-update-cmd": ["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"],
     "format": "vendor/bin/pint",
     "validate-gitattributes": "vendor/bin/lean-package-validator validate",
     "qa": ["@format", "@validate-gitattributes"],

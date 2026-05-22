@@ -190,7 +190,7 @@ The package itself ships only:
     "description": "AI playbook + stub library for bootstrapping the canonical Sander/hihaho repo setup. Install globally: `composer global require sandermuller/repo-init`.",
     "require": {
         "php": "^8.3",
-        "sandermuller/boost-core": "^0.5.0"
+        "sandermuller/boost-core": "^0.6.0"
     },
     "require-dev": {
         "laravel/pint": "^1.29",
@@ -199,22 +199,21 @@ The package itself ships only:
         "stolt/lean-package-validator": "^5.7"
     },
     "scripts": {
-        "post-install-cmd": ["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::runWithSummary"],
-        "post-update-cmd": ["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::runWithSummary"]
+        "post-install-cmd": ["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"],
+        "post-update-cmd": ["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"]
     },
     "config": {
         "sort-packages": true,
         "allow-plugins": {
-            "sandermuller/boost-core": true,
             "sandermuller/package-boost-php": true
         }
     }
 }
 ```
 
-`repo-init` is a `type: library` package distributed via **global install** (`composer global require sandermuller/repo-init`; see §3.3 and RQ40) — never as a `--dev` dependency of a target repo. Its sole runtime dependency is `sandermuller/boost-core`, the skill-sync engine. `boost-core` is a `composer-plugin`; under a global install its global-context auto-sync propagates the `repo-init` skill into `~/.{agent}/skills/sandermuller__repo-init/` automatically, so the skill is available in every project with no per-target installation.
+`repo-init` is a `type: library` package distributed via **global install** (`composer global require sandermuller/repo-init`; see §3.3 and RQ40) — never as a `--dev` dependency of a target repo. Its sole runtime dependency is `sandermuller/boost-core` (`type: library` from 0.6.0), the skill-sync engine. Pre-0.6.0 boost-core was a `composer-plugin` and auto-synced the `repo-init` skill into `~/.{agent}/skills/sandermuller__repo-init/` on `composer global` install/update; 0.6.0 removed the plugin (Pattern C). The sync is now a one-line manual command after each install/update: `vendor/bin/boost sync --scope=user --all` (see `references/boost-core-user-scope.md`).
 
-Everything else sits in `require-dev` — `laravel/pint`, `sandermuller/boost-skills`, `sandermuller/package-boost-php`, `stolt/lean-package-validator` — repo-init's own maintenance tooling, not shipped to consumers. `config.allow-plugins` allow-lists both composer-plugins (`boost-core`, `package-boost-php`).
+Everything else sits in `require-dev` — `laravel/pint`, `sandermuller/boost-skills`, `sandermuller/package-boost-php`, `stolt/lean-package-validator` — repo-init's own maintenance tooling, not shipped to consumers. `config.allow-plugins` allow-lists `sandermuller/package-boost-php` (still `type: composer-plugin`); boost-core is no longer a plugin in 0.6.0 so its allow-plugins entry is gone.
 
 An early draft instead placed `orchestra/testbench` + `sandermuller/package-boost` in `require`, so they would ride along when a target ran `composer require --dev sandermuller/repo-init`. That project-local model is superseded — see RQ35 and the v7 distribution decision in RQ40.
 
@@ -435,8 +434,8 @@ Always:
     "test-coverage": "vendor/bin/pest --coverage",
     "sync-ai": "vendor/bin/boost sync",
     "qa": ["@rector", "@format", "@phpstan-simplified"],
-    "post-install-cmd": ["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::runWithSummary"],
-    "post-update-cmd": ["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::runWithSummary"]
+    "post-install-cmd": ["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"],
+    "post-update-cmd": ["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"]
   }
 }
 ```
@@ -926,7 +925,7 @@ The "dogfood" property therefore reduces to: every stub in `stubs/` was generate
 
 11. **Testbench in dev deps.** **Decision:** Always added. **Rationale:** `package-boost:sync` runs through testbench across every category. **Superseded (v7):** AI-asset sync no longer runs through testbench — `boost-core` ships a standalone `vendor/bin/boost` bin. `orchestra/testbench` stays in the shared dev-dep list as the **package test bootstrap**, and `composer-plugin` excludes it (no Laravel runtime). See `references/shared-dev-deps.md`.
 
-12. **Conditional post-install hook.** **Decision:** Always added — `if [ $COMPOSER_DEV_MODE = "1" ]; then vendor/bin/testbench package-boost:sync 2>/dev/null || true; fi`. **Rationale:** Auto-syncs AI assets after dev installs; matches the laravel-x402-mcp pattern. **Superseded (v7):** the POSIX-shell hook is Windows-broken and is replaced — `post-install-cmd` and `post-update-cmd` now both invoke the boost-core PHP callback `SanderMuller\BoostCore\Scripts\BoostAutoSync::runWithSummary`. See §5.4 and `references/composer-scripts.md`.
+12. **Conditional post-install hook.** **Decision:** Always added — `if [ $COMPOSER_DEV_MODE = "1" ]; then vendor/bin/testbench package-boost:sync 2>/dev/null || true; fi`. **Rationale:** Auto-syncs AI assets after dev installs; matches the laravel-x402-mcp pattern. **Superseded (v7):** the POSIX-shell hook is Windows-broken and is replaced — `post-install-cmd` and `post-update-cmd` now both invoke the boost-core PHP callback `SanderMuller\BoostCore\Scripts\BoostAutoSync::run` (silent on no-op installs; prints the one-line sync summary when `wrote>0` — boost-core ≥0.6.0). An intermediate v8-era wiring used `::runWithSummary` for these hooks; that was wrong (auto-firing hooks should be silent-on-no-op, otherwise routine `composer install` runs always print a summary as noise). `::runWithSummary` remains correct for user-invoked scripts (e.g. `composer sync-ai`). See §5.4 and `references/composer-scripts.md`.
 
 13. **Workbench scripts.** **Decision:** Always added for `laravel-package`. **Rationale:** All canonical sander L-packages have them.
 

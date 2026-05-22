@@ -92,14 +92,15 @@ Same logic as audit-php-package.md, with composer-plugin stub paths from `$REPO_
 
 ## NON-CANONICAL findings
 
-- [ ] **`config.allow-plugins` missing the boost plugins** (HIGH severity): `sandermuller/package-boost-php` transitively pulls `sandermuller/boost-core` — a `composer-plugin`. `config.allow-plugins` MUST list BOTH `sandermuller/boost-core` and `sandermuller/package-boost-php` (both are `type: composer-plugin`). Missing either → the first non-interactive `composer install` fails with "blocked by your allow-plugins config". (Distinct from the self-allow rule below.) Flag NON-CANONICAL.
+- [ ] **`config.allow-plugins` missing `sandermuller/package-boost-php`** (HIGH severity): `sandermuller/package-boost-php` is `type: composer-plugin` — `config.allow-plugins` MUST list `sandermuller/package-boost-php: true` or the first non-interactive `composer install` fails with "blocked by your allow-plugins config". (Distinct from the self-allow rule below.) Flag NON-CANONICAL.
+- [ ] **`config.allow-plugins` lists `sandermuller/boost-core`** (MEDIUM severity, stale post boost-core 0.6.0): boost-core is `type: library` from 0.6.0, no longer a composer-plugin. The `sandermuller/boost-core: true` entry is a leftover from pre-0.6.0 scaffolds — Composer ignores it, harmless but stale. Flag NON-CANONICAL; suggest removal.
 - [ ] `composer.lock` committed (libraries should not commit lockfiles).
 - [ ] **`extra.class` missing** (HIGH severity): Composer rejects the plugin at install time with "no class found". Flag NON-CANONICAL.
 - [ ] **`extra.class` points to a class that does NOT exist in autoload** (HIGH severity): grep PSR-4 mapping + verify file. If class missing or namespace mismatched, plugin won't load.
 - [ ] **`extra.class` resolves to a class that does NOT implement `PluginInterface`** (HIGH severity): Composer rejects at activation.
 - [ ] **`composer/composer` in `require` instead of `require-dev`** (HIGH severity): pulls Composer at runtime into consumers (~5 MB bloat + transitive). Flag NON-CANONICAL; move to require-dev.
 - [ ] **Self-allow missing in `config.allow-plugins`** (MEDIUM severity): if the plugin has itself in `require-dev` for dogfooding (common pattern), or if any other composer-plugin is in deps, those entries MUST be in `config.allow-plugins`. Otherwise `composer install` here errors with "blocked by allow-plugins config". Flag missing entries.
-- [ ] **`command-provider` shape declared but commands extend wrong parent** (HIGH severity, only when sub-flag `command-provider=y`): Composer's CommandProvider capability validates instances are `Composer\Command\BaseCommand`. If commands extend plain `Symfony\Component\Console\Command\Command`, plugin throws "invalid value, we expected an array of Composer\Command\BaseCommand objects" at install. Verify: `getCommands()` returns BaseCommand instances (or adapter-wrapped instances).
+- [ ] **`command-provider` shape declared but commands extend wrong parent** (HIGH severity, only when sub-flag `command-provider=y`): Composer's CommandProvider capability validates instances are `Composer\Command\BaseCommand`. If commands extend plain `Symfony\Component\Console\Command\Command`, plugin throws "invalid value, we expected an array of Composer\Command\BaseCommand objects" at install. Verify: `getCommands()` returns `Composer\Command\BaseCommand` instances.
 - [ ] **`event-subscriber` shape declared but `getSubscribedEvents()` returns empty array** (LOW severity, only when sub-flag `event-subscriber=y`): plugin will load silently but hook nothing. Flag as suspicious — confirm intent.
 - [ ] **PHPUnit cache rules** (if `test-framework=phpunit`): apply `$REPO_INIT_HOME/references/phpunit-config.md` Audit-rule section — flag `.phpunit.cache/` at root, missing/wrong `cacheDirectory` attribute in `phpunit.xml`, committed `.phpunit.cache`.
 - [ ] **CI path filter drift — `phpstan.yml`** (MEDIUM severity): grep `.github/workflows/phpstan.yml` `paths:` blocks under `push` and `pull_request`; both MUST include `composer.json` AND `composer.lock`. Flag NON-CANONICAL if either missing.
@@ -115,7 +116,7 @@ Same logic as audit-php-package.md, with composer-plugin stub paths from `$REPO_
 
 ## EXTRA findings
 
-Informational. Example: plugin ships its own `bin/<binary>` for standalone invocation (e.g. `sandermuller/boost-core` ships `bin/boost`) — legitimate when the plugin also offers a standalone CLI surface. Don't flag. If present alongside `command-provider=y`, note: the standalone bin and the plugin command path should share a CommandRegistry to avoid drift (see boost-core BaseCommandAdapter pattern).
+Informational. Example: plugin ships its own `bin/<binary>` for standalone invocation (e.g. `sandermuller/boost-core` ships `bin/boost`) — legitimate when the plugin also offers a standalone CLI surface. Don't flag. If present alongside `command-provider=y`, note: the standalone bin and the plugin command path should share a CommandRegistry to avoid drift.
 
 ## Report
 

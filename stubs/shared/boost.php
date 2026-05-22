@@ -6,7 +6,7 @@ use SanderMuller\BoostCore\Config\BoostConfig;
 use SanderMuller\BoostCore\Enums\Agent;
 
 /**
- * boost-core configuration — which AI agents `composer boost:sync` writes to,
+ * boost-core configuration — which AI agents `vendor/bin/boost sync` writes to,
  * which dependency vendors' shipped skills are synced, and which skill tags
  * are active.
  *
@@ -19,8 +19,8 @@ use SanderMuller\BoostCore\Enums\Agent;
  * `withTags()` filters `sandermuller/boost-skills`: with no tags you still get
  * the universal skills; each tag adds its capability-specific set (e.g. `php`
  * adds backend-quality / pre-release, `jira` adds the jira-* skills). Re-run
- * `composer boost:install` to change agents/vendors/tags interactively, or
- * hand-edit this file; then run `composer boost:sync`.
+ * `vendor/bin/boost install` to change agents/vendors/tags interactively, or
+ * hand-edit this file; then run `vendor/bin/boost sync`.
  *
  * Docs: https://github.com/sandermuller/boost-core
  */

@@ -14,6 +14,60 @@ composer global update sandermuller/repo-init
 
 The `post-update-cmd` hook re-syncs the skill into `~/.claude/skills/sandermuller__repo-init/`. If a stub or reference doc shape changed in a way that affects in-flight workflows, re-running `audit` on already-set-up repos will surface the new MISSING / NON-CANONICAL findings.
 
+> **From 0.8.0 onward** there is no install-time auto-sync — boost-core 0.6.0 removed the Composer plugin. After every `composer global update sandermuller/repo-init`, run `vendor/bin/boost sync --scope=user --all` to refresh the user-scope skill dirs. See the `0.7.x → 0.8.0` section below.
+
+---
+
+## 0.7.x → 0.8.0 (boost-core 0.6.0 alignment)
+
+(Version provisional — final tag chosen at release time.)
+
+boost-core 0.6.0 (BREAKING) removed its Composer plugin and is now `type: library`. repo-init's scaffold + audit/upgrade phases re-align across the family. Upgrade repo-init itself:
+
+```bash
+composer global update sandermuller/repo-init
+vendor/bin/boost sync --scope=user --all
+```
+
+The second command is new and required after every global update: boost-core 0.6 removed the install-time auto-sync. `boost sync --scope=user --all` publishes every installed package's `resources/boost/skills/` into the user-scope agent dirs (`~/.{agent}/skills/<vendor>__<package>/`).
+
+### Scaffold constraint bumps
+
+| Category | Old pin | New pin |
+|---|---|---|
+| `skill-bundle` (direct `boost-core`) | `^0.5.0` | `^0.6.0` |
+| `php-package` / `phpstan-extension` / `rector-extension` / `composer-plugin` | `package-boost-php ^0.5.0` | `package-boost-php ^0.7.0` |
+| `laravel-package` / `laravel-package-spatie` / `filament-plugin` / `nova-tool` | `package-boost-laravel ^0.5.0` | **pending** — package-boost-laravel's `boost-core ^0.6` release is in flight; the laravel-family stubs stay on `^0.5.0` in this release and bump in a follow-up batch when that release lands |
+
+`laravel-project` is unaffected — it uses `laravel/boost`, not `sandermuller/boost-core`.
+
+### `config.allow-plugins` — drop `sandermuller/boost-core`
+
+boost-core 0.6.0 is `type: library`, no longer a composer-plugin. The `sandermuller/boost-core: true` allow-plugins entry is unnecessary — Composer ignores it; harmless but stale. `audit-<category>.md` flags it; `upgrade-<category>.md` removes it on confirmation. `sandermuller/package-boost-php` stays in `allow-plugins` — it remains `type: composer-plugin` through 0.7.0+.
+
+### `post-install-cmd` / `post-update-cmd` switch to `BoostAutoSync::run`
+
+Auto-firing hooks should be silent-by-default. `::runWithSummary` was wrong for these hooks (always printed a sync summary on `composer install` — noise on routine no-op installs). The canonical wiring is now:
+
+- `post-install-cmd` / `post-update-cmd` → `BoostAutoSync::run`
+- User-invoked scripts (e.g. `composer sync-ai`) — `::runWithSummary` stays correct there, where silence would read as a no-op.
+
+From boost-core 0.6.0, `run()` prints the one-line sync summary only when `wrote>0` (silent on routine no-op installs, visible on real syncs). `audit-<category>.md` flags a stale `::runWithSummary` in those two hooks; `upgrade-<category>.md` replaces with `::run`.
+
+### `BaseCommandAdapter` removed (composer-plugin authors only)
+
+boost-core 0.6.0 removed its `BaseCommandAdapter` class. The composer-plugin phase docs previously cited it as a reference pattern; that citation is dropped. Plugins shipping Composer commands should extend `Composer\Command\BaseCommand` directly — the native parent. The adapter idiom solved a dual-surface problem (plugin + standalone bin) specific to boost-core and is not a general fix path.
+
+### `composer boost:*` commands gone
+
+The `composer boost:install` / `composer boost:sync` plugin commands are gone. Use the standalone bin instead:
+
+```bash
+vendor/bin/boost install        # was: composer boost:install
+vendor/bin/boost sync           # was: composer boost:sync
+vendor/bin/boost sync --scope=user --all   # new: global skill refresh
+```
+
 ---
 
 ## 0.6.x → 0.7.0
@@ -26,7 +80,7 @@ composer global update sandermuller/repo-init
 
 ### New: boost-skills + the skill-tag picker
 
-A newly bootstrapped package now gets `sandermuller/boost-skills` (in `require-dev` and the `boost.php` `withAllowedVendors()`), and the bootstrap flow interactively prompts for which skill tags to activate (`php` / `frontend` / `github` / `jira`) — written into `boost.php` as `->withTags(...)`. For a package scaffolded before 0.7.0, `audit-<category>.md` flags `sandermuller/boost-skills` as MISSING and `upgrade-<category>.md` installs it; the tag set is then a manual `boost.php` edit or a `composer boost:install` re-run. Not breaking.
+A newly bootstrapped package now gets `sandermuller/boost-skills` (in `require-dev` and the `boost.php` `withAllowedVendors()`), and the bootstrap flow interactively prompts for which skill tags to activate (`php` / `frontend` / `github` / `jira`) — written into `boost.php` as `->withTags(...)`. For a package scaffolded before 0.7.0, `audit-<category>.md` flags `sandermuller/boost-skills` as MISSING and `upgrade-<category>.md` installs it; the tag set is then a manual `boost.php` edit or a `vendor/bin/boost install` re-run. Not breaking.
 
 ### Stub constraints → boost 0.5.0 family
 
@@ -67,7 +121,7 @@ composer global update sandermuller/repo-init
 Run `audit-<category>.md` then `upgrade-<category>.md` against it. Two findings will surface:
 
 - **Blocking — `config.allow-plugins` missing the boost plugins.** Pre-0.5.0 stubs shipped a `composer.json` that requires a boost umbrella but never allow-listed `sandermuller/boost-core` (a `composer-plugin` pulled in transitively). The result: `composer install --no-interaction` aborts with "blocked by your allow-plugins config". The upgrade phase adds `sandermuller/boost-core` + `sandermuller/package-boost-php` to `config.allow-plugins`. **This is the highest-priority fix** — apply it even if you skip everything else.
-- **`post-install-cmd` modernization.** The old POSIX-shell `post-install-cmd` (`if [ "$COMPOSER_DEV_MODE" = "1" ]; then ...`) is Windows-broken. The upgrade phase replaces it with boost-core's `BoostAutoSync::runWithSummary` callback and adds the missing `post-update-cmd`.
+- **`post-install-cmd` modernization.** The old POSIX-shell `post-install-cmd` (`if [ "$COMPOSER_DEV_MODE" = "1" ]; then ...`) is Windows-broken. The upgrade phase replaces it with boost-core's `BoostAutoSync::run` callback and adds the missing `post-update-cmd`. (`::run` not `::runWithSummary` — auto-firing hooks should be silent-on-no-op; `::runWithSummary` is for user-invoked scripts. See the `0.7.x → 0.8.0` section.)
 
 ### Boost-family dependency remap (BREAKING for new scaffolds)
 

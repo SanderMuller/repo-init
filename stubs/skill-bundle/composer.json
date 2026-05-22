@@ -20,7 +20,7 @@
     ],
     "require": {
         "php": "__PHP_VERSION__",
-        "sandermuller/boost-core": "^0.5.0"
+        "sandermuller/boost-core": "^0.6.0"
     },
     "require-dev": {
         "laravel/pint": "^1.29",
@@ -29,10 +29,10 @@
     },
     "scripts": {
         "post-install-cmd": [
-            "SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::runWithSummary"
+            "SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"
         ],
         "post-update-cmd": [
-            "SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::runWithSummary"
+            "SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"
         ],
         "format": "vendor/bin/pint",
         "validate-gitattributes": "vendor/bin/lean-package-validator validate",
@@ -46,10 +46,7 @@
         ]
     },
     "config": {
-        "sort-packages": true,
-        "allow-plugins": {
-            "sandermuller/boost-core": true
-        }
+        "sort-packages": true
     },
     "minimum-stability": "stable",
     "prefer-stable": true

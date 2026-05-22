@@ -42,15 +42,15 @@ For each OUTDATED file, apply its mode from `$REPO_INIT_HOME/references/upgrade-
 
 Per `$REPO_INIT_HOME/references/composer-scripts.md`:
 
-- **`scripts`**: insert missing `format`, `validate-gitattributes`, `qa`. Insert `post-install-cmd` AND `post-update-cmd` as `SanderMuller\BoostCore\Scripts\BoostAutoSync::runWithSummary` — if an old POSIX-shell `post-install-cmd` is present, replace it (it is Windows-broken).
-- **`config.allow-plugins`**: `sandermuller/boost-core: true` (MANDATORY — `boost-core` is a `composer-plugin`; without the entry the first non-interactive `composer install` is blocked).
+- **`scripts`**: insert missing `format`, `validate-gitattributes`, `qa`. Insert `post-install-cmd` AND `post-update-cmd` as `SanderMuller\BoostCore\Scripts\BoostAutoSync::run` — if an old POSIX-shell `post-install-cmd` is present, replace it (it is Windows-broken); if a stale `::runWithSummary` is wired, replace with `::run` (`runWithSummary` is for user-invoked scripts; auto-firing hooks should be silent-on-no-op, which 0.6.0's `run()` is).
+- **`config.allow-plugins`**: with boost-core 0.6.0 (`type: library`), no `sandermuller/boost-core` allow-plugins entry is required. If a stale `sandermuller/boost-core: true` entry is present from a pre-0.6.0 scaffold, remove it. For `skill-bundle`, `config.allow-plugins` is typically empty post-0.6.0.
 - **`config.sort-packages`**: `true`.
 
 ## Apply NON-CANONICAL fixes (each prompted)
 
 - **`sandermuller/boost-core` in `require-dev`**: move it to `require` (see MISSING runtime deps above) — consumers need it transitively.
-- **`config.allow-plugins` missing `sandermuller/boost-core`**: insert via the merge-keys patch above.
-- **Outdated POSIX-shell `post-install-cmd`**: replace with the boost-core callback (see merge-keys patch above).
+- **`config.allow-plugins` lists `sandermuller/boost-core`** (stale, post boost-core 0.6.0): remove the entry — boost-core 0.6.0 is `type: library`, the entry is harmless but unnecessary.
+- **Outdated POSIX-shell `post-install-cmd`** or **stale `::runWithSummary`**: replace with `::run` per the merge-keys patch above.
 - **`src/` directory with PHP source**: prompt "is this actually a `php-package`?" If the user confirms it ships real PHP, re-route to `audit-php-package.md`.
 - **`composer.lock` committed**: prompt `git rm --cached composer.lock`.
 - **PHP floor `^8.2`**: prompt bump to `^8.3`.
@@ -81,5 +81,4 @@ composer validate-gitattributes
 
 ## Common issues
 
-- **`composer install` blocked on `sandermuller/boost-core`**: `config.allow-plugins` is missing the `sandermuller/boost-core: true` entry. Add it.
 - **`validate-gitattributes` fails with "command not found"**: `vendor/bin/lean-package-validator` needs `composer install` after the dep was added. Run it.

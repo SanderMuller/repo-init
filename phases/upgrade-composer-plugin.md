@@ -47,7 +47,7 @@ Same logic as upgrade-php-package.md — apply each file's mode from `$REPO_INIT
 ## Apply composer.json merge-keys patches
 
 - **`scripts`**: insert missing entries per `references/composer-scripts.md`. Include `validate-gitattributes` script. Add `@validate-gitattributes` to `qa` chain.
-- **`config.allow-plugins`**: self-allow entry (`"<vendor>/<package>": true`), `pestphp/pest-plugin: true` (if pest), `phpstan/extension-installer: true`, `sandermuller/boost-core: true`, `sandermuller/package-boost-php: true` (the last two are MANDATORY — both are `type: composer-plugin` pulled in via the boost umbrella; without them the first non-interactive `composer install` is blocked). If any other composer-plugin is in require/require-dev, add those too.
+- **`config.allow-plugins`**: self-allow entry (`"<vendor>/<package>": true`), `pestphp/pest-plugin: true` (if pest), `phpstan/extension-installer: true`, `sandermuller/package-boost-php: true` (MANDATORY — still `type: composer-plugin` post boost-core 0.6.0; without it the first non-interactive `composer install` is blocked). NO `sandermuller/boost-core` entry — boost-core 0.6.0 is `type: library`; if a pre-0.6.0 scaffold left `sandermuller/boost-core: true` in place, remove it (Composer ignores it, harmless but stale). If any other composer-plugin is in require/require-dev, add those too.
 - **`config.sort-packages`**: `true`.
 - **`extra.class`**: required for composer-plugin. Must resolve to a class implementing `PluginInterface`. If missing, insert per MISSING files step above.
 
@@ -58,7 +58,7 @@ Same logic as upgrade-php-package.md — apply each file's mode from `$REPO_INIT
 - **`extra.class` resolves to a class that doesn't implement `PluginInterface`**: prompt to add `implements PluginInterface` + the three required no-op methods (activate/deactivate/uninstall). Offer the stub skeleton.
 - **`composer/composer` in `require` instead of `require-dev`**: `composer remove composer/composer && composer require --dev "composer/composer:^2.6"`. Heavy dep; never ship at runtime.
 - **Self-allow missing in `config.allow-plugins`** (and any other composer-plugin deps): insert via merge-keys patch above. Without these, `composer install` blocks with "blocked by your allow-plugins config".
-- **`command-provider` shape commands extend wrong parent**: surface each offending command class. Two fix paths: (a) change parent to `Composer\Command\BaseCommand`; (b) keep `Symfony\Component\Console\Command\Command` but wrap in an adapter when registering via `CommandProvider::getCommands()` (see `sandermuller/boost-core` BaseCommandAdapter). The latter is required if commands also run via standalone `vendor/bin/<plugin>` without `composer/composer` available.
+- **`command-provider` shape commands extend wrong parent**: Composer's plugin command-provider path requires commands to extend `Composer\Command\BaseCommand` (the native parent for plugin commands). Change each offending command class's parent to `Composer\Command\BaseCommand`. A Symfony-Console-style adapter wrapping is technically possible but solves a dual-surface problem (a plugin that also ships a standalone bin without `composer/composer` available) — not a general fix path. Prefer the native parent.
 - **`event-subscriber` shape with empty `getSubscribedEvents()`**: confirm intent with user. If the plugin should hook events, list the missing handlers (commonly POST_AUTOLOAD_DUMP for sync-on-install plugins).
 - **`larastan/larastan` / `illuminate/*` / `orchestra/testbench`**: confirm "does this plugin need Laravel runtime?" If yes (rare), suggest re-categorizing as `laravel-package` with a composer-plugin wrapper. If no, remove the offending deps.
 - **`composer.lock` committed**: prompt to `git rm --cached composer.lock`.
@@ -99,7 +99,7 @@ If the last command exits 0, plugin class autoloads cleanly. Non-zero exit = aut
 
 ## Common issues
 
-- **`composer install` errors with "Plugin capability X returned an invalid value"**: command-provider sub-flag declared but commands extend `Symfony\Component\Console\Command\Command` instead of `Composer\Command\BaseCommand`. Wrap in adapter (see boost-core BaseCommandAdapter) or change parent class.
+- **`composer install` errors with "Plugin capability X returned an invalid value"**: command-provider sub-flag declared but commands extend `Symfony\Component\Console\Command\Command` instead of `Composer\Command\BaseCommand`. Change the parent class to `Composer\Command\BaseCommand` (the native parent for plugin commands).
 - **Plugin not loading at all (silent)**: `extra.class` typo or PSR-4 mismatch. `composer dump-autoload -v` shows the resolved autoload paths.
 - **End users blocked by allow-plugins**: document in README — consumers must run `composer config allow-plugins.{vendor}/{name} true` once, OR `composer global require` answers the interactive prompt.
 - **`composer/composer` install pulls dozens of transitive deps**: expected; `composer/composer` itself depends on symfony/console, react/promise, etc. Live with it — dev-only.

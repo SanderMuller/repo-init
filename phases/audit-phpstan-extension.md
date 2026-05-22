@@ -75,7 +75,8 @@ Same logic as audit-laravel-package.md — apply each file's mode from `$REPO_IN
 
 ## NON-CANONICAL findings
 
-- [ ] **`config.allow-plugins` missing the boost plugins** (HIGH severity): `sandermuller/package-boost-php` transitively pulls `sandermuller/boost-core` — a `composer-plugin`. `config.allow-plugins` MUST list BOTH `sandermuller/boost-core` and `sandermuller/package-boost-php` (both are `type: composer-plugin`). Missing either → the first non-interactive `composer install` fails with "blocked by your allow-plugins config". Flag NON-CANONICAL.
+- [ ] **`config.allow-plugins` missing `sandermuller/package-boost-php`** (HIGH severity): `sandermuller/package-boost-php` is `type: composer-plugin` — `config.allow-plugins` MUST list `sandermuller/package-boost-php: true` or the first non-interactive `composer install` fails with "blocked by your allow-plugins config". Flag NON-CANONICAL.
+- [ ] **`config.allow-plugins` lists `sandermuller/boost-core`** (MEDIUM severity, stale post boost-core 0.6.0): boost-core is `type: library` from 0.6.0, no longer a composer-plugin. The `sandermuller/boost-core: true` entry is a leftover from pre-0.6.0 scaffolds — Composer ignores it, harmless but stale. Flag NON-CANONICAL; suggest removal.
 - [ ] `phpstan/phpstan` in BOTH `require` and `require-dev` (Composer rejects; should never happen but check). Flag — remove from `require-dev`.
 - [ ] `larastan/larastan` in `require-dev` BUT no `illuminate/*` in `require` — Laravel-aware claim without the actual Laravel runtime dep. Ask user: do you mean to be Laravel-aware? If yes, add `illuminate/support` to `require`.
 - [ ] Test-framework is Pest for a phpstan-extension — tolerate but mention in Notes.

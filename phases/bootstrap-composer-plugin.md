@@ -166,4 +166,4 @@ Re-running this phase against a target where all steps' post-conditions are met 
 - **Missing `Capable` interface for command-provider shape**: `getCapabilities()` won't be called. Plugin loads silently but commands don't register. Verify `implements Capable`.
 - **`composer/composer` in `require` instead of `require-dev`**: pulls Composer at runtime into consumers — ~5 MB bloat. Always require-dev only.
 - **Plugin not allow-listed**: end users get "blocked by your allow-plugins config" error on install. Document in README that consumers must `composer config allow-plugins.{vendor}/{name} true`.
-- **Symfony Console / Composer BaseCommand mismatch**: if shipping standalone bin commands too, see `sandermuller/boost-core` as reference for the adapter pattern (CommandRegistry returns Symfony commands; BaseCommandAdapter wraps them for the plugin CommandProvider path).
+- **Symfony Console / Composer BaseCommand mismatch**: plugin commands must extend `Composer\Command\BaseCommand` (Composer's CommandProvider path validates this). If commands ship for BOTH a standalone bin AND the plugin path, a shared `CommandRegistry` keeps the two surfaces in sync.

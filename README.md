@@ -24,9 +24,14 @@ Walks an AI agent (Claude Code, Cursor, GitHub Copilot, …) through **bootstrap
 
 ```bash
 composer global require sandermuller/repo-init
+vendor/bin/boost sync --scope=user --all
 ```
 
-[`sandermuller/boost-core`](https://github.com/SanderMuller/boost-core)'s global-context auto-sync (active under `composer global` since 0.2.0) propagates the `repo-init` skill into `~/.claude/skills/sandermuller__repo-init/`, `~/.cursor/skills/sandermuller__repo-init/`, `~/.agents/skills/sandermuller__repo-init/`, etc. on first install. The skill then auto-activates in any project. See `references/boost-core-user-scope.md` for the full contract.
+The second command publishes the `repo-init` skill (and any other globally-installed [`sandermuller/boost-core`](https://github.com/SanderMuller/boost-core) consumer's skills) into `~/.claude/skills/sandermuller__repo-init/`, `~/.cursor/skills/sandermuller__repo-init/`, `~/.agents/skills/sandermuller__repo-init/`, etc. The skill then auto-activates in any project. Re-run `vendor/bin/boost sync --scope=user --all` after each `composer global update` to refresh. See `references/boost-core-user-scope.md` for the full contract.
+
+> **Changed in boost-core 0.6.0.** Before 0.6.0 boost-core was a Composer plugin and auto-synced on every `composer global` install/update. 0.6.0 removed the plugin (boost-core is now `type: library`); the sync is the one-line manual command above instead.
+
+<!-- markdownlint-disable-next-line MD028 -->
 
 > **Upgrading from a pre-0.4.0 install?** boost-core 0.4.0 namespaces user-scope skill dirs by the full `vendor__package` slug. On first `composer global update` the legacy `~/.{agent}/skills/repo-init/` dir is auto-migrated to `~/.{agent}/skills/sandermuller__repo-init/`. See [`UPGRADING.md`](UPGRADING.md).
 
@@ -44,9 +49,10 @@ The agent reads the `repo-init` skill, decides intent + category, and opens the 
 
 ```bash
 composer global update sandermuller/repo-init
+vendor/bin/boost sync --scope=user --all
 ```
 
-boost-core's plugin re-syncs the skill on the same hook.
+The second line is required: boost-core 0.6.0 removed the auto-sync plugin, so refreshing the user-scope skill dirs is a manual command after every update.
 
 ## Repo categories supported
 
@@ -111,7 +117,7 @@ Highlights:
 ## Dependencies
 
 - [`sandermuller/package-boost-php`](https://github.com/SanderMuller/package-boost-php) — direct require; ships AI agent skills for PHP package authors.
-- [`sandermuller/boost-core`](https://github.com/SanderMuller/boost-core) — transitive via package-boost-php; Composer plugin engine for `vendor/bin/boost sync` and the `BoostAutoSync::runWithSummary` callback used in `post-install-cmd` / `post-update-cmd`.
+- [`sandermuller/boost-core`](https://github.com/SanderMuller/boost-core) — direct require since 0.6.0 (`type: library`; the Composer plugin was removed in that release). Ships the standalone `vendor/bin/boost` bin and the `BoostAutoSync::run` callback used in `post-install-cmd` / `post-update-cmd` (silent on no-op installs; prints the one-line sync summary when `wrote>0`).
 
 Both pulled in automatically when you `composer global require sandermuller/repo-init`.
 

@@ -1,21 +1,20 @@
 # `sandermuller/boost-core` user-scope sync
 
-repo-init's global-install model (per SPEC RQ40 + Open Question #3) needs a way to propagate the `repo-init` skill into `~/.claude/skills/` / `~/.cursor/skills/` / etc. when the package is installed via `composer global require sandermuller/repo-init`. This feature landed in [`sandermuller/boost-core`](https://github.com/SanderMuller/boost-core), commit [`bebd046b`](https://github.com/SanderMuller/boost-core/commit/bebd046bbcc14d8ca3f7184b911d467b04bc27bb).
+repo-init's global-install model (per SPEC RQ40 + Open Question #3) needs a way to propagate the `repo-init` skill into `~/.claude/skills/` / `~/.cursor/skills/` / etc. when the package is installed via `composer global require sandermuller/repo-init`. boost-core ships the user-scope sync command; repo-init's install path documents the one-line invocation.
 
-**Important:** the feature shipped in `boost-core`, not in `sandermuller/package-boost`. The earlier draft of this doc anticipated the wrong package. Repo-init's post-install hook now invokes `boost-core`'s binary.
+> **Changed in boost-core 0.6.0 (BREAKING).** Before 0.6.0 boost-core was a Composer plugin and auto-synced on every `composer global` install/update. 0.6.0 removed the plugin (boost-core is now `type: library`). User-scope sync is now a run-it-yourself command — the user invokes it once after `composer global require` and again after each `composer global update`. The plugin-driven auto-sync model is gone (Pattern C migration on the boost-core side).
 
 ## Command surface
 
 ```bash
-vendor/bin/boost sync --scope=user
+vendor/bin/boost sync --scope=user --all
 ```
 
-- `--scope=project` (default): project-local sync — writes to `<cwd>/.claude/skills/<skill>/SKILL.md`, etc. Existing behaviour; NOT namespaced by package.
+- `--scope=project` (default): project-local sync — writes to `<cwd>/.claude/skills/<skill>/SKILL.md`, etc. NOT namespaced by package.
 - `--scope=user`: writes to `$HOME/.claude/skills/<vendor>__<package>/<skill>/SKILL.md` and the equivalent dirs for 9 agents (`.cursor`, `.agents`, `.github`, `.junie`, `.kiro`, `.codex`, `.windsurf`, `.aider`).
+- `--all`: publishes EVERY installed Composer package that ships a `resources/boost/skills/` directory (discovered via `Composer\InstalledVersions`). No vendor allowlist filtering and no tag filtering — user scope has no `boost.php`, so `withAllowedVendors()` / `withTags()` (project-scope controls) do not apply. Skills only; guidelines (`CLAUDE.md` / `AGENTS.md`) are never fanned to `$HOME`.
 
 Each globally-installed package nests under its own `<vendor>__<package>/` subdir so multiple tools (repo-init + future siblings) don't collide. The `/` in the Composer name is replaced by `__` — a sequence the Composer name spec forbids inside vendor or project parts, so the slug mapping is injective.
-
-> **Changed in boost-core 0.4.0.** Pre-0.4 user-scope paths used the bare package basename (`~/.{agent}/skills/repo-init/`). 0.4.0 namespaces by the full `<vendor>__<package>` slug. boost-core's `UserScopeMigrator` performs a one-time, ownership-checked rename of the legacy dir on first sync post-upgrade. See repo-init `UPGRADING.md`.
 
 When the source skill directory is named after the package basename (repo-init ships its single skill at `resources/boost/skills/repo-init/`), boost-core's `rewriteForUserScope` collapses the redundant level — the user-scope output is `~/.{agent}/skills/sandermuller__repo-init/SKILL.md`, not `.../sandermuller__repo-init/repo-init/SKILL.md`.
 
@@ -35,7 +34,7 @@ Load-bearing invariant for the self-removal contract (`tests/self-removal-contra
 
 ## Idempotency
 
-Re-running `boost sync --scope=user` does not duplicate, append-to, or corrupt existing user-scope files. Same hash-then-overwrite semantics as project-scope sync.
+Re-running `boost sync --scope=user --all` does not duplicate, append-to, or corrupt existing user-scope files. Same hash-then-overwrite semantics as project-scope sync.
 
 ## Permissions
 
@@ -45,28 +44,30 @@ Files `0644`, dirs `0755` — matches boost-core's project-scope posture.
 
 `$HOME` first, then `$USERPROFILE` (Windows), then `sys_get_temp_dir()`. boost-core also accepts a `$homeRoot` override (used for testing) so the test harness doesn't need to call `putenv` (which is on `spaze/phpstan-disallowed-calls`).
 
-## Source of truth
-
-The implementation lives in boost-core:
-
-- `src/Commands/SyncCommand.php` — the `--scope` flag plumbing.
-- `src/Sync/SyncEngine.php` — `syncUser($packageRoot, $checkOnly, ?$homeRoot)`.
-- `src/Sync/UserScopeResult.php` — value object for per-run summary.
-- `tests/Integration/UserScopeSyncTest.php` — happy path, guidelines NOT fanned out, check-mode reports drift, missing composer.json surfaces as error.
-
 ## How repo-init uses it
 
-`bin/post-install-sync.php` is the composer `post-install-cmd` hook. It:
+Two-step install (one-time per machine):
 
-1. Locates `vendor/bin/boost` (boost-core's binary). Bails silently if not found.
-2. Runs `vendor/bin/boost sync --scope=user` from repo-init's own vendor dir.
-3. On exit-non-zero, prints a clear one-liner pointing at `references/boost-core-user-scope.md` and continues — does NOT fail the composer install.
+```bash
+composer global require sandermuller/repo-init
+vendor/bin/boost sync --scope=user --all
+```
+
+Two-step update (after each version bump):
+
+```bash
+composer global update sandermuller/repo-init
+vendor/bin/boost sync --scope=user --all
+```
+
+repo-init is a pure-markdown package — it ships no bin and no `post-install-cmd` that fires for a globally-required dependency (Composer script hooks fire only for the root package, not for required dependencies). Post-0.6.0 there is no install-time auto-sync mechanism for a passive skill-distribution package; the user-invoked `boost sync --scope=user --all` is the canonical sync trigger. See SPEC RQ1 (zero-PHP-code) for why repo-init does not ship a bin.
 
 ## Constraints
 
-Repo-init's `composer.json` requires `sandermuller/boost-core: ^X.Y` where X.Y is the version that ships `bebd046b` (the `--scope=user` commit). Composer enforces this at install time.
+repo-init's `composer.json` requires `sandermuller/boost-core: ^0.6.0`. The `--scope=user --all` flag combination is a 0.6.0 feature (the `--all` flag arrived alongside the plugin removal). Pre-0.6.0 boost-core supported `--scope=user` but not `--all` and did the auto-sync via the plugin instead.
 
 ## See also
 
-- repo-init `SPEC.md` RQ40 — the global-install model that depends on this feature
+- repo-init `SPEC.md` RQ40 — the global-install model that depends on this sync
 - repo-init `tests/self-removal-contract.md` — the copy-never-symlink invariant
+- boost-core's Pattern C migration spec — Composer-plugin removal in 0.6.0
