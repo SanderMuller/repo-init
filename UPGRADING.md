@@ -2,9 +2,9 @@
 
 Per-major / per-minor upgrade notes for `sandermuller/repo-init`. Each section is anchored so release notes can deep-link to the relevant breaking-change explanation.
 
-## From 0.x to 0.x (pre-1.0 cadence)
+## From 0.x to 0.x (pre-1.0 cadence — historical)
 
-Pre-`1.0.0` releases may introduce breaking changes in MINOR bumps. We surface those in the CHANGELOG and here. Patch releases are always non-breaking.
+Pre-`1.0.0` releases (0.1.0 through 0.8.x) introduced breaking changes in MINOR bumps; each is documented in the CHANGELOG and the per-version-pair sections below. From 1.0.0 onward repo-init follows standard SemVer: breaking changes ship as MAJOR only, additive as MINOR, fixes as PATCH.
 
 To upgrade:
 
@@ -15,6 +15,17 @@ composer global update sandermuller/repo-init
 The `post-update-cmd` hook re-syncs the skill into `~/.claude/skills/sandermuller__repo-init/`. If a stub or reference doc shape changed in a way that affects in-flight workflows, re-running `audit` on already-set-up repos will surface the new MISSING / NON-CANONICAL findings.
 
 > **From 0.8.0 onward** there is no install-time auto-sync — boost-core 0.6.0 removed the Composer plugin. After every `composer global update sandermuller/repo-init`, run `composer global exec -- boost sync --scope=user --all` to refresh the user-scope skill dirs. See the `0.7.x → 0.8.0` section below.
+
+---
+
+## 0.8.x → 1.0.0
+
+Stability declaration — no content changes, no breaking changes, no migration steps. `composer global update sandermuller/repo-init` (+ `composer global exec -- boost sync --scope=user --all` per the post-0.8.0 install flow) and you are on 1.0.0.
+
+What 1.0.0 changes:
+
+- **Versioning contract.** Repo-init follows standard SemVer from here: breaking changes ship as **MAJOR** (2.0.0+) only, additive as MINOR, fixes as PATCH. The pre-1.0 cadence (breaking-MINOR allowed, surfaced per pair in this file) is closed; the historical entries below remain for users coming from 0.x.
+- **Nothing in the published archive.** Scaffold output, audit phases, stubs, references, the `repo-init` skill — identical to 0.8.1.
 
 ---
 

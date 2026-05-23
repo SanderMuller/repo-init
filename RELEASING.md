@@ -12,12 +12,12 @@ How to cut a release of `sandermuller/repo-init`.
 
 ## Versioning rules
 
-- **Pre-1.0**: MINOR bumps may break — document in UPGRADING.md. PATCH bumps are non-breaking.
-- **Post-1.0** (future): standard SemVer. MAJOR for breaking, MINOR for additive, PATCH for fixes.
+- **0.x (pre-1.0, historical)**: MINOR bumps could break — documented in `UPGRADING.md` per version pair. PATCH bumps were non-breaking.
+- **1.0+**: standard SemVer. MAJOR for breaking, MINOR for additive, PATCH for fixes.
 
 What counts as breaking for repo-init:
 
-- Stub content change that requires consumers to re-run audit + upgrade (most stub edits are MINOR-breaking pre-1.0).
+- Stub content change that requires consumers to re-run audit + upgrade (was MINOR-breaking pre-1.0; MAJOR from 1.0+).
 - Phase file step ordering change that an in-flight agent might trip on.
 - Reference doc rename / removal.
 - `references/per-category-deps.yml` schema change.

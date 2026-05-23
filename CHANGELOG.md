@@ -5,7 +5,7 @@ All notable changes to `sandermuller/repo-init` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-Pre-`1.0.0` releases may introduce breaking changes in MINOR bumps; we surface those here clearly.
+Pre-`1.0.0` releases (0.x.x — historical) introduced breaking changes in MINOR bumps; from 1.0.0 onward repo-init follows standard SemVer (breaking changes ship as MAJOR only). The pre-1.0 entries below remain for reference.
 
 ## [0.8.1](https://github.com/sandermuller/repo-init/compare/0.8.0...0.8.1) - 2026-05-23
 

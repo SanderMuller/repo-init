@@ -92,15 +92,13 @@ The project-local install takes precedence over the global one. Remove with `com
 composer global remove sandermuller/repo-init
 ```
 
-Optional skill cleanup (the synced user-level skill dirs survive `composer global remove`):
+Optional skill cleanup (the synced user-level skill dirs survive `composer global remove` because `sync` writes file copies — see `references/boost-core-user-scope.md`):
 
 ```bash
-rm -rf ~/.claude/skills/sandermuller__repo-init \
-       ~/.cursor/skills/sandermuller__repo-init \
-       ~/.agents/skills/sandermuller__repo-init
+rm -rf ~/.{claude,cursor,agents,github,junie,kiro,codex,windsurf,aider}/skills/sandermuller__repo-init
 ```
 
-(Keep the synced skills if you might re-install later — re-running `composer global require sandermuller/repo-init` re-syncs them, so leaving them in place is harmless.)
+(boost-core 0.6+ fans into 9 agent targets — the brace expansion above clears all of them in one line. Keep the synced skills if you might re-install later — re-running the install + `composer global exec -- boost sync --scope=user --all` re-syncs them, so leaving them in place is harmless.)
 
 ## Design
 
@@ -116,10 +114,16 @@ Highlights:
 
 ## Dependencies
 
-- [`sandermuller/package-boost-php`](https://github.com/SanderMuller/package-boost-php) — direct require; ships AI agent skills for PHP package authors.
-- [`sandermuller/boost-core`](https://github.com/SanderMuller/boost-core) — direct require since 0.6.0 (`type: library`; the Composer plugin was removed in that release). Ships the standalone `vendor/bin/boost` bin and the `BoostAutoSync::run` callback used in `post-install-cmd` / `post-update-cmd` (silent on no-op installs; prints the one-line sync summary when `wrote>0`).
+Runtime (`require`) — what `composer global require sandermuller/repo-init` pulls in for every consumer:
 
-Both pulled in automatically when you `composer global require sandermuller/repo-init`.
+- [`sandermuller/boost-core`](https://github.com/SanderMuller/boost-core) — `type: library` from 0.6.0 (the Composer plugin was removed in that release). Ships the standalone `vendor/bin/boost` bin and the `BoostAutoSync::run` callback used in `post-install-cmd` / `post-update-cmd` (silent on no-op installs; prints the one-line sync summary when `wrote>0`).
+
+Maintenance (`require-dev`) — used only by repo-init's own dev workflow; NOT propagated to consumers (Composer never installs a required package's `require-dev`):
+
+- [`sandermuller/package-boost-php`](https://github.com/SanderMuller/package-boost-php) — the boost-family umbrella repo-init dogfoods (it's also what the `php-package` / `phpstan-extension` / `rector-extension` / `composer-plugin` scaffolds pin).
+- [`sandermuller/boost-skills`](https://github.com/SanderMuller/boost-skills) — the shared dev-workflow skill library (code-review, bug-fixing, pre-release, evaluate, …); boost-core syncs its skills into repo-init's agent dirs at dev time.
+- `laravel/pint` — code style.
+- `stolt/lean-package-validator` — validates `.gitattributes` export-ignore coverage.
 
 ## Contributing
 
