@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Pre-`1.0.0` releases may introduce breaking changes in MINOR bumps; we surface those here clearly.
 
+## [0.8.1](https://github.com/sandermuller/repo-init/compare/0.8.0...0.8.1) - 2026-05-23
+
+### Fixed
+
+#### `.gitattributes` export-ignore patterns no longer sweep up stub files
+
+repo-init 0.8.0's `.gitattributes` (introduced by the 0.8.0 self-baseline upgrade) used **unanchored** export-ignore patterns: `.editorconfig`, `.github/`, `boost.php`, `pint.json`, `tests/`, `CHANGELOG.md`, `SECURITY.md`, `.lpv`, and so on. Git matches those at **any depth**, not just at repo root — so every identically-named file under `stubs/` was also excluded from `git archive`, and therefore from the Composer archive Packagist serves.
+
+Consumers installing 0.8.0 got an incomplete stub tree:
+
+- `stubs/shared/` shipped **6 of 18** files. Missing from the archive: `.editorconfig`, `.gitignore`, `.github/dependabot.yml`, `.github/workflows/{phpstan,pint-check,rector-check,update-changelog}.yml`, `boost.php`, `CHANGELOG.md`, `SECURITY.md`, `pint.json`, `tests/Feature/.gitkeep`.
+- `stubs/php-package/` shipped **5 of 7**. Missing: `.lpv`, `.github/workflows/run-tests.yml`.
+- The same pattern affected every stub category with dotfile / workflow / tests sub-content (laravel-package, laravel-package-spatie, filament-plugin, nova-tool, phpstan-extension, rector-extension, composer-plugin, skill-bundle).
+
+A `composer global require sandermuller/repo-init` on 0.8.0 produces an incomplete stub tree; downstream scaffolders (e.g. `sandermuller/repo-new`) break with missing canonical files. Surfaced by repo-new's smoke tests against 0.8.0.
+
+**Fix:** every managed-block pattern in `.gitattributes` now carries a leading `/` so it only matches at repo root, leaving identically-named files under `stubs/` in the archive. Verified — `git archive --worktree-attributes HEAD stubs/` ships **100 of 100** stub files (was 72); root-level exclusions still apply unchanged.
+
+### Upgrading
+
+If you installed 0.8.0:
+
+```bash
+composer global update sandermuller/repo-init
+composer global exec -- boost sync --scope=user --all
+
+```
+The Composer archive for 0.8.1 contains the full stub tree; downstream scaffolders that broke on 0.8.0 work again.
+
+### CI note
+
+`integrity.yml` and `lint-markdown.yml` are path-filtered. This release touches `.gitattributes` only — no path matches — so neither workflow ran on the push. Verified locally instead: full integrity gauntlet (10 scripts) + `check-dep-sync.py` + `markdownlint` (60 files) + `composer validate` all green; `git archive --worktree-attributes HEAD` shows the full 100-file stub tree.
+
+Full changelog at [CHANGELOG.md](https://github.com/SanderMuller/repo-init/blob/0.8.1/CHANGELOG.md).
+
 ## [0.8.0](https://github.com/sandermuller/repo-init/compare/0.7.0...0.8.0) - 2026-05-22
 
 0.8.0 aligns repo-init's scaffold + audit/upgrade phases + its own toolchain with the `sandermuller/boost-core` 0.6.0 family migration (boost-core dropped its Composer plugin and is now `type: library`; the umbrella packages bumped with it). Breaking for **new scaffolds** — existing repos surface the drift through `audit-<category>.md` and apply it through `upgrade-<category>.md`.
@@ -18,6 +53,7 @@ Pre-`1.0.0` releases may introduce breaking changes in MINOR bumps; we surface t
 ```bash
 composer global require sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
+
 
 ```
 The `composer global exec --` form runs `boost` from Composer's global `vendor/bin/` regardless of the user's current directory; the literal `--` stops Composer from interpreting boost's flags as its own. `--scope=user --all` publishes every globally-installed package's `resources/boost/skills/` into `~/.{agent}/skills/<vendor>__<package>/`. See `references/boost-core-user-scope.md` for the full contract.
@@ -34,6 +70,7 @@ repo-init now uses the shared `sandermuller/boost-skills` library (code-review, 
 
 ```bash
 gh release create X.Y.Z --notes-file internal/release-notes-X.Y.Z.md
+
 
 ```
 repo-init already shipped this workflow as a stub for scaffolded packages (`stubs/shared/.github/workflows/update-changelog.yml`); it now also runs on repo-init itself. `CONTRIBUTING.md` + `RELEASING.md` updated to match.
@@ -81,6 +118,7 @@ vendor/bin/boost sync           # was: composer boost:sync
 # After `composer global require` (any cwd):
 composer global exec -- boost sync --scope=user --all   # new: global skill refresh
 
+
 ```
 `stubs/shared/boost.php` + repo-init's own `boost.php` docblocks updated accordingly.
 
@@ -109,6 +147,7 @@ Upgrade repo-init itself:
 ```bash
 composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
+
 
 ```
 For an existing scaffolded repo:
@@ -239,6 +278,7 @@ For an existing scaffolded repo:
 - **BREAKING — boost-family dependency remapped per category.** The boost
   umbrella was previously `sandermuller/package-boost-php` in the shared
   dev-dep list for every category. It is now assigned by category:
+  
   - `php-package`, `phpstan-extension`, `rector-extension`, `composer-plugin`
     → `sandermuller/package-boost-php`
   - `laravel-package` (+ `filament-plugin`, `nova-tool`) →
@@ -254,8 +294,10 @@ For an existing scaffolded repo:
   `shared-exclusions` entry that dropped it was removed — `composer-plugin` is
   a framework-agnostic Composer package and takes the umbrella like the other
   agnostic categories.
+  
 - Stub `package-boost-php` constraint bumped `^0.3.0` → `^0.4.0`; the
   Laravel-category stubs now pin `sandermuller/package-boost-laravel: ^0.4.0`.
+  
 
 ## [0.4.0](https://github.com/sandermuller/repo-init/compare/0.3.1...0.4.0) - 2026-05-20
 
@@ -406,6 +448,7 @@ For an existing scaffolded repo:
 - **`composer-plugin` is now a first-class category** (6 total). Previously
   flagged out-of-scope per `references/detection-rules.md` with a "run
   audit-php-package.md manually" workaround. Now ships:
+  
   - Decision-table row in `references/detection-rules.md`: `type: composer-plugin` → `composer-plugin`.
   - Sub-flags: `command-provider` (plugin implements `Capable` + `CommandProvider`),
     `event-subscriber` (`EventSubscriberInterface`), `boost-skill-provider`
@@ -443,12 +486,14 @@ For an existing scaffolded repo:
   (not a skim). Real audits had missed `laravel/pao` because the agent
   read the structure and assumed compliance. Each `## MISSING dev deps`
   section in all 6 audit phases now cites the protocol upfront.
+  
 - **CI path-filter audit/upgrade rule** across audit/upgrade phases.
   Audit flags `phpstan.yml` missing `composer.json`/`composer.lock` in path
   filters (all 5 categories). Audit also flags `run-tests.yml` missing
   `testbench.yaml`/`workbench/**` (laravel-package only — covers the
   spatie/filament/nova fall-through too). Upgrade fixes insert the missing
   lines under matching indentation.
+  
 - **PHPUnit cache audit/upgrade rule** across all 5 categories (`php-package`,
   `laravel-package`, `laravel-project`, `phpstan-extension`, `rector-extension`).
   New `references/phpunit-config.md` defines the canonical `phpunit.xml`
@@ -457,6 +502,7 @@ For an existing scaffolded repo:
   at repo root, missing/wrong `cacheDirectory` attribute, and committed
   `.phpunit.cache`. Upgrade fixes `cacheDirectory`, removes the leaked dir,
   and `git rm -r --cached` if previously committed.
+  
 
 ### Changed
 
