@@ -29,11 +29,7 @@ composer global exec -- boost sync --scope=user --all
 
 The second command publishes the `repo-init` skill (and any other globally-installed [`sandermuller/boost-core`](https://github.com/SanderMuller/boost-core) consumer's skills) into `~/.claude/skills/sandermuller__repo-init/`, `~/.cursor/skills/sandermuller__repo-init/`, `~/.agents/skills/sandermuller__repo-init/`, etc. The skill then auto-activates in any project. Re-run `composer global exec -- boost sync --scope=user --all` after each `composer global update` to refresh. (The `composer global exec --` form runs `boost` from Composer's global `vendor/bin/` regardless of your current directory; the literal `--` separator stops Composer from interpreting `boost`'s flags as its own.) See `references/boost-core-user-scope.md` for the full contract.
 
-> **Changed in boost-core 0.6.0.** Before 0.6.0 boost-core was a Composer plugin and auto-synced on every `composer global` install/update. 0.6.0 removed the plugin (boost-core is now `type: library`); the sync is the one-line manual command above instead.
-
-<!-- markdownlint-disable-next-line MD028 -->
-
-> **Upgrading from a pre-0.4.0 install?** boost-core 0.4.0 namespaces user-scope skill dirs by the full `vendor__package` slug. On first `composer global update` the legacy `~/.{agent}/skills/repo-init/` dir is auto-migrated to `~/.{agent}/skills/sandermuller__repo-init/`. See [`UPGRADING.md`](UPGRADING.md).
+> **Changed in boost-core 0.6.0.** Before 0.6.0 boost-core was a Composer plugin and auto-synced on every `composer global` install/update. 0.6.0 removed the plugin (boost-core is now `type: library`); the sync is the one-line manual command above instead. Older boost-core migrations (e.g. the 0.4.0 user-scope slug rename) are covered in [`UPGRADING.md`](UPGRADING.md).
 
 ## Use
 
@@ -67,7 +63,7 @@ The second line is required: boost-core 0.6.0 removed the auto-sync plugin, so r
 | `composer-plugin` | `type: composer-plugin` |
 | `skill-bundle` | `type: library` + `sandermuller/boost-core` in `require` |
 
-Each has its own bootstrap, audit, and upgrade phase file (23 phase files total — 7 audit + 7 upgrade + 9 bootstrap, the extra 2 bootstraps cover `filament-plugin` and `nova-tool` which fall through to `laravel-package` for audit/upgrade). `composer-plugin` (added in 0.3.0) covers framework-agnostic Composer plugins (e.g. boost-core, package-boost-php) with sub-flags for command-provider / event-subscriber shapes. `skill-bundle` (added in 0.5.0) covers distributable packages whose product is AI agent skills — `type: library`, `sandermuller/boost-core` in runtime `require`, ships `resources/boost/skills/`, no `src/`.
+Each has its own bootstrap, audit, and upgrade phase file (23 phase files total — 7 audit + 7 upgrade + 9 bootstrap, the extra 2 bootstraps cover `filament-plugin` and `nova-tool` which fall through to `laravel-package` for audit/upgrade). `composer-plugin` covers framework-agnostic Composer plugins (e.g. boost-core, package-boost-php) with sub-flags for command-provider / event-subscriber shapes. `skill-bundle` covers distributable packages whose product is AI agent skills — `type: library`, `sandermuller/boost-core` in runtime `require`, ships `resources/boost/skills/`, no `src/`.
 
 ## What's NOT in the package
 
