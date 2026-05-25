@@ -7,6 +7,65 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Pre-`1.0.0` releases (0.x.x — historical) introduced breaking changes in MINOR bumps; from 1.0.0 onward repo-init follows standard SemVer (breaking changes ship as MAJOR only). The pre-1.0 entries below remain for reference.
 
+## [1.1.0](https://github.com/sandermuller/repo-init/compare/1.0.0...1.1.0) - 2026-05-25
+
+Additive release: a new **MISMATCH-aware** audit protocol for the `composer.json` `scripts` block, applied to every code-bearing audit + upgrade phase plus a central source-of-truth in `references/composer-scripts.md`. No stub churn, no migration steps — agents running prior phase versions still work; this is strict-superset rigor.
+
+### Why
+
+A real-world upgrade run against a downstream `laravel-package` ended with a POSIX-shell `post-install-cmd` (Windows-broken — predates boost-core 0.6's PHP callback) left in place AND no `post-update-cmd` at all. The audit + upgrade phase docs steered the agent through every dev-dep but offered only a one-line pointer at the `scripts` block, so the agent auto-completed the canonical block from training data instead of diffing against `references/composer-scripts.md`. Surfaced by consumer usage feedback.
+
+Root cause is structural: the prior `phases/audit-<category>.md` had a MISSING-only checklist for `composer.json` keys. A `post-install-cmd` that is PRESENT but value-broken survived the audit, because "present" was the only counter-state. **Value drift needs its own verdict.**
+
+### What 1.1.0 ships
+
+#### New protocol — `references/composer-scripts.md`
+
+A `## Audit verification protocol (MANDATORY)` section at top, mirroring the dev-deps one in `shared-dev-deps.md`. Introduces a three-verdict protocol per script key:
+
+- **PRESENT** — key exists, value matches canonical
+- **MISSING** — key absent
+- **MISMATCH** — key exists, value differs from canonical (quote both sides)
+
+MISMATCH is the load-bearing addition. Audit and upgrade phases now treat MISMATCH at the same severity as MISSING, prompting before overwrite. The common drift class — a `post-install-cmd` whose value is a POSIX-shell conditional referencing `vendor/bin/boost sync` — is now caught explicitly.
+
+#### Per-category audit checklists
+
+New `## Per-category audit checklists` section in the reference doc, listing the exact expected key set per detected category — used as the input to the protocol above. Counts per category (after merging baseline + category-specific blocks):
+
+| Category             | Keys                                  |
+|----------------------|---------------------------------------|
+| `laravel-package`    | 16 (baseline 11 + workbench 5)        |
+| `php-package`        | 12 (baseline 11 + validate-gitattrs)  |
+| `composer-plugin`    | 11 (baseline minus sync-ai + validate-gitattrs) |
+| `phpstan-extension`  | 11 (baseline)                         |
+| `rector-extension`   | 11 (baseline; qa includes @test)      |
+| `laravel-project`    | 8 unconditional + 2 scaffold-conditional (BoostAutoSync hooks gated on boost-core in scaffold) |
+| `skill-bundle`       | 6 (lean subset; already had its own check)      |
+
+The reference doc is the source of truth — per-key checklists embedded in each audit phase mirror these lists verbatim so the protocol can enforce a per-key verdict without indirection.
+
+#### Per-phase additions
+
+Every code-bearing audit phase gains a `## MISSING composer.json scripts` section with an explicit per-key checklist + a HIGH-severity **POSIX-shell `post-install-cmd` / `post-update-cmd`** NON-CANONICAL finding. Every upgrade phase's `scripts` merge-keys bullet is rewritten to open with `Read references/composer-scripts.md IN FULL before patching. Do NOT infer the canonical block from memory.` MISMATCH is called out as the load-bearing case requiring a prompt before overwrite.
+
+Touched phases:
+
+- `phases/audit-laravel-package.md` + `phases/upgrade-laravel-package.md`
+- `phases/audit-php-package.md` + `phases/upgrade-php-package.md`
+- `phases/audit-composer-plugin.md` + `phases/upgrade-composer-plugin.md`
+- `phases/audit-phpstan-extension.md` + `phases/upgrade-phpstan-extension.md`
+- `phases/audit-rector-extension.md` + `phases/upgrade-rector-extension.md`
+- `phases/audit-laravel-project.md` + `phases/upgrade-laravel-project.md`
+
+`skill-bundle` already had this check (`audit-skill-bundle.md:63` since pre-1.0); untouched.
+
+#### `laravel-project` nuance
+
+A vanilla `laravel-project` ships `laravel/boost`, not `sandermuller/boost-core`. The canonical `BoostAutoSync::run` callback is therefore not autoloadable there. The `post-install-cmd` / `post-update-cmd` rows in the `laravel-project` audit checklist are **scaffold-conditional** — included only when boost-core is in the dependency tree. If a stale POSIX-shell `post-install-cmd` is present in a boost-core-less `laravel-project`, the canonical fix is REMOVAL of the script, not replacement.
+
+Full changelog at [CHANGELOG.md](https://github.com/SanderMuller/repo-init/blob/1.1.0/CHANGELOG.md).
+
 ## [1.0.0](https://github.com/sandermuller/repo-init/compare/0.8.1...1.0.0) - 2026-05-23
 
 **1.0.0 is a stability declaration**, not a feature release. No breaking changes, no scaffold or phase or stub content churn. From this version on `sandermuller/repo-init` follows standard SemVer — breaking changes ship as MAJOR (2.0.0+) only, additive as MINOR, fixes as PATCH. The pre-1.0 cadence (breaking-MINOR allowed, surfaced in `UPGRADING.md` per version pair) is closed; the prior 0.x entries remain in `CHANGELOG.md` + `UPGRADING.md` as history.
@@ -26,8 +85,8 @@ Doc reconciliation only — the published archive content is identical to 0.8.1:
 composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
 
-```
 
+```
 No further steps. Scaffold output, the `repo-init` skill, audit/upgrade phases, stubs — all identical to 0.8.1.
 
 ### Versioning from here
@@ -36,7 +95,7 @@ No further steps. Scaffold output, the `repo-init` skill, audit/upgrade phases, 
 - **MINOR** — additive only: new category, new shared dep added without disturbing existing ones, new audit/upgrade rule that's a strict-superset of prior behaviour.
 - **PATCH** — fixes: doc reconciliations, lint cleanups, stub typos, phase-prose corrections, dep-constraint bumps within the umbrella SemVer compatible ranges.
 
-**Full Changelog**: <https://github.com/SanderMuller/repo-init/compare/0.8.1...1.0.0>
+**Full Changelog**: [https://github.com/SanderMuller/repo-init/compare/0.8.1...1.0.0](https://github.com/SanderMuller/repo-init/compare/0.8.1...1.0.0)
 
 ## [0.8.1](https://github.com/sandermuller/repo-init/compare/0.8.0...0.8.1) - 2026-05-23
 
@@ -65,8 +124,8 @@ composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
 
 
-```
 
+```
 The Composer archive for 0.8.1 contains the full stub tree; downstream scaffolders that broke on 0.8.0 work again.
 
 ### CI note
@@ -89,8 +148,8 @@ composer global exec -- boost sync --scope=user --all
 
 
 
-```
 
+```
 The `composer global exec --` form runs `boost` from Composer's global `vendor/bin/` regardless of the user's current directory; the literal `--` stops Composer from interpreting boost's flags as its own. `--scope=user --all` publishes every globally-installed package's `resources/boost/skills/` into `~/.{agent}/skills/<vendor>__<package>/`. See `references/boost-core-user-scope.md` for the full contract.
 
 ### Added
@@ -108,8 +167,8 @@ gh release create X.Y.Z --notes-file internal/release-notes-X.Y.Z.md
 
 
 
-```
 
+```
 repo-init already shipped this workflow as a stub for scaffolded packages (`stubs/shared/.github/workflows/update-changelog.yml`); it now also runs on repo-init itself. `CONTRIBUTING.md` + `RELEASING.md` updated to match.
 
 ### Changed (breaking for new scaffolds)
@@ -157,8 +216,8 @@ composer global exec -- boost sync --scope=user --all   # new: global skill refr
 
 
 
-```
 
+```
 `stubs/shared/boost.php` + repo-init's own `boost.php` docblocks updated accordingly.
 
 #### repo-init aligned to its own `skill-bundle` baseline
@@ -189,8 +248,8 @@ composer global exec -- boost sync --scope=user --all
 
 
 
-```
 
+```
 For an existing scaffolded repo:
 
 1. `audit-<category>.md` surfaces the family drift: stale `boost-core` in `allow-plugins`, `::runWithSummary` in `post-install/update-cmd`, old boost-family constraints, stale `BaseCommandAdapter` citations (composer-plugin only).
@@ -313,6 +372,7 @@ For an existing scaffolded repo:
   - CI: `check-layout.sh`, `check-phase-coverage.sh`, `check-stub-composer-validity.sh`
     updated for the new category.
   
+
 ### Changed
 
 - **BREAKING — boost-family dependency remapped per category.** The boost
@@ -338,6 +398,7 @@ For an existing scaffolded repo:
 - Stub `package-boost-php` constraint bumped `^0.3.0` → `^0.4.0`; the
   Laravel-category stubs now pin `sandermuller/package-boost-laravel: ^0.4.0`.
   
+
 ## [0.4.0](https://github.com/sandermuller/repo-init/compare/0.3.1...0.4.0) - 2026-05-20
 
 ### Changed
@@ -458,6 +519,7 @@ For an existing scaffolded repo:
     doesn't second-guess the range (per per-category-deps.md). Only NEW
     bootstraps get the bumped default.
   
+
 ### Fixed
 
 - **`.gitattributes` managed block stubs missing `.ai/ export-ignore`** (codex
@@ -480,6 +542,7 @@ For an existing scaffolded repo:
     testbench.yaml can no longer merge silently without a test run.
     `laravel-project` left as-is (apps don't ship testbench.yaml/workbench).
   
+
 ### Added
 
 - **`composer-plugin` is now a first-class category** (6 total). Previously
@@ -540,6 +603,7 @@ For an existing scaffolded repo:
   `.phpunit.cache`. Upgrade fixes `cacheDirectory`, removes the leaked dir,
   and `git rm -r --cached` if previously committed.
   
+
 ### Changed
 
 - **Bumped `sandermuller/package-boost-php` from `^0.2.0` to `^0.3.0`**
