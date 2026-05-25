@@ -2,6 +2,7 @@
 
 use SanderMuller\BoostCore\Config\BoostConfig;
 use SanderMuller\BoostCore\Enums\Agent;
+use SanderMuller\BoostCore\Enums\Tag;
 
 /**
  * boost-core configuration.
@@ -24,5 +25,5 @@ return BoostConfig::configure()
         'sandermuller/package-boost-php',
         'stolt/lean-package-validator',
     ])
-    ->withTags('php', 'github')
+    ->withTags(Tag::Php, Tag::Github, 'release-automation')
     ->withDisabledEmitters([]);
