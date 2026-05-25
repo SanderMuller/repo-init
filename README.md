@@ -4,6 +4,7 @@
 [![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/sandermuller/repo-init/integrity.yml?branch=main&label=tests&style=flat-square)](https://github.com/sandermuller/repo-init/actions/workflows/integrity.yml)
 [![Total Downloads](https://img.shields.io/packagist/dt/sandermuller/repo-init.svg?style=flat-square)](https://packagist.org/packages/sandermuller/repo-init)
 [![License](https://img.shields.io/packagist/l/sandermuller/repo-init.svg?style=flat-square)](LICENSE)
+[![Laravel Boost](https://badge.laravel.cloud/boost-badge.svg?style=flat-square)](https://github.com/laravel/boost)
 
 AI playbook + stub library for bootstrapping the canonical Sander / hihaho dev setup. Pure markdown + stub files. **No PHP code in the package itself.** Install globally once, use everywhere — same UX as `composer global require laravel/installer`.
 
