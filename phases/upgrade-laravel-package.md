@@ -75,7 +75,12 @@ For each OUTDATED file, apply the mode from `$REPO_INIT_HOME/references/upgrade-
 
 For each composer.json key documented in `$REPO_INIT_HOME/references/composer-scripts.md` and `$REPO_INIT_HOME/references/upgrade-merge-modes.md`, insert missing entries (surgical JSON patch, never whole-file rewrite). For the keys below, insert only what's missing — don't touch existing entries.
 
-- **`scripts`**: insert each script from `references/composer-scripts.md` (always-present block + workbench block always added for laravel-package) not present in target. Don't override scripts with the same name; prompt the user on conflict.
+- **`scripts`**: **Read `$REPO_INIT_HOME/references/composer-scripts.md` IN FULL before patching.** Do NOT infer the canonical block from memory — audit reports have caught Windows-broken `post-install-cmd` + missing `post-update-cmd` slipping through because the agent auto-completed from training data. For each documented key (baseline 11 + workbench 5 for laravel-package): verify present in target with canonical value. Three cases:
+  - **MISSING**: insert.
+  - **PRESENT with canonical value**: leave.
+  - **MISMATCH** (present with different value): prompt — show both sides, offer replace / skip. Do NOT silently leave drift in place.
+
+  The MISMATCH case is load-bearing. Common drift: `post-install-cmd` is a POSIX-shell conditional referencing `vendor/bin/boost sync` (or older `vendor/bin/testbench package-boost:sync`) — Windows-broken, predates boost-core 0.6's PHP callback. Canonical form is the array `["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"]`. Same drift class: `post-update-cmd` is often missing entirely from the same scaffold (the old conditional only wired `post-install-cmd`). Treat both as HIGH severity.
 - **`extra.laravel.providers`**: insert `__NAMESPACE__\\__PACKAGE_STUDLY__ServiceProvider` if missing. If existing array contains a different provider, ask user whether to add or replace.
 - **`config.allow-plugins`**: insert `pestphp/pest-plugin: true` (when test-framework=pest) and `phpstan/extension-installer: true` (always) if missing. Also insert `sandermuller/package-boost-php: true` (MANDATORY — still `type: composer-plugin` post boost-core 0.6.0; without it the first non-interactive `composer install` is blocked). NO `sandermuller/boost-core` entry — boost-core 0.6.0 is `type: library`; if a pre-0.6.0 scaffold left `sandermuller/boost-core: true` in place, remove it (Composer ignores it, harmless but stale). `sandermuller/package-boost-laravel` is `type: library` and was never a plugin — if present, remove it too.
 - **`config.sort-packages`**: set to `true` if absent.

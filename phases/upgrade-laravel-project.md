@@ -63,7 +63,11 @@ Same logic as upgrade-laravel-package.md — apply each file's mode from `$REPO_
 
 Per `references/composer-scripts.md`:
 
-- **`scripts`**: insert missing `phpstan`, `phpstan-simplified`, `format`, `rector`, `qa`. For `test`, `test-coverage`: laravel-project may already have them from `laravel new`; don't override. laravel-project does NOT get a `sync-ai` script — `laravel/boost` owns AI-asset sync for applications (`php artisan boost:update`); there is no `vendor/bin/boost` here.
+- **`scripts`**: **Read `$REPO_INIT_HOME/references/composer-scripts.md` IN FULL before patching.** Do NOT infer the canonical block from memory — a real laravel-package upgrade (2026-05-25) shipped a Windows-broken `post-install-cmd` and no `post-update-cmd` because the agent auto-completed from training data. For each documented key (10 for laravel-project: baseline 11 minus `sync-ai`; `test` / `test-coverage` may already be present from `laravel new`, don't override): verify present with canonical value. Three cases — **MISSING** (insert), **PRESENT** (leave), **MISMATCH** (prompt — show both sides, offer replace / skip).
+
+  laravel-project does NOT get a `sync-ai` script — `laravel/boost` owns AI-asset sync for applications (`php artisan boost:update`); there is no `vendor/bin/boost` here.
+
+  **`post-install-cmd` / `post-update-cmd` are scaffold-conditional**: the canonical `["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"]` value requires `sandermuller/boost-core` to be in the dependency tree. A vanilla laravel-project does NOT pull boost-core — it uses `laravel/boost`. Check first; if boost-core absent, skip these two keys entirely. If a POSIX-shell `post-install-cmd` is present in a laravel-project without boost-core, the value should be REMOVED (Windows-broken AND the binary doesn't exist) — prompt the user. HIGH severity drift either way.
 - **`scripts.dev`**: if absent, suggest adding the multi-process dev script (concurrent server + queue + pail + vite). This is laravel-project canonical. Show example, ask before inserting.
 - **`config.allow-plugins`**: insert `phpstan/extension-installer: true`, `pestphp/pest-plugin: true` (if pest), `php-http/discovery: true` (Laravel default).
 - **`config.sort-packages`**: set to `true`.

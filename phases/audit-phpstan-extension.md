@@ -67,6 +67,26 @@ OPTIONAL (Laravel-aware):
 
 - [ ] `larastan/larastan` (REPLACES bare `phpstan/phpstan` — never both; the require-side `phpstan/phpstan: ^2` stays so the extension declares its own dep cleanly for consumers).
 
+## MISSING composer.json scripts
+
+**Follow `$REPO_INIT_HOME/references/composer-scripts.md#audit-verification-protocol-mandatory`.** Every key below gets an explicit PRESENT / MISSING / MISMATCH verdict. Skimming is the failure mode — see the laravel-package upgrade incident (2026-05-25) where the agent shipped Windows-broken `post-install-cmd` and no `post-update-cmd` because it inferred the canonical block from training data.
+
+Baseline (11 keys):
+
+- [ ] `phpstan` → `vendor/bin/phpstan analyse --memory-limit=2G`
+- [ ] `phpstan-simplified` → `vendor/bin/phpstan analyse --memory-limit=2G --error-format symplify`
+- [ ] `phpstan-clear-cache` → `vendor/bin/phpstan clear-result-cache`
+- [ ] `format` → `vendor/bin/pint`
+- [ ] `rector` → `vendor/bin/rector process`
+- [ ] `test` → `vendor/bin/phpunit` (phpstan-extension forces phpunit)
+- [ ] `test-coverage` → `vendor/bin/phpunit --coverage-html=coverage`
+- [ ] `sync-ai` → `vendor/bin/boost sync`
+- [ ] `qa` → `["@rector", "@format", "@phpstan-simplified"]`
+- [ ] `post-install-cmd` → `["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"]`
+- [ ] `post-update-cmd` → `["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"]`
+
+MISMATCH cases worth HIGH severity: POSIX-shell `post-install-cmd` (Windows-broken); `post-update-cmd` absent entirely.
+
 ## OUTDATED files (per merge mode)
 
 Same logic as audit-laravel-package.md — apply each file's mode from `$REPO_INIT_HOME/references/upgrade-merge-modes.md`. Plus:
@@ -78,6 +98,7 @@ Same logic as audit-laravel-package.md — apply each file's mode from `$REPO_IN
 - [ ] **`config.allow-plugins` missing `sandermuller/package-boost-php`** (HIGH severity): `sandermuller/package-boost-php` is `type: composer-plugin` — `config.allow-plugins` MUST list `sandermuller/package-boost-php: true` or the first non-interactive `composer install` fails with "blocked by your allow-plugins config". Flag NON-CANONICAL.
 - [ ] **`config.allow-plugins` lists `sandermuller/boost-core`** (MEDIUM severity, stale post boost-core 0.6.0): boost-core is `type: library` from 0.6.0, no longer a composer-plugin. The `sandermuller/boost-core: true` entry is a leftover from pre-0.6.0 scaffolds — Composer ignores it, harmless but stale. Flag NON-CANONICAL; suggest removal.
 - [ ] `phpstan/phpstan` in BOTH `require` and `require-dev` (Composer rejects; should never happen but check). Flag — remove from `require-dev`.
+- [ ] **POSIX-shell `post-install-cmd` / `post-update-cmd`** (HIGH severity): if either script's value is a shell conditional like `if [ "$COMPOSER_DEV_MODE" = "1" ]; then vendor/bin/boost sync; fi` (or older `vendor/bin/testbench package-boost:sync`), it is Windows-broken and predates boost-core 0.6's PHP callback. Canonical is the array `["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"]` for BOTH keys. Flag NON-CANONICAL; suggest the merge-keys replace via `phases/upgrade-phpstan-extension.md`.
 - [ ] `larastan/larastan` in `require-dev` BUT no `illuminate/*` in `require` — Laravel-aware claim without the actual Laravel runtime dep. Ask user: do you mean to be Laravel-aware? If yes, add `illuminate/support` to `require`.
 - [ ] Test-framework is Pest for a phpstan-extension — tolerate but mention in Notes.
 - [ ] `composer.lock` committed.

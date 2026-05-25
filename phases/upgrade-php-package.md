@@ -41,7 +41,7 @@ Same logic as upgrade-laravel-package.md — apply each file's mode from `$REPO_
 
 ## Apply composer.json merge-keys patches
 
-- **`scripts`**: insert missing entries per `references/composer-scripts.md`. Include `validate-gitattributes` script — php-package canonical. Add `@validate-gitattributes` to the `qa` chain.
+- **`scripts`**: **Read `$REPO_INIT_HOME/references/composer-scripts.md` IN FULL before patching.** Do NOT infer the canonical block from memory — a real laravel-package upgrade (2026-05-25) shipped a Windows-broken `post-install-cmd` and no `post-update-cmd` because the agent auto-completed from training data. For each documented key (12 for php-package: baseline 11 + `validate-gitattributes`; the `qa` chain appends `@validate-gitattributes` but `qa` is already in the baseline 11): verify present in target with canonical value. Three cases — **MISSING** (insert), **PRESENT** (leave), **MISMATCH** (prompt — show both sides, offer replace / skip). Common drift: `post-install-cmd` is a POSIX-shell conditional referencing `vendor/bin/boost sync` — Windows-broken, predates boost-core 0.6's PHP callback (`["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"]`). `post-update-cmd` often missing entirely. Treat both as HIGH severity.
 - **`config.allow-plugins`**: `pestphp/pest-plugin: true` (if pest), `phpstan/extension-installer: true`, `sandermuller/boost-core: true`, `sandermuller/package-boost-php: true` (the last two are MANDATORY — both are `type: composer-plugin` pulled in via the boost umbrella; without them the first non-interactive `composer install` is blocked).
 - **`config.sort-packages`**: `true`.
 - Don't touch `extra` (php-package has no canonical extra keys from repo-init).

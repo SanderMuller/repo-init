@@ -87,6 +87,34 @@ Test-framework:
 - For `phpunit` (default for laravel-project): `phpunit/phpunit` (Laravel ships).
 - For `pest`: `pestphp/pest`, `pestphp/pest-plugin-arch`, `pestphp/pest-plugin-laravel`, `mrpunyapal/rector-pest`.
 
+## MISSING composer.json scripts
+
+**Follow `$REPO_INIT_HOME/references/composer-scripts.md#audit-verification-protocol-mandatory`.** Every key below gets an explicit PRESENT / MISSING / MISMATCH verdict. Skimming is the failure mode — see the laravel-package upgrade incident (2026-05-25) where the agent shipped Windows-broken `post-install-cmd` and no `post-update-cmd` because it inferred the canonical block from training data.
+
+Baseline minus `sync-ai` (laravel-project uses `laravel/boost`, not `sandermuller/boost-core`; no `vendor/bin/boost` — AI sync is `php artisan boost:install` / `boost:update`).
+
+**Pre-step**: detect whether the scaffold carries `sandermuller/boost-core` (grep `composer.json` `require` / `require-dev`). This gates the two BoostAutoSync rows below.
+
+Unconditional keys (8):
+
+- [ ] `phpstan` → `vendor/bin/phpstan analyse --memory-limit=2G`
+- [ ] `phpstan-simplified` → `vendor/bin/phpstan analyse --memory-limit=2G --error-format symplify`
+- [ ] `phpstan-clear-cache` → `vendor/bin/phpstan clear-result-cache`
+- [ ] `format` → `vendor/bin/pint`
+- [ ] `rector` → `vendor/bin/rector process`
+- [ ] `test` → `vendor/bin/pest` (or `vendor/bin/phpunit` if `test-framework=phpunit`, the laravel-project default)
+- [ ] `test-coverage` → `vendor/bin/pest --coverage` (or `vendor/bin/phpunit --coverage-html=coverage`)
+- [ ] `qa` → `["@rector", "@format", "@phpstan-simplified"]`
+
+Scaffold-conditional keys (2) — **include in the checklist ONLY when boost-core is in the dependency tree**:
+
+- [ ] `post-install-cmd` → `["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"]`
+- [ ] `post-update-cmd` → `["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"]`
+
+If the target does NOT carry boost-core, the BoostAutoSync callback won't autoload — skip these two keys entirely. Don't issue a MISSING verdict for them. The only exception: if either script is PRESENT with a stale shell-conditional value referencing `vendor/bin/boost sync`, flag MISMATCH (Windows-broken AND the binary won't exist) — the canonical fix is REMOVAL of the script, not replacement.
+
+MISMATCH cases worth HIGH severity (boost-core in scaffold): POSIX-shell `post-install-cmd` (Windows-broken); `post-update-cmd` absent entirely.
+
 ## OUTDATED files (per merge mode)
 
 Same logic as `audit-laravel-package.md` §OUTDATED — apply each file's mode from `$REPO_INIT_HOME/references/upgrade-merge-modes.md`. With laravel-project paths:
@@ -104,6 +132,7 @@ Same logic as `audit-laravel-package.md` §OUTDATED — apply each file's mode f
 - [ ] **CI path filter drift — `phpstan.yml`** (MEDIUM severity): grep `.github/workflows/phpstan.yml` `paths:` blocks under `push` and `pull_request`; both MUST include `composer.json` AND `composer.lock`. Flag NON-CANONICAL if either missing.
 - [ ] **`.gitattributes` managed block missing `.ai/ export-ignore`** (MEDIUM severity): per `$REPO_INIT_HOME/references/gitattributes-managed-block.md`, `.ai/` is the boost SOURCE/authoring dir and MUST be in the managed block. Without it, `boost sync`-populated dev skills leak into the published Composer archive. Flag NON-CANONICAL.
 - [ ] `phpstan/phpstan` in `require-dev` alongside `larastan/larastan`: §5.3 exclusivity violation. NON-CANONICAL.
+- [ ] **POSIX-shell `post-install-cmd` / `post-update-cmd`** (HIGH severity, only flag if boost-core is in the scaffold): if either script's value is a shell conditional like `if [ "$COMPOSER_DEV_MODE" = "1" ]; then vendor/bin/boost sync; fi`, it is Windows-broken AND in a laravel-project without boost-core the binary won't exist at all. Canonical (when boost-core is present) is the array `["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"]`. Without boost-core: remove the script entirely. Flag NON-CANONICAL; confirm scaffold composition with the user before patching.
 - [ ] PHP floor `^8.2` (or below) in `require.php`. NON-CANONICAL.
 - [ ] `composer.lock` NOT committed: for laravel-project the lockfile IS committed (Laravel convention — apps pin deps). If missing, suggest committing.
 - [ ] Two managed blocks in `.gitattributes`.

@@ -46,7 +46,7 @@ Same logic as upgrade-laravel-package.md — apply each file's mode from `$REPO_
 
 ## Apply composer.json merge-keys patches
 
-- **`scripts`**: insert missing entries. For phpstan-extension, `test` defaults to `vendor/bin/phpunit`.
+- **`scripts`**: **Read `$REPO_INIT_HOME/references/composer-scripts.md` IN FULL before patching.** Do NOT infer the canonical block from memory — a real laravel-package upgrade (2026-05-25) shipped a Windows-broken `post-install-cmd` and no `post-update-cmd` because the agent auto-completed from training data. For each documented key (11 baseline for phpstan-extension; `test` is `vendor/bin/phpunit` since phpstan-extension forces phpunit): verify present with canonical value. Three cases — **MISSING** (insert), **PRESENT** (leave), **MISMATCH** (prompt — show both sides, offer replace / skip). Common drift: POSIX-shell `post-install-cmd` referencing `vendor/bin/boost sync` is Windows-broken (canonical: `["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"]`); `post-update-cmd` often missing entirely. Both HIGH severity.
 - **`extra.phpstan.includes`**: ensure `["extension.neon"]` is set. If existing array, ensure `extension.neon` is in it. Don't replace; add.
 - **`autoload-dev.classmap`**: ensure `tests/Rules/stubs/` is in the classmap. If missing, insert as `["tests/Rules/stubs/"]` (preserving existing entries).
 - **`config.allow-plugins`**: `phpstan/extension-installer: true`, `sandermuller/boost-core: true`, `sandermuller/package-boost-php: true` (the last two are MANDATORY — both are `type: composer-plugin` pulled in via the boost umbrella; without them the first non-interactive `composer install` is blocked).

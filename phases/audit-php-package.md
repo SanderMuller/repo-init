@@ -76,6 +76,30 @@ Test-framework split:
 - pest: `pestphp/pest`, `pestphp/pest-plugin-arch`, `mrpunyapal/rector-pest`. (NOT `pestphp/pest-plugin-laravel` — this is framework-agnostic.)
 - phpunit: `phpunit/phpunit`.
 
+## MISSING composer.json scripts
+
+**Follow `$REPO_INIT_HOME/references/composer-scripts.md#audit-verification-protocol-mandatory`.** Every key below gets an explicit PRESENT / MISSING / MISMATCH verdict. Skimming is the failure mode — see the laravel-package upgrade incident (2026-05-25) where the agent shipped Windows-broken `post-install-cmd` and no `post-update-cmd` because it inferred the canonical block from training data.
+
+Baseline + php-package additions (12 keys):
+
+- [ ] `phpstan` → `vendor/bin/phpstan analyse --memory-limit=2G`
+- [ ] `phpstan-simplified` → `vendor/bin/phpstan analyse --memory-limit=2G --error-format symplify`
+- [ ] `phpstan-clear-cache` → `vendor/bin/phpstan clear-result-cache`
+- [ ] `format` → `vendor/bin/pint`
+- [ ] `rector` → `vendor/bin/rector process`
+- [ ] `test` → `vendor/bin/pest` (or `vendor/bin/phpunit` if `test-framework=phpunit`)
+- [ ] `test-coverage` → `vendor/bin/pest --coverage` (or `vendor/bin/phpunit --coverage-html=coverage`)
+- [ ] `sync-ai` → `vendor/bin/boost sync`
+- [ ] `validate-gitattributes` → `vendor/bin/lean-package-validator validate`
+- [ ] `qa` → `["@rector", "@format", "@phpstan-simplified", "@validate-gitattributes"]` (php-package appends `@validate-gitattributes`)
+- [ ] `post-install-cmd` → `["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"]`
+- [ ] `post-update-cmd` → `["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"]`
+
+MISMATCH cases worth HIGH severity:
+
+- `post-install-cmd` is a POSIX-shell conditional referencing `vendor/bin/boost sync` (or older `vendor/bin/testbench package-boost:sync`). Windows-broken; predates boost-core 0.6.
+- `post-update-cmd` absent entirely — common companion to the above.
+
 ## OUTDATED files (per merge mode)
 
 Same logic as audit-laravel-package.md, with php-package stub paths. Apply each file's mode from `$REPO_INIT_HOME/references/upgrade-merge-modes.md`.
@@ -93,6 +117,7 @@ Same logic as audit-laravel-package.md, with php-package stub paths. Apply each 
 - [ ] `illuminate/*` in `require` — same. Re-route to `audit-laravel-package.md`.
 - [ ] PHP floor `^8.2` (or below).
 - [ ] Missing `validate-gitattributes` script in `composer.json` — php-package should have it.
+- [ ] **POSIX-shell `post-install-cmd` / `post-update-cmd`** (HIGH severity): if either script's value is a shell conditional like `if [ "$COMPOSER_DEV_MODE" = "1" ]; then vendor/bin/boost sync; fi` (or older `vendor/bin/testbench package-boost:sync`), it is Windows-broken and predates boost-core 0.6's PHP callback. Canonical is the array `["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"]` for BOTH keys. Flag NON-CANONICAL; suggest the merge-keys replace via `phases/upgrade-php-package.md`.
 - [ ] `.lpv` exists but no `vendor/bin/lean-package-validator validate` clean. Run the validator; if it warns, flag NON-CANONICAL with the specific missing export-ignore lines.
 - [ ] **`.gitattributes` package-boost managed block MISSING** (HIGH severity): same as laravel-package — without it, `composer archive` ships local-only files. Flag NON-CANONICAL; suggest `vendor/bin/testbench package-boost:sync` (requires `orchestra/testbench` to be in require-dev, which `shared/always` mandates).
 - [ ] **README badge row MISSING or incomplete** (HIGH severity): the first 30 lines of `README.md` MUST contain the canonical badge set — Packagist version, run-tests CI status, Total Downloads, License — each on its own line, all using `?style=flat-square` on shields.io URLs. Grep first 30 lines for `img.shields.io/packagist/v/`, `actions/workflow/status/.+/run-tests.yml`, `img.shields.io/packagist/dt/`, and `img.shields.io/packagist/l/`. Any missing → flag NON-CANONICAL with the specific badge(s) absent. Extra badges (PHPStan, Codecov, Laravel Compatibility, Sponsors, custom) are EXTRA-info only, never flagged. Rationale: badges are the at-a-glance trust signal for a Packagist library.

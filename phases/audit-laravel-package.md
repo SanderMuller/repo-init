@@ -103,6 +103,37 @@ Category-mandatory:
 
 `livewire/livewire` is `suggest only` — never flagged.
 
+## MISSING composer.json scripts
+
+**Follow `$REPO_INIT_HOME/references/composer-scripts.md#audit-verification-protocol-mandatory`.** Every key below gets an explicit PRESENT / MISSING / MISMATCH verdict against the target's `scripts` map. Skimming is the failure mode — see report from project-boost-laravel upgrade (2026-05-25) where the agent inferred the canonical block from training data and shipped a Windows-broken `post-install-cmd` with no `post-update-cmd`.
+
+Baseline (code-bearing) keys:
+
+- [ ] `phpstan` → `vendor/bin/phpstan analyse --memory-limit=2G`
+- [ ] `phpstan-simplified` → `vendor/bin/phpstan analyse --memory-limit=2G --error-format symplify`
+- [ ] `phpstan-clear-cache` → `vendor/bin/phpstan clear-result-cache`
+- [ ] `format` → `vendor/bin/pint`
+- [ ] `rector` → `vendor/bin/rector process`
+- [ ] `test` → `vendor/bin/pest` (or `vendor/bin/phpunit` if `test-framework=phpunit`)
+- [ ] `test-coverage` → `vendor/bin/pest --coverage` (or `vendor/bin/phpunit --coverage-html=coverage`)
+- [ ] `sync-ai` → `vendor/bin/boost sync`
+- [ ] `qa` → `["@rector", "@format", "@phpstan-simplified"]`
+- [ ] `post-install-cmd` → `["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"]`
+- [ ] `post-update-cmd` → `["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"]`
+
+Workbench keys (unconditional for `laravel-package` per RQ13/RQ39):
+
+- [ ] `post-autoload-dump` → `["@clear", "@prepare"]`
+- [ ] `clear` → `@php vendor/bin/testbench package:purge-skeleton --ansi`
+- [ ] `prepare` → `@php vendor/bin/testbench package:discover --ansi`
+- [ ] `build` → `@php vendor/bin/testbench workbench:build --ansi`
+- [ ] `serve` → `["Composer\\Config::disableProcessTimeout", "@build", "@php vendor/bin/testbench serve --ansi"]`
+
+MISMATCH cases worth a HIGH-severity flag (common drift):
+
+- `post-install-cmd` is a POSIX-shell conditional referencing `vendor/bin/boost sync` (or older `vendor/bin/testbench package-boost:sync`). **Windows-broken**, predates boost-core 0.6's PHP callback.
+- `post-update-cmd` absent entirely — common companion to the above (the old shell-conditional scaffold only wired `post-install-cmd`).
+
 ## OUTDATED files (per merge mode)
 
 For each file present, look up its merge mode in `$REPO_INIT_HOME/references/upgrade-merge-modes.md`:
@@ -128,6 +159,7 @@ For each file present, look up its merge mode in `$REPO_INIT_HOME/references/upg
 - [ ] **Two managed blocks in `.gitattributes`** (a `# >>> package-boost (managed) >>>` block AND a `# >>> repo-init (managed) >>>` block): suboptimal per `references/gitattributes-managed-block.md` contract; everything should be inside the package-boost block.
 - [ ] **PHP floor `^8.2` (or below) in `require.php`**: repo-init floors at `^8.3`. Suggest bump.
 - [ ] **`.gitattributes` package-boost managed block MISSING** (HIGH severity, not soft mention): grep for `# >>> package-boost (managed) >>>`. Without the block, `composer archive` ships local-only files (`.cache/`, `.claude/`, `AGENTS.md`, workbench/, etc.) into the published tarball, ballooning install size + leaking dev tooling. Flag NON-CANONICAL with the suggestion "run `vendor/bin/testbench package-boost:sync` to regenerate the managed block".
+- [ ] **POSIX-shell `post-install-cmd` / `post-update-cmd`** (HIGH severity): if either script's value is a shell conditional like `if [ "$COMPOSER_DEV_MODE" = "1" ]; then vendor/bin/boost sync; fi` (or the older `vendor/bin/testbench package-boost:sync`), it is Windows-broken and predates boost-core 0.6's PHP callback. Canonical is the array `["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"]` for BOTH keys. Flag NON-CANONICAL; suggest the merge-keys replace via `phases/upgrade-laravel-package.md`.
 - [ ] **`.lpv` present but no `validate-gitattributes` composer script**: `.lpv` is the lean-package-validator config; without the script wired into composer scripts, the validator can never run. Flag NON-CANONICAL with the suggestion "add `\"validate-gitattributes\": \"vendor/bin/lean-package-validator validate\"` to composer.json scripts (and `qa-check` if present)".
 - [ ] **README badge row MISSING or incomplete** (HIGH severity): the first 30 lines of `README.md` MUST contain the canonical badge set — Packagist version, run-tests CI status, Total Downloads, License — each on its own line, all using `?style=flat-square` on shields.io URLs. Grep first 30 lines for `img.shields.io/packagist/v/`, `actions/workflow/status/.+/run-tests.yml`, `img.shields.io/packagist/dt/`, and `img.shields.io/packagist/l/`. Any missing → flag NON-CANONICAL with the specific badge(s) absent. Extra badges (PHPStan, Codecov, Laravel Compatibility, Sponsors, custom) are EXTRA-info only, never flagged. Rationale: badges are the at-a-glance trust signal for a Packagist library.
 
