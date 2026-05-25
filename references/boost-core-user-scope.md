@@ -11,7 +11,7 @@ composer global exec -- boost sync --scope=user --all
 ```
 
 - `--scope=project` (default): project-local sync — writes to `<cwd>/.claude/skills/<skill>/SKILL.md`, etc. NOT namespaced by package.
-- `--scope=user`: writes to `$HOME/.claude/skills/<vendor>__<package>/<skill>/SKILL.md` and the equivalent dirs for 9 agents (`.cursor`, `.agents`, `.github`, `.junie`, `.kiro`, `.codex`, `.windsurf`, `.aider`).
+- `--scope=user`: writes to `$HOME/.claude/skills/<vendor>__<package>/<skill>/SKILL.md` and the equivalent dirs for 9 agents (`.cursor`, `.agents`, `.github`, `.amp`, `.gemini`, `.junie`, `.kiro`, `.opencode`). The `.agents` dir is shared (used by Codex via the AGENTS.md convention; Amp also writes its `commands/` there).
 - `--all`: publishes EVERY installed Composer package that ships a `resources/boost/skills/` directory (discovered via `Composer\InstalledVersions`). No vendor allowlist filtering and no tag filtering — user scope has no `boost.php`, so `withAllowedVendors()` / `withTags()` (project-scope controls) do not apply. Skills only; guidelines (`CLAUDE.md` / `AGENTS.md`) are never fanned to `$HOME`.
 
 Each globally-installed package nests under its own `<vendor>__<package>/` subdir so multiple tools (repo-init + future siblings) don't collide. The `/` in the Composer name is replaced by `__` — a sequence the Composer name spec forbids inside vendor or project parts, so the slug mapping is injective.

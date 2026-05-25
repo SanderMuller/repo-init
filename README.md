@@ -92,7 +92,7 @@ composer global remove sandermuller/repo-init
 Optional skill cleanup (the synced user-level skill dirs survive `composer global remove` because `sync` writes file copies — see `references/boost-core-user-scope.md`):
 
 ```bash
-rm -rf ~/.{claude,cursor,agents,github,junie,kiro,codex,windsurf,aider}/skills/sandermuller__repo-init
+rm -rf ~/.{claude,cursor,agents,github,amp,gemini,junie,kiro,opencode}/skills/sandermuller__repo-init
 ```
 
 (boost-core 0.6+ fans into 9 agent targets — the brace expansion above clears all of them in one line. Keep the synced skills if you might re-install later — re-running the install + `composer global exec -- boost sync --scope=user --all` re-syncs them, so leaving them in place is harmless.)
