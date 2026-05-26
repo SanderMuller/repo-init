@@ -75,9 +75,10 @@ composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
 
 ```
+
 For existing scaffolded packages, the next audit walk will surface the `sandermuller/package-boost-php: true` entry as MEDIUM-stale. The upgrade phase handles removal correctly — bump first, then drop the entry.
 
-**Full Changelog**: https://github.com/SanderMuller/repo-init/compare/1.1.0...1.2.0
+**Full Changelog**: <https://github.com/SanderMuller/repo-init/compare/1.1.0...1.2.0>
 
 ## [1.1.0](https://github.com/sandermuller/repo-init/compare/1.0.0...1.1.0) - 2026-05-25
 
@@ -160,6 +161,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 ```
+
 No further steps. Scaffold output, the `repo-init` skill, audit/upgrade phases, stubs — all identical to 0.8.1.
 
 ### Versioning from here
@@ -200,6 +202,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 ```
+
 The Composer archive for 0.8.1 contains the full stub tree; downstream scaffolders that broke on 0.8.0 work again.
 
 ### CI note
@@ -225,6 +228,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 ```
+
 The `composer global exec --` form runs `boost` from Composer's global `vendor/bin/` regardless of the user's current directory; the literal `--` stops Composer from interpreting boost's flags as its own. `--scope=user --all` publishes every globally-installed package's `resources/boost/skills/` into `~/.{agent}/skills/<vendor>__<package>/`. See `references/boost-core-user-scope.md` for the full contract.
 
 ### Added
@@ -245,6 +249,7 @@ gh release create X.Y.Z --notes-file internal/release-notes-X.Y.Z.md
 
 
 ```
+
 repo-init already shipped this workflow as a stub for scaffolded packages (`stubs/shared/.github/workflows/update-changelog.yml`); it now also runs on repo-init itself. `CONTRIBUTING.md` + `RELEASING.md` updated to match.
 
 ### Changed (breaking for new scaffolds)
@@ -295,6 +300,7 @@ composer global exec -- boost sync --scope=user --all   # new: global skill refr
 
 
 ```
+
 `stubs/shared/boost.php` + repo-init's own `boost.php` docblocks updated accordingly.
 
 #### repo-init aligned to its own `skill-bundle` baseline
@@ -328,6 +334,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 ```
+
 For an existing scaffolded repo:
 
 1. `audit-<category>.md` surfaces the family drift: stale `boost-core` in `allow-plugins`, `::runWithSummary` in `post-install/update-cmd`, old boost-family constraints, stale `BaseCommandAdapter` citations (composer-plugin only).
@@ -450,7 +457,6 @@ For an existing scaffolded repo:
   - CI: `check-layout.sh`, `check-phase-coverage.sh`, `check-stub-composer-validity.sh`
     updated for the new category.
   
-
 ### Changed
 
 - **BREAKING — boost-family dependency remapped per category.** The boost
@@ -476,7 +482,6 @@ For an existing scaffolded repo:
 - Stub `package-boost-php` constraint bumped `^0.3.0` → `^0.4.0`; the
   Laravel-category stubs now pin `sandermuller/package-boost-laravel: ^0.4.0`.
   
-
 ## [0.4.0](https://github.com/sandermuller/repo-init/compare/0.3.1...0.4.0) - 2026-05-20
 
 ### Changed
@@ -597,7 +602,6 @@ For an existing scaffolded repo:
     doesn't second-guess the range (per per-category-deps.md). Only NEW
     bootstraps get the bumped default.
   
-
 ### Fixed
 
 - **`.gitattributes` managed block stubs missing `.ai/ export-ignore`** (codex
@@ -620,7 +624,6 @@ For an existing scaffolded repo:
     testbench.yaml can no longer merge silently without a test run.
     `laravel-project` left as-is (apps don't ship testbench.yaml/workbench).
   
-
 ### Added
 
 - **`composer-plugin` is now a first-class category** (6 total). Previously
@@ -681,7 +684,6 @@ For an existing scaffolded repo:
   `.phpunit.cache`. Upgrade fixes `cacheDirectory`, removes the leaked dir,
   and `git rm -r --cached` if previously committed.
   
-
 ### Changed
 
 - **Bumped `sandermuller/package-boost-php` from `^0.2.0` to `^0.3.0`**
