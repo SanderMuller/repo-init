@@ -22,12 +22,12 @@
     ],
     "require": {
         "php": "^8.3",
-        "sandermuller/boost-core": "^0.6.0"
+        "sandermuller/boost-core": "^0.7.0"
     },
     "require-dev": {
         "laravel/pint": "^1.29",
         "sandermuller/boost-skills": "^1.0",
-        "sandermuller/package-boost-php": "^0.7.0",
+        "sandermuller/package-boost-php": "^0.9.0",
         "stolt/lean-package-validator": "^5.7"
     },
     "scripts": {
@@ -51,9 +51,6 @@
     "minimum-stability": "stable",
     "prefer-stable": true,
     "config": {
-        "sort-packages": true,
-        "allow-plugins": {
-            "sandermuller/package-boost-php": true
-        }
+        "sort-packages": true
     }
 }

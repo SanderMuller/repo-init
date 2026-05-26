@@ -53,7 +53,7 @@ Run after every upgrade phase. If anything is red, stop and report to the user b
 
 - [ ] `composer validate-gitattributes` returns 0 (or surfaces specific export-ignore lines still needed).
 - [ ] `sandermuller/boost-core` is in `require` (runtime), NOT `require-dev`.
-- [ ] `config.allow-plugins` lists `sandermuller/boost-core: true`.
+- [ ] `config.allow-plugins` does NOT list `sandermuller/boost-core: true` (stale post boost-core 0.6.0 — `type: library`). For `skill-bundle`, `config.allow-plugins` is typically empty.
 - [ ] `resources/boost/skills/` holds at least one `<skill-name>/SKILL.md`.
 
 ### `phpstan-extension`

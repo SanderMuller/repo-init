@@ -49,7 +49,11 @@ Same logic as upgrade-laravel-package.md — apply each file's mode from `$REPO_
 - **`scripts`**: **Read `$REPO_INIT_HOME/references/composer-scripts.md` IN FULL before patching.** Do NOT infer the canonical block from memory — a real laravel-package upgrade (2026-05-25) shipped a Windows-broken `post-install-cmd` and no `post-update-cmd` because the agent auto-completed from training data. For each documented key (11 baseline for phpstan-extension; `test` is `vendor/bin/phpunit` since phpstan-extension forces phpunit): verify present with canonical value. Three cases — **MISSING** (insert), **PRESENT** (leave), **MISMATCH** (prompt — show both sides, offer replace / skip). Common drift: POSIX-shell `post-install-cmd` referencing `vendor/bin/boost sync` is Windows-broken (canonical: `["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"]`); `post-update-cmd` often missing entirely. Both HIGH severity.
 - **`extra.phpstan.includes`**: ensure `["extension.neon"]` is set. If existing array, ensure `extension.neon` is in it. Don't replace; add.
 - **`autoload-dev.classmap`**: ensure `tests/Rules/stubs/` is in the classmap. If missing, insert as `["tests/Rules/stubs/"]` (preserving existing entries).
-- **`config.allow-plugins`**: `phpstan/extension-installer: true`, `sandermuller/boost-core: true`, `sandermuller/package-boost-php: true` (the last two are MANDATORY — both are `type: composer-plugin` pulled in via the boost umbrella; without them the first non-interactive `composer install` is blocked).
+- **`config.allow-plugins`**: `phpstan/extension-installer: true`. Remove stale entries — ORDER MATTERS for `package-boost-php`:
+  - `sandermuller/boost-core: true` — safe to remove unconditionally (`type: library` from 0.6.0).
+  - `sandermuller/package-boost-php: true` — safe to remove ONLY when the installed `sandermuller/package-boost-php` is `≥ 0.9.0`. Verify with `composer show sandermuller/package-boost-php`. If `< 0.9.0`: FIRST bump the constraint in `require-dev` to `^0.9.0` and run `composer update sandermuller/package-boost-php`. Removing the entry while package-boost-php is still `< 0.9.0` blocks `composer install` with a `blocked-plugin` error.
+
+  Both are Composer-ignored once library-typed (harmless but obsolete).
 - **`config.sort-packages`**: `true`.
 - Skip `pestphp/pest-plugin` allow-plugin (phpstan-extension uses PHPUnit).
 - Don't touch `extra.laravel.providers` (phpstan-extension isn't a Laravel service provider).

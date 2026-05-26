@@ -42,7 +42,11 @@ Same logic as upgrade-laravel-package.md — apply each file's mode from `$REPO_
 ## Apply composer.json merge-keys patches
 
 - **`scripts`**: **Read `$REPO_INIT_HOME/references/composer-scripts.md` IN FULL before patching.** Do NOT infer the canonical block from memory — a real laravel-package upgrade (2026-05-25) shipped a Windows-broken `post-install-cmd` and no `post-update-cmd` because the agent auto-completed from training data. For each documented key (12 for php-package: baseline 11 + `validate-gitattributes`; the `qa` chain appends `@validate-gitattributes` but `qa` is already in the baseline 11): verify present in target with canonical value. Three cases — **MISSING** (insert), **PRESENT** (leave), **MISMATCH** (prompt — show both sides, offer replace / skip). Common drift: `post-install-cmd` is a POSIX-shell conditional referencing `vendor/bin/boost sync` — Windows-broken, predates boost-core 0.6's PHP callback (`["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"]`). `post-update-cmd` often missing entirely. Treat both as HIGH severity.
-- **`config.allow-plugins`**: `pestphp/pest-plugin: true` (if pest), `phpstan/extension-installer: true`, `sandermuller/boost-core: true`, `sandermuller/package-boost-php: true` (the last two are MANDATORY — both are `type: composer-plugin` pulled in via the boost umbrella; without them the first non-interactive `composer install` is blocked).
+- **`config.allow-plugins`**: `pestphp/pest-plugin: true` (if pest), `phpstan/extension-installer: true`. Remove stale entries — but ORDER MATTERS:
+  - `sandermuller/boost-core: true` — safe to remove unconditionally (boost-core ≥ 0.6.0 is `type: library`; pre-0.6.0 was a plugin but those versions are no longer available on Packagist).
+  - `sandermuller/package-boost-php: true` — safe to remove ONLY when the installed `sandermuller/package-boost-php` is `≥ 0.9.0`. Verify with `composer show sandermuller/package-boost-php`. If the installed version is `< 0.9.0`: FIRST bump the constraint in `composer.json` `require-dev` to `^0.9.0` and run `composer update sandermuller/package-boost-php`. Removing the allow-plugins entry while package-boost-php is still `< 0.9.0` blocks the next non-interactive `composer install` with a `blocked-plugin` error, because pre-0.9.0 versions are still `type: composer-plugin`.
+
+  Both entries are harmless-but-obsolete once the corresponding package is library-typed. Composer ignores them.
 - **`config.sort-packages`**: `true`.
 - Don't touch `extra` (php-package has no canonical extra keys from repo-init).
 

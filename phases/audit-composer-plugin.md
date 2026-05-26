@@ -112,7 +112,7 @@ Same logic as audit-php-package.md, with composer-plugin stub paths from `$REPO_
 
 ## NON-CANONICAL findings
 
-- [ ] **`config.allow-plugins` missing `sandermuller/package-boost-php`** (HIGH severity): `sandermuller/package-boost-php` is `type: composer-plugin` — `config.allow-plugins` MUST list `sandermuller/package-boost-php: true` or the first non-interactive `composer install` fails with "blocked by your allow-plugins config". (Distinct from the self-allow rule below.) Flag NON-CANONICAL.
+- [ ] **`config.allow-plugins` lists `sandermuller/package-boost-php`** (MEDIUM severity, stale post package-boost-php 0.9.0): from `sandermuller/package-boost-php` 0.9.0, the package is `type: library` (dropped the Composer plugin; subcommands moved to `vendor/bin/package-boost-php`). The `sandermuller/package-boost-php: true` entry is a leftover from pre-0.9.0 scaffolds — Composer ignores it, harmless but stale. Flag NON-CANONICAL; suggest removal. (Distinct from the self-allow rule below, which still applies.)
 - [ ] **`config.allow-plugins` lists `sandermuller/boost-core`** (MEDIUM severity, stale post boost-core 0.6.0): boost-core is `type: library` from 0.6.0, no longer a composer-plugin. The `sandermuller/boost-core: true` entry is a leftover from pre-0.6.0 scaffolds — Composer ignores it, harmless but stale. Flag NON-CANONICAL; suggest removal.
 - [ ] `composer.lock` committed (libraries should not commit lockfiles).
 - [ ] **`extra.class` missing** (HIGH severity): Composer rejects the plugin at install time with "no class found". Flag NON-CANONICAL.

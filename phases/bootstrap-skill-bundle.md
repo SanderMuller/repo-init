@@ -95,5 +95,5 @@ Re-running this phase against a target where all steps' post-conditions are alre
 
 ## Common issues
 
-- **`composer install` blocked on `sandermuller/boost-core`**: the stub `composer.json` allow-lists it under `config.allow-plugins`. If the user stripped that entry, re-add `"sandermuller/boost-core": true` — `boost-core` is a `composer-plugin` and a non-interactive install is blocked without it.
+- **Stale `sandermuller/boost-core: true` in `config.allow-plugins`**: from boost-core 0.6.0, the package is `type: library` — no allow-plugins entry needed. The stub `composer.json` ships with `config.allow-plugins` empty. If the user added the entry manually (or migrated from a pre-0.6.0 scaffold), remove it; Composer ignores it, harmless but obsolete.
 - **No `src/` — PHPStan/Rector workflows missing**: intentional. A skill-bundle has no PHP source; the PHP-toolchain stubs are skipped per step 5.

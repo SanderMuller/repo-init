@@ -54,11 +54,11 @@ The `sandermuller/boost-*` umbrella is assigned **per category**, not via the sh
 | Laravel application — `laravel-project` | `laravel/boost` |
 | Skill-distribution package — `skill-bundle` | `sandermuller/boost-core` directly, in runtime `require` |
 
-All three umbrellas pull `sandermuller/boost-core` (the skill-sync engine, a `composer-plugin`) transitively; `package-boost-laravel` also pulls `package-boost-php`. Because `boost-core` and `package-boost-php` are `type: composer-plugin`, every scaffolded `composer.json` MUST list both in `config.allow-plugins` — otherwise the first non-interactive `composer install` fails with a blocked-plugin error. Audit flags missing entries; see each category's audit phase.
+All three umbrellas pull `sandermuller/boost-core` (the skill-sync engine, `type: library` from 0.6.0) transitively; `package-boost-laravel` also pulls `package-boost-php`. Neither `sandermuller/boost-core` nor `sandermuller/package-boost-php` is a composer-plugin anymore — both shed plugin status (boost-core in 0.6.0; package-boost-php in 0.9.0, when its subcommands moved to the standalone `vendor/bin/package-boost-php` bin). Scaffolds therefore need NO `sandermuller/*` entries in `config.allow-plugins`. Pre-0.9.0 scaffolds that still list `sandermuller/package-boost-php: true` (or `sandermuller/boost-core: true` from pre-0.6.0) carry harmless-but-stale entries — Composer ignores them; audit phases flag for removal. Audit and upgrade phases handle this drift; see each category's audit phase.
 
 `composer-plugin` GETS `package-boost-php` like the other framework-agnostic categories — the pre-0.5.0 `shared-exclusions` entry that dropped it was removed.
 
-`skill-bundle` is the exception: its product *is* AI skills, so it depends on `sandermuller/boost-core` (the engine) directly in runtime `require` — not via an umbrella, and not in `require-dev` (consumers need boost-core present to discover the shipped skills). Its `config.allow-plugins` lists `sandermuller/boost-core` only (no `package-boost-php`).
+`skill-bundle` is the exception: its product *is* AI skills, so it depends on `sandermuller/boost-core` (the engine, `type: library`) directly in runtime `require` — not via an umbrella, and not in `require-dev` (consumers need boost-core present to discover the shipped skills). Its `config.allow-plugins` is empty (no `boost-core` entry — `type: library`; no `package-boost-php` — not pulled in).
 
 ### `skill-bundle`
 
@@ -67,7 +67,7 @@ A distributable Composer package whose deliverable is the AI agent skills it shi
 - **`type: library`**, no `src/` PHP code. Detected by `sandermuller/boost-core` in runtime `require` (see `detection-rules.md`).
 - **`require`**: `sandermuller/boost-core` — runtime, so consumers receive it transitively and can sync the skills.
 - **`require-dev`**: `laravel/pint`, `sandermuller/boost-skills`, `stolt/lean-package-validator`. A skill-bundle ships pure-markdown skills and no PHP source, so it carries **no test runner** (no `pest`, no `phpunit`) and does not consume the shared dev-dep block — neither the PHPStan / Rector packs nor the shared test-framework block. In the yml, `consumes-shared-dev-deps: false` marks that; `sandermuller/boost-skills` is hand-listed in its `mandatory.require-dev` (the one shared library a skill bundle still wants), so the three above are its full dep set.
-- **`config.allow-plugins`**: `sandermuller/boost-core: true` only (it is a `composer-plugin`).
+- **`config.allow-plugins`**: empty. `sandermuller/boost-core` is `type: library` from 0.6.0 — no allow-plugins entry required; if a pre-0.6.0 scaffold still lists `sandermuller/boost-core: true`, audit flags it for removal.
 - Skips the PHP-toolchain stubs — see the `shared-stub-skip` key below.
 
 ### `shared-stub-skip`
