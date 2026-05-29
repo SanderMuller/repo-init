@@ -120,7 +120,6 @@ Maintenance (`require-dev`) — used only by repo-init's own dev workflow; NOT p
 - [`sandermuller/package-boost-php`](https://github.com/SanderMuller/package-boost-php) — the boost-family umbrella repo-init dogfoods (it's also what the `php-package` / `phpstan-extension` / `rector-extension` / `composer-plugin` scaffolds pin).
 - [`sandermuller/boost-skills`](https://github.com/SanderMuller/boost-skills) — the shared dev-workflow skill library (code-review, bug-fixing, pre-release, evaluate, …); boost-core syncs its skills into repo-init's agent dirs at dev time.
 - `laravel/pint` — code style.
-- `stolt/lean-package-validator` — validates `.gitattributes` export-ignore coverage.
 
 ## Contributing
 
