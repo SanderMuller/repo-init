@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Pre-`1.0.0` releases (0.x.x — historical) introduced breaking changes in MINOR bumps; from 1.0.0 onward repo-init follows standard SemVer (breaking changes ship as MAJOR only). The pre-1.0 entries below remain for reference.
 
+## [1.3.1](https://github.com/sandermuller/repo-init/compare/1.3.0...1.3.1) - 2026-05-29
+
+<!-- verified-sha: 99da238951ec04b36a623f812fb4de06143af18e -->
+### 1.3.1
+
+Tracks the same-day boost-family re-tag. `sandermuller/package-boost-php` 0.12.0 floor-bumped its `boost-core` requirement to `^0.10`, so repo-init's scaffold defaults and own dependencies move in lockstep.
+
+#### Changed
+
+- **`boost-core` floor raised to `^0.10.0`** — for repo-init's own runtime dependency and the `skill-bundle` scaffold (the category that requires `boost-core` directly). package-boost-php 0.12.0 requires `boost-core ^0.10`, so this bump is mandatory to keep the constraint chain resolvable.
+- **`package-boost-php` floor raised to `^0.12.0`** — in repo-init's dev dependencies and the four framework-agnostic scaffolds (php-package, composer-plugin, phpstan-extension, rector-extension).
+
+Laravel categories are unchanged: they pull `boost-core` transitively through `package-boost-laravel ^0.7.3`, which still targets the `boost-core ^0.9` line. Their floors follow once package-boost-laravel adopts boost-core 0.10.
+
+Resolves to boost-core 0.10.0 / package-boost-php 0.12.0 / boost-skills 1.9.2; no advisories.
+
+**Full Changelog**: https://github.com/SanderMuller/repo-init/compare/1.3.0...1.3.1
+
 ## [1.3.0](https://github.com/sandermuller/repo-init/compare/1.2.0...1.3.0) - 2026-05-29
 
 <!-- verified-sha: 2abd83a268bda31beb9f6c166feb7717158ff3c1 -->
@@ -21,6 +39,7 @@ Pre-`1.0.0` releases (0.x.x — historical) introduced breaking changes in MINOR
   
   Applied across all nine stub `composer.json` files and repo-init's own dependencies.
   
+
 ### Fixed
 
 - **Audit phases now apply the PHPUnit-cache rules to Pest repositories.** The PHPUnit-cache audit block was gated on `test-framework=phpunit`, so Pest repos skipped it — but Pest reuses PHPUnit's `phpunit.xml` and the same cache mechanism, so the rules apply equally. The gate now keys on the presence of a `phpunit.xml`, catching non-canonical `cacheDirectory` values and stray `.phpunit.cache/` directories that were previously missed on Pest repos. Affects the laravel-package, php-package, composer-plugin, rector-extension, and laravel-project audit phases.
@@ -29,7 +48,7 @@ Pre-`1.0.0` releases (0.x.x — historical) introduced breaking changes in MINOR
 
 - Removed repo-init's own `validate-gitattributes` quality gate (and the direct `stolt/lean-package-validator` dev dependency). repo-init ships `stubs/` trees whose filenames collide with root dev files, so its own `.gitattributes` must use root-anchored `export-ignore` patterns — which the validator's format check rejects. The gate was a false positive whose prescribed fix would re-corrupt the published archive. The validator and its `validate-gitattributes` script remain part of what repo-init scaffolds for consumer packages, which are unaffected.
 
-**Full Changelog**: <https://github.com/SanderMuller/repo-init/compare/1.2.0...1.3.0>
+**Full Changelog**: [https://github.com/SanderMuller/repo-init/compare/1.2.0...1.3.0](https://github.com/SanderMuller/repo-init/compare/1.2.0...1.3.0)
 
 ## [1.2.0](https://github.com/sandermuller/repo-init/compare/1.1.0...1.2.0) - 2026-05-26
 
@@ -99,8 +118,8 @@ composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
 
 
-```
 
+```
 For existing scaffolded packages, the next audit walk will surface the `sandermuller/package-boost-php: true` entry as MEDIUM-stale. The upgrade phase handles removal correctly — bump first, then drop the entry.
 
 **Full Changelog**: [https://github.com/SanderMuller/repo-init/compare/1.1.0...1.2.0](https://github.com/SanderMuller/repo-init/compare/1.1.0...1.2.0)
@@ -186,8 +205,8 @@ composer global exec -- boost sync --scope=user --all
 
 
 
-```
 
+```
 No further steps. Scaffold output, the `repo-init` skill, audit/upgrade phases, stubs — all identical to 0.8.1.
 
 ### Versioning from here
@@ -228,8 +247,8 @@ composer global exec -- boost sync --scope=user --all
 
 
 
-```
 
+```
 The Composer archive for 0.8.1 contains the full stub tree; downstream scaffolders that broke on 0.8.0 work again.
 
 ### CI note
@@ -255,8 +274,8 @@ composer global exec -- boost sync --scope=user --all
 
 
 
-```
 
+```
 The `composer global exec --` form runs `boost` from Composer's global `vendor/bin/` regardless of the user's current directory; the literal `--` stops Composer from interpreting boost's flags as its own. `--scope=user --all` publishes every globally-installed package's `resources/boost/skills/` into `~/.{agent}/skills/<vendor>__<package>/`. See `references/boost-core-user-scope.md` for the full contract.
 
 ### Added
@@ -277,8 +296,8 @@ gh release create X.Y.Z --notes-file internal/release-notes-X.Y.Z.md
 
 
 
-```
 
+```
 repo-init already shipped this workflow as a stub for scaffolded packages (`stubs/shared/.github/workflows/update-changelog.yml`); it now also runs on repo-init itself. `CONTRIBUTING.md` + `RELEASING.md` updated to match.
 
 ### Changed (breaking for new scaffolds)
@@ -329,8 +348,8 @@ composer global exec -- boost sync --scope=user --all   # new: global skill refr
 
 
 
-```
 
+```
 `stubs/shared/boost.php` + repo-init's own `boost.php` docblocks updated accordingly.
 
 #### repo-init aligned to its own `skill-bundle` baseline
@@ -364,8 +383,8 @@ composer global exec -- boost sync --scope=user --all
 
 
 
-```
 
+```
 For an existing scaffolded repo:
 
 1. `audit-<category>.md` surfaces the family drift: stale `boost-core` in `allow-plugins`, `::runWithSummary` in `post-install/update-cmd`, old boost-family constraints, stale `BaseCommandAdapter` citations (composer-plugin only).
@@ -488,6 +507,7 @@ For an existing scaffolded repo:
   - CI: `check-layout.sh`, `check-phase-coverage.sh`, `check-stub-composer-validity.sh`
     updated for the new category.
   
+
 ### Changed
 
 - **BREAKING — boost-family dependency remapped per category.** The boost
@@ -513,6 +533,7 @@ For an existing scaffolded repo:
 - Stub `package-boost-php` constraint bumped `^0.3.0` → `^0.4.0`; the
   Laravel-category stubs now pin `sandermuller/package-boost-laravel: ^0.4.0`.
   
+
 ## [0.4.0](https://github.com/sandermuller/repo-init/compare/0.3.1...0.4.0) - 2026-05-20
 
 ### Changed
@@ -633,6 +654,7 @@ For an existing scaffolded repo:
     doesn't second-guess the range (per per-category-deps.md). Only NEW
     bootstraps get the bumped default.
   
+
 ### Fixed
 
 - **`.gitattributes` managed block stubs missing `.ai/ export-ignore`** (codex
@@ -655,6 +677,7 @@ For an existing scaffolded repo:
     testbench.yaml can no longer merge silently without a test run.
     `laravel-project` left as-is (apps don't ship testbench.yaml/workbench).
   
+
 ### Added
 
 - **`composer-plugin` is now a first-class category** (6 total). Previously
@@ -715,6 +738,7 @@ For an existing scaffolded repo:
   `.phpunit.cache`. Upgrade fixes `cacheDirectory`, removes the leaked dir,
   and `git rm -r --cached` if previously committed.
   
+
 ### Changed
 
 - **Bumped `sandermuller/package-boost-php` from `^0.2.0` to `^0.3.0`**
