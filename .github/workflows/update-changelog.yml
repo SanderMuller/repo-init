@@ -23,6 +23,16 @@ jobs:
           latest-version: ${{ github.event.release.tag_name }}
           release-notes: ${{ github.event.release.body }}
 
+      # The prepended release body is not always markdownlint-clean (MD012 blank
+      # lines, MD031 fence spacing, MD034 bare URLs). Normalize it here — same
+      # markdownlint-cli2 version the lint-markdown gate uses — so the committed
+      # CHANGELOG passes on the next push instead of needing a manual --fix
+      # follow-up. `|| true`: --fix exits non-zero if any unfixable error remains;
+      # the recurring offenders are all auto-fixable, so we still commit the
+      # normalized file rather than failing the release decorator over lint.
+      - name: Normalize CHANGELOG markdown
+        run: npx --yes markdownlint-cli2@0.18 --fix "CHANGELOG.md" || true
+
       - name: Commit updated CHANGELOG
         uses: stefanzweifel/git-auto-commit-action@v7
         with:
