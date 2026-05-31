@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Pre-`1.0.0` releases (0.x.x — historical) introduced breaking changes in MINOR bumps; from 1.0.0 onward repo-init follows standard SemVer (breaking changes ship as MAJOR only). The pre-1.0 entries below remain for reference.
 
+## [1.4.2](https://github.com/sandermuller/repo-init/compare/1.4.1...1.4.2) - 2026-05-31
+
+<!-- verified-sha: 9c82475f50da1f9c1e1a4a76e2a0488e9bc8d079 -->
+Documentation patch. No scaffold-output or behavior change.
+
+### Changed
+
+- `references/gitattributes-managed-block.md` now documents the package-boost
+  gitattributes writer's guarantees, now that `package-boost-php`'s
+  `ManagedBlockWriter` implements the foreign-line-preservation contract
+  (previously tracked as open work):
+  
+  - **single-pass convergence** — one run produces the canonical block from any
+    input, self-healing a malformed block (no need to run it twice);
+  - **strict idempotency** — re-running on a synced file is a byte-for-byte no-op;
+  - **exact-match foreign-line dedup**, whitespace-normalized matching of canonical
+    entries, and dominant line-ending (LF/CRLF) preservation.
+  
+  The guarantees are version-gated (`package-boost-php` ≥ 0.16.2); the audit's
+  managed-block check stays version-agnostic (it verifies the block is correct and
+  never relies on self-heal as a precondition, since the scaffold floor is
+  `^0.16.0`). The legacy two-block fallback is marked superseded.
+  
+**Full Changelog**: <https://github.com/SanderMuller/repo-init/compare/1.4.1...1.4.2>
+
 ## [1.4.1](https://github.com/sandermuller/repo-init/compare/1.4.0...1.4.1) - 2026-05-31
 
 <!-- verified-sha: e6ef21c2a07ad5bad4dba792e6b6a34c6903b0b7 -->
@@ -50,7 +75,7 @@ the current boost-family dependency line.
 - repo-init's own dependencies bumped to the current boost-family line:
   `boost-core ^0.16.0`, `boost-skills ^2.0.0`, `package-boost-php ^0.16.1`.
 
-**Full Changelog**: <https://github.com/SanderMuller/repo-init/compare/1.4.0...1.4.1>
+**Full Changelog**: [https://github.com/SanderMuller/repo-init/compare/1.4.0...1.4.1](https://github.com/SanderMuller/repo-init/compare/1.4.0...1.4.1)
 
 ## [1.4.0](https://github.com/sandermuller/repo-init/compare/1.3.1...1.4.0) - 2026-05-31
 
@@ -218,6 +243,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 For existing scaffolded packages, the next audit walk will surface the `sandermuller/package-boost-php: true` entry as MEDIUM-stale. The upgrade phase handles removal correctly — bump first, then drop the entry.
@@ -308,6 +334,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 No further steps. Scaffold output, the `repo-init` skill, audit/upgrade phases, stubs — all identical to 0.8.1.
@@ -353,6 +380,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 The Composer archive for 0.8.1 contains the full stub tree; downstream scaffolders that broke on 0.8.0 work again.
@@ -383,6 +411,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 The `composer global exec --` form runs `boost` from Composer's global `vendor/bin/` regardless of the user's current directory; the literal `--` stops Composer from interpreting boost's flags as its own. `--scope=user --all` publishes every globally-installed package's `resources/boost/skills/` into `~/.{agent}/skills/<vendor>__<package>/`. See `references/boost-core-user-scope.md` for the full contract.
@@ -399,6 +428,7 @@ repo-init now uses the shared `sandermuller/boost-skills` library (code-review, 
 
 ```bash
 gh release create X.Y.Z --notes-file internal/release-notes-X.Y.Z.md
+
 
 
 
@@ -463,6 +493,7 @@ composer global exec -- boost sync --scope=user --all   # new: global skill refr
 
 
 
+
 ```
 
 `stubs/shared/boost.php` + repo-init's own `boost.php` docblocks updated accordingly.
@@ -492,6 +523,7 @@ Upgrade repo-init itself:
 ```bash
 composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
+
 
 
 
