@@ -54,6 +54,19 @@ Plus per-category extras:
 - `phpstan-extension`: also `extension.neon`
 - `rector-extension`: also `config/` (the extension's own rector config dir — careful, this is a real published path; only the test-fixture `config/` is `export-ignore`d when applicable)
 
+## `.lpv` file format (NOT `.gitattributes` syntax)
+
+`.lpv` is lean-package-validator's glob-pattern file (`php-package` and `skill-bundle` ship one). It does **not** use `.gitattributes` syntax. Each line is a **bare glob pattern** — one artifact per line, with **no `export-ignore` suffix**:
+
+```text
+.editorconfig
+.github/
+CHANGELOG.md
+pint.json
+```
+
+The validator joins the lines into a single brace glob (`{.editorconfig,.github/,CHANGELOG.md,pint.json}*`) and checks that everything matching it is `export-ignore`d in `.gitattributes`. A line written in `.gitattributes` form (`pint.json export-ignore`) becomes the literal glob `pint.json export-ignore` — with the space — which matches no file, so the expected-export-ignore set collapses to empty and `validate` **passes vacuously**, silently defeating its own purpose. When the validator warns about a missing artifact: add the `<path> export-ignore` line to the `.gitattributes` managed block AND the **bare `<path>`** (no suffix) to `.lpv`.
+
 ## Contract with package-boost
 
 For repo-init to append into package-boost's block, package-boost must preserve foreign lines during its sync. The contract:

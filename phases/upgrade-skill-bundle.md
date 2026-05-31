@@ -56,7 +56,7 @@ Per `$REPO_INIT_HOME/references/composer-scripts.md`:
 - **PHP floor `^8.2`**: prompt bump to `^8.3`.
 - **`.gitattributes` missing `.ai/ export-ignore`**: insert `.ai/ export-ignore` after `.agents/ export-ignore` inside the `# >>> package-boost (managed) >>>` block.
 - **Missing `validate-gitattributes` script**: insert it (via the composer.json scripts merge above).
-- **`.lpv` warnings on `vendor/bin/lean-package-validator validate`**: add each missing export-ignore line to `.lpv` AND to the `.gitattributes` managed block.
+- **`.lpv` warnings on `vendor/bin/lean-package-validator validate`**: for each flagged artifact, add the **bare path** (no `export-ignore` suffix) to `.lpv` AND the `<path> export-ignore` line to the `.gitattributes` managed block. `.lpv` is a glob-pattern file, not `.gitattributes` syntax — see `references/gitattributes-managed-block.md` (`.lpv` file format).
 
 ## Run boost-core sync
 
