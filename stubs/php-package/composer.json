@@ -35,7 +35,7 @@
         "rector/rector": "^2.4",
         "rector/type-perfect": "^2.1",
         "sandermuller/boost-skills": "^1.9.0",
-        "sandermuller/package-boost-php": "^0.12.0",
+        "sandermuller/package-boost-php": "^0.16.0",
         "spaze/phpstan-disallowed-calls": "^4.10",
         "stolt/lean-package-validator": "^5.7",
         "symplify/phpstan-extensions": "^12.0",
@@ -54,10 +54,10 @@
     },
     "scripts": {
         "post-install-cmd": [
-            "SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"
+            "SanderMuller\\PackageBoostPhp\\Scripts\\AutoSync::run"
         ],
         "post-update-cmd": [
-            "SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"
+            "SanderMuller\\PackageBoostPhp\\Scripts\\AutoSync::run"
         ],
         "phpstan": "vendor/bin/phpstan analyse --memory-limit=2G",
         "phpstan-simplified": "vendor/bin/phpstan analyse --memory-limit=2G --error-format symplify",
