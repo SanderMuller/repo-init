@@ -59,7 +59,18 @@ No `sync-ai` script — `laravel/boost` owns AI-asset sync for applications (`ph
 
 ### Canonical-value lookups
 
-- `post-install-cmd` / `post-update-cmd`: array containing `"SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"`. Any POSIX-shell conditional (`if [ "$COMPOSER_DEV_MODE" = "1" ]; then …`) is MISMATCH — Windows-broken; predates boost-core 0.6.
+- `post-install-cmd` / `post-update-cmd`: array containing the **family-specific** auto-sync callback. The value forks by which boost package the category depends on directly — see the table below. Any POSIX-shell conditional (`if [ "$COMPOSER_DEV_MODE" = "1" ]; then …`) is MISMATCH — Windows-broken; predates boost-core 0.6. A callback that names the wrong namespace for the category is also MISMATCH (e.g. a php-wrapper scaffold still naming `BoostCore\Scripts\BoostAutoSync::run` instead of its `PackageBoostPhp` façade).
+
+  | Category | Direct boost dep | Canonical `post-install-cmd` / `post-update-cmd` value | Floor that ships the façade |
+  |---|---|---|---|
+  | `php-package`, `phpstan-extension`, `rector-extension`, `composer-plugin` | `sandermuller/package-boost-php` | `SanderMuller\PackageBoostPhp\Scripts\AutoSync::run` | `^0.16.0` |
+  | `laravel-package` (+ `laravel-package-spatie`, `filament-plugin`, `nova-tool`) | `sandermuller/package-boost-laravel` | `SanderMuller\PackageBoostLaravel\Scripts\AutoSync::run` | `^0.10.0` |
+  | `skill-bundle` | `sandermuller/boost-core` (direct `require`) | `SanderMuller\BoostCore\Scripts\BoostAutoSync::run` | `^0.10.0` (boost-core; `BoostAutoSync` predates it) |
+  | `laravel-project` | n/a (artisan command) | scaffold-conditional — see the `laravel-project` section above | n/a |
+
+  **Why the fork:** the wrapper categories pull `boost-core` only *transitively* through their wrapper. Naming `BoostCore\Scripts\BoostAutoSync::run` there is a transitive-class reference — declaring a symbol the `composer.json` doesn't directly depend on. Each wrapper ships a namespace façade (`PackageBoostPhp\Scripts\AutoSync` / `PackageBoostLaravel\Scripts\AutoSync`) that delegates to `BoostAutoSync`, so the scaffold names only a class from its own direct dependency. `skill-bundle` requires `boost-core` *directly*, so `BoostAutoSync::run` is already a direct-dep class there — it keeps the boost-core callback, and the façade rule does not apply.
+
+  > **ATOMIC RULE — the callback and its floor move together.** The façade class only exists from the "Floor that ships the façade" version. Whenever a phase WRITES one of these callbacks — a bootstrap mint, an upgrade INSERTING a missing `post-install-cmd`/`post-update-cmd` hook, OR an upgrade replacing an old `BoostAutoSync::run` MISMATCH — the same change MUST ensure the `require-dev` floor for that category's wrapper is at least the floor shown above. The MISSING-insert case is easy to miss: a partially-drifted scaffold with only one of the two hooks gets the other inserted as the façade callback, and if its floor is still pre-façade that inserted callback is non-autoloadable. A façade callback paired with a pre-façade floor is **worse than the drift it replaces**: a fresh `composer install`/`update` whose lock resolves the older wrapper hits a post-install/post-update hook referencing a class that isn't autoloadable. Composer does NOT hard-fail here — its `EventDispatcher` runs a `class_exists()` guard, emits a `<warning>` ("Class … is not autoloadable, can not call … script"), and skips the hook. So the failure is silent: the autosync hook **no-ops**, and AI-asset sync is dead until the floor is fixed — strictly worse than the working-but-cosmetically-transitive callback it replaced. On the upgrade path: if the wrapper is PRESENT below the façade floor, bump the constraint AND swap the callback in one patch; never swap the callback alone.
 - `qa` (baseline): `["@rector", "@format", "@phpstan-simplified"]`. `php-package` / `composer-plugin` append `@validate-gitattributes`. `rector-extension` appends `@test` instead.
 - All other values: see the JSON blocks below.
 
@@ -80,16 +91,16 @@ This block is the baseline for the five **code-bearing** categories (`php-packag
     "sync-ai": "vendor/bin/boost sync",
     "qa": ["@rector", "@format", "@phpstan-simplified"],
     "post-install-cmd": [
-      "SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"
+      "SanderMuller\\PackageBoostPhp\\Scripts\\AutoSync::run"
     ],
     "post-update-cmd": [
-      "SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"
+      "SanderMuller\\PackageBoostPhp\\Scripts\\AutoSync::run"
     ]
   }
 }
 ```
 
-`post-install-cmd` / `post-update-cmd` invoke boost-core's PHP script callback (`SanderMuller\BoostCore\Scripts\BoostAutoSync::run`) — not a POSIX-shell conditional (Windows-broken) and not the testbench artisan command (the framework-agnostic `package-boost-php` registers none). The callback is autoloadable because every category's `composer.json` pulls `sandermuller/boost-core` — via a boost umbrella, or directly (`skill-bundle`).
+The baseline above shows the **php-wrapper** callback (`SanderMuller\PackageBoostPhp\Scripts\AutoSync::run`), canonical for four of the five code-bearing categories: `php-package`, `phpstan-extension`, `rector-extension`, `composer-plugin`. **`laravel-package` substitutes** the laravel-wrapper façade — see "Substitutions → `laravel-package`" below. Both are namespace façades that delegate to boost-core's `BoostAutoSync`, so the scaffold references a class from its own direct dependency (`package-boost-php` / `package-boost-laravel`) rather than the transitive `boost-core`. Neither is a POSIX-shell conditional (Windows-broken) nor the testbench artisan command (the framework-agnostic `package-boost-php` registers none). The façade is autoloadable because the category's direct boost dependency provides it; see the per-family table under "Canonical-value lookups".
 
 ## Substitutions
 
@@ -97,6 +108,10 @@ This block is the baseline for the five **code-bearing** categories (`php-packag
 
 - `"test": "vendor/bin/phpunit"`
 - `"test-coverage": "vendor/bin/phpunit --coverage-html=coverage"`
+
+### `laravel-package`
+
+- **`post-install-cmd` / `post-update-cmd` callback.** Substitute the laravel-wrapper façade for the php-wrapper default shown in the baseline block: both arrays become `["SanderMuller\\PackageBoostLaravel\\Scripts\\AutoSync::run"]`. Same delegate-to-`BoostAutoSync` façade, but from `sandermuller/package-boost-laravel` (the category's direct dep) instead of `package-boost-php`. Applies equally to the `laravel-package-spatie`, `filament-plugin`, and `nova-tool` variants, which route through the laravel-package audit/upgrade phases.
 
 ### `laravel-project`
 

@@ -113,7 +113,7 @@ Highlights:
 
 Runtime (`require`) — what `composer global require sandermuller/repo-init` pulls in for every consumer:
 
-- [`sandermuller/boost-core`](https://github.com/SanderMuller/boost-core) — `type: library` from 0.6.0 (the Composer plugin was removed in that release). Ships the standalone `vendor/bin/boost` bin and the `BoostAutoSync::run` callback used in `post-install-cmd` / `post-update-cmd` (silent on no-op installs; prints the one-line sync summary when `wrote>0`).
+- [`sandermuller/boost-core`](https://github.com/SanderMuller/boost-core) — `type: library` from 0.6.0 (the Composer plugin was removed in that release). Ships the standalone `vendor/bin/boost` bin and the `BoostAutoSync::run` auto-sync engine (silent on no-op installs; prints the one-line sync summary when `wrote>0`). Categories that depend on boost-core directly (`skill-bundle`) wire `BoostAutoSync::run` in `post-install-cmd` / `post-update-cmd`; wrapper categories instead wire their wrapper's namespace façade (`PackageBoostPhp\Scripts\AutoSync::run` / `PackageBoostLaravel\Scripts\AutoSync::run`), which delegates to it — so the scaffold references only a class from its own direct dependency. See [`references/composer-scripts.md`](references/composer-scripts.md).
 
 Maintenance (`require-dev`) — used only by repo-init's own dev workflow; NOT propagated to consumers (Composer never installs a required package's `require-dev`):
 
