@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Pre-`1.0.0` releases (0.x.x — historical) introduced breaking changes in MINOR bumps; from 1.0.0 onward repo-init follows standard SemVer (breaking changes ship as MAJOR only). The pre-1.0 entries below remain for reference.
 
+## [1.4.1](https://github.com/sandermuller/repo-init/compare/1.4.0...1.4.1) - 2026-05-31
+
+<!-- verified-sha: e6ef21c2a07ad5bad4dba792e6b6a34c6903b0b7 -->
+Patch release. Fixes two composer-plugin scaffold gaps and a `.lpv`
+validator-config defect, reconciles the `.gitattributes` reference, and adopts
+the current boost-family dependency line.
+
+### Fixed
+
+- **`.lpv` stubs shipped in the wrong format.** `php-package` and `skill-bundle`
+  shipped a `.lpv` using `.gitattributes` syntax (`<path> export-ignore` per line)
+  instead of lean-package-validator's bare-glob format. The validator joins those
+  lines into a glob containing spaces that matches no file, so a scaffolded
+  package's `validate-gitattributes` passed *vacuously* — silently checking
+  nothing. Now bare globs, one artifact per line.
+- **composer-plugin scaffolds had no CI test run.** Every other code-bearing
+  category ships its own `run-tests.yml`; composer-plugin shipped none, though its
+  bootstrap and audit expected one. Added the stub (framework-agnostic, PHP-only
+  matrix).
+- **composer-plugin shipped no `.lpv`.** It runs `validate-gitattributes` but had
+  no validator config, so the validator fell back to its default preset and
+  skipped project-specific artifacts (`boost.php`, `.ai/`, `.claude/`). Added
+  `composer-plugin/.lpv`.
+- **`CHANGELOG.md` was listed in `.lpv` but not export-ignored**, so a fresh
+  scaffold's `validate-gitattributes` would flag it. `CHANGELOG.md` and
+  `.phpunit.cache` are now export-ignored in the shared `.gitattributes` managed
+  block. The never-shipped `workbench/` entry was removed from `php-package/.lpv`.
+
+### Changed
+
+- Audit phases: a structured "MISSING composer.json scripts" section for the
+  skill-bundle audit; an atomic callback↔floor-coupling reminder across all wrapper
+  audits; a `phpunit.xml.dist` check for the composer-plugin audit. `UPGRADING.md`
+  now documents the 1.4.0 façade migration.
+- `references/gitattributes-managed-block.md` reconciled — removed a duplicate
+  entry, separated laravel-only entries from the universal set, completed the
+  `.lpv` per-category list, and documented the `.lpv` file format.
+
+### Internal
+
+- repo-init's own dependencies bumped to the current boost-family line:
+  `boost-core ^0.16.0`, `boost-skills ^2.0.0`, `package-boost-php ^0.16.1`.
+
+**Full Changelog**: <https://github.com/SanderMuller/repo-init/compare/1.4.0...1.4.1>
+
 ## [1.4.0](https://github.com/sandermuller/repo-init/compare/1.3.1...1.4.0) - 2026-05-31
 
 <!-- verified-sha: 4c05f83ba2d49f0d3a7c85d0a77a63c621700eb5 -->
@@ -58,7 +103,7 @@ releases that introduced the façades), both live on Packagist.
 - `laravel-project` keeps its `@php artisan project-boost:sync` hook — an
   artisan command, never a class callback.
 
-**Full Changelog**: <https://github.com/SanderMuller/repo-init/compare/1.3.1...1.4.0>
+**Full Changelog**: [https://github.com/SanderMuller/repo-init/compare/1.3.1...1.4.0](https://github.com/SanderMuller/repo-init/compare/1.3.1...1.4.0)
 
 ## [1.3.1](https://github.com/sandermuller/repo-init/compare/1.3.0...1.3.1) - 2026-05-29
 
@@ -172,6 +217,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 For existing scaffolded packages, the next audit walk will surface the `sandermuller/package-boost-php: true` entry as MEDIUM-stale. The upgrade phase handles removal correctly — bump first, then drop the entry.
@@ -261,6 +307,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 No further steps. Scaffold output, the `repo-init` skill, audit/upgrade phases, stubs — all identical to 0.8.1.
@@ -305,6 +352,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 The Composer archive for 0.8.1 contains the full stub tree; downstream scaffolders that broke on 0.8.0 work again.
@@ -334,6 +382,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 The `composer global exec --` form runs `boost` from Composer's global `vendor/bin/` regardless of the user's current directory; the literal `--` stops Composer from interpreting boost's flags as its own. `--scope=user --all` publishes every globally-installed package's `resources/boost/skills/` into `~/.{agent}/skills/<vendor>__<package>/`. See `references/boost-core-user-scope.md` for the full contract.
@@ -350,6 +399,7 @@ repo-init now uses the shared `sandermuller/boost-skills` library (code-review, 
 
 ```bash
 gh release create X.Y.Z --notes-file internal/release-notes-X.Y.Z.md
+
 
 
 
@@ -412,6 +462,7 @@ composer global exec -- boost sync --scope=user --all   # new: global skill refr
 
 
 
+
 ```
 
 `stubs/shared/boost.php` + repo-init's own `boost.php` docblocks updated accordingly.
@@ -441,6 +492,7 @@ Upgrade repo-init itself:
 ```bash
 composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
+
 
 
 
