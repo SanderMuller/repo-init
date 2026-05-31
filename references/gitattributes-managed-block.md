@@ -84,7 +84,18 @@ For repo-init to append into package-boost's block, package-boost must preserve 
 2. repo-init's append is line-based with dedup (don't insert the same line twice).
 3. If a third tool later wants to manage `.gitattributes`, it follows the same contract — append inside the block, dedupe by line text.
 
-**This contract requires a one-time update to package-boost** (~30 LOC) to add the "preserve foreign lines" behaviour. As of this writing (May 2026) this update is open work. Open Question #2 in the SPEC tracks it.
+**Status:** the foreign-line-preservation behaviour is implemented in `sandermuller/package-boost-php`'s `ManagedBlockWriter` (the owner of the block) and covered by end-to-end command tests.
+
+### Convergence and idempotency (package-boost-php ≥ 0.16.2)
+
+The package-boost gitattributes writer is **convergent** and **idempotent**:
+
+- **Convergent (single-pass):** one run of the gitattributes command produces the canonical managed block from ANY input — including a malformed block (open marker, no close), stray duplicate markers, or mixed line endings. The self-heal happens in that single run; an audit does NOT need to run it twice to converge.
+- **Idempotent (strict):** `sync(sync(x))` equals `sync(x)` byte-for-byte for any input. Re-running on an already-synced file is a no-op, so `--check` exits 0.
+- **Preservation (the repo-init contract):** foreign lines inside the block — anything that isn't a canonical package-boost entry, i.e. repo-init's appends — survive, rendered AFTER the canonical lines; exact duplicates are collapsed (first occurrence kept, first-seen order). Stray block markers captured inside a malformed region are dropped (not preserved as foreign). Content outside the block (before the first START / after the last END) is untouched.
+- **Matching:** canonical lines are matched on their whitespace-normalized form, so a differently-padded variant of a managed rule is recognized as package-boost's own and not re-emitted as a foreign duplicate. The file's dominant line ending (LF/CRLF) is preserved.
+
+These guarantees land in `package-boost-php` 0.16.2. repo-init's scaffold floor is `^0.16.0`, so a freshly scaffolded repo resolves to the newest (≥ 0.16.2) and gets them; an older audited repo on 0.16.0/0.16.1 still has the pre-self-heal behaviour. The audit's managed-block check is therefore **version-agnostic** — it verifies the block is correct (canonical set present + foreign lines preserved) and never relies on single-pass convergence as a precondition. Convergence/idempotency is a documented property of the writer ≥ 0.16.2, not an audit assumption.
 
 ## Fallback if package-boost doesn't accept the contract
 
@@ -98,6 +109,8 @@ repo-init writes its own block:
 ```
 
 Two managed blocks coexist in `.gitattributes`. Audit reports the two-blocks state as `NON-CANONICAL` so it's visible but not blocked. This fallback is documented but not preferred.
+
+**Superseded:** package-boost now implements the foreign-line-preservation contract (see above), so the single-block path is always available and the fallback is no longer needed for new work. The two-block NON-CANONICAL detection below stays valid for legacy repos that already have a separate `# >>> repo-init (managed) >>>` block — the fix is to fold those lines into the package-boost block and remove the second block.
 
 ## Audit detection
 
