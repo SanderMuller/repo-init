@@ -103,6 +103,7 @@ Baseline minus `sync-ai` + composer-plugin additions (11 keys). The composer-plu
 - [ ] `qa` → `["@rector", "@format", "@phpstan-simplified", "@validate-gitattributes"]`
 - [ ] `post-install-cmd` → `["SanderMuller\\PackageBoostPhp\\Scripts\\AutoSync::run"]`
 - [ ] `post-update-cmd` → `["SanderMuller\\PackageBoostPhp\\Scripts\\AutoSync::run"]`
+- [ ] **Floor coupling (ATOMIC)**: if either hook above is MISSING or MISMATCH, the fix MUST also bump `sandermuller/package-boost-php` in `require-dev` to `^0.16.0` in the same change — the façade class first ships in 0.16.0, and a façade callback below that floor silently no-ops the autosync hook (Composer skip-warns via its `class_exists()` guard). See the ATOMIC rule in this category's upgrade phase.
 
 MISMATCH cases worth HIGH severity: POSIX-shell `post-install-cmd` (Windows-broken; predates boost-core 0.6); `post-update-cmd` absent entirely.
 
@@ -129,6 +130,7 @@ Same logic as audit-php-package.md, with composer-plugin stub paths from `$REPO_
 - [ ] `illuminate/*` in `require` — same. composer-plugin is framework-agnostic by definition; flag as misalignment.
 - [ ] `orchestra/testbench` in `require-dev` — composer-plugin category excludes testbench (no Laravel runtime to bootstrap). Flag NON-CANONICAL; suggest removal.
 - [ ] PHP floor `^8.2` (or below).
+- [ ] **`phpunit.xml.dist` committed (with `.dist` suffix)**: canonical baseline ships `phpunit.xml` (no `.dist`). Flag NON-CANONICAL.
 - [ ] Missing `validate-gitattributes` script in `composer.json` — composer-plugin should have it (same lean-archive reasoning as php-package).
 - [ ] **POSIX-shell `post-install-cmd` / `post-update-cmd`** (HIGH severity): if either script's value is a shell conditional like `if [ "$COMPOSER_DEV_MODE" = "1" ]; then vendor/bin/boost sync; fi` (or older `vendor/bin/testbench package-boost:sync`), it is Windows-broken and predates boost-core 0.6's PHP callback. Canonical is the array `["SanderMuller\\PackageBoostPhp\\Scripts\\AutoSync::run"]` for BOTH keys. Flag NON-CANONICAL; suggest the merge-keys replace via `phases/upgrade-composer-plugin.md`.
 - [ ] `.lpv` exists but no `vendor/bin/lean-package-validator validate` clean.

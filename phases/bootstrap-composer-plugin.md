@@ -40,6 +40,8 @@ For each file under `$REPO_INIT_HOME/stubs/shared/`, copy to cwd. Substitute pla
 For each file under `$REPO_INIT_HOME/stubs/composer-plugin/` (excluding `src/Plugin.*.php` variants — those are resolved in step 4):
 
 - `composer.json` — substitute placeholders. Note: `type: composer-plugin`, `require: composer-plugin-api: ^2.6`, `require-dev: composer/composer: ^2.6`, `extra.class: __NAMESPACE_ESCAPED__\\Plugin`, `config.allow-plugins` includes self-allow entry.
+- `.github/workflows/run-tests.yml` — copy (framework-agnostic, 3-cell PHP-only matrix, no Laravel axis; defaults to Pest — the test-framework swap in step 5 retargets it to `vendor/bin/phpunit` if PHPUnit was chosen).
+- `.lpv` — copy (lean-package-validator glob-pattern file; bare globs, no `export-ignore` suffix — see `references/gitattributes-managed-block.md`).
 
 ### 4. Copy `src/Plugin.php` variant per `plugin-shape`
 

@@ -94,6 +94,7 @@ Baseline + php-package additions (12 keys):
 - [ ] `qa` → `["@rector", "@format", "@phpstan-simplified", "@validate-gitattributes"]` (php-package appends `@validate-gitattributes`)
 - [ ] `post-install-cmd` → `["SanderMuller\\PackageBoostPhp\\Scripts\\AutoSync::run"]`
 - [ ] `post-update-cmd` → `["SanderMuller\\PackageBoostPhp\\Scripts\\AutoSync::run"]`
+- [ ] **Floor coupling (ATOMIC)**: if either hook above is MISSING or MISMATCH, the fix MUST also bump `sandermuller/package-boost-php` in `require-dev` to `^0.16.0` in the same change — the façade class first ships in 0.16.0, and a façade callback below that floor silently no-ops the autosync hook (Composer skip-warns via its `class_exists()` guard). See the ATOMIC rule in this category's upgrade phase.
 
 MISMATCH cases worth HIGH severity:
 

@@ -51,6 +51,19 @@ From `$REPO_INIT_HOME/references/per-category-deps.md#skill-bundle` MANDATORY `r
 
 A skill-bundle ships no PHP source — it carries no test runner (no `pestphp/pest` / `phpunit/phpunit`) and the shared dev-dep list (PHPStan / Rector packs) does not apply. Only the two above are mandatory.
 
+## MISSING composer.json scripts
+
+**Read `$REPO_INIT_HOME/references/composer-scripts.md` and follow its audit verification protocol** — one explicit PRESENT / MISSING / MISMATCH verdict per key. `skill-bundle` takes the lean **6-key** set (NOT the baseline 11 — it ships no PHP toolchain), per `references/composer-scripts.md#skill-bundle`:
+
+- [ ] `format` → `vendor/bin/pint`
+- [ ] `validate-gitattributes` → `vendor/bin/lean-package-validator validate`
+- [ ] `qa` → `["@format", "@validate-gitattributes"]`
+- [ ] `qa-check` → `["vendor/bin/pint --test", "@validate-gitattributes"]`
+- [ ] `post-install-cmd` → `["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"]`
+- [ ] `post-update-cmd` → `["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"]`
+
+skill-bundle keeps the **direct boost-core** callback `BoostCore\Scripts\BoostAutoSync::run` (NOT a wrapper façade) — it depends on `sandermuller/boost-core` directly, so that callback is a direct-dep class. This is the correct post-1.4.0 canonical for skill-bundle; do NOT flag it as a stale `BoostAutoSync` reference. MISMATCH cases (POSIX-shell, `::runWithSummary`, or a wrapper façade) are detailed in NON-CANONICAL findings below.
+
 ## OUTDATED files (per merge mode)
 
 For each file present, apply its merge mode from `$REPO_INIT_HOME/references/upgrade-merge-modes.md` — same logic as `audit-php-package.md`, with `skill-bundle` / `shared` stub paths.

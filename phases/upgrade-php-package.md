@@ -61,7 +61,7 @@ Same logic as upgrade-laravel-package.md — apply each file's mode from `$REPO_
 - **`.gitattributes` missing `.ai/ export-ignore`**: insert `.ai/ export-ignore` line after `.agents/ export-ignore` inside the `# >>> package-boost (managed) >>>` block. Preserves alphabetical ordering.
 - **PHP floor `^8.2`**: prompt bump.
 - **Missing `validate-gitattributes` script**: insert it (via composer.json scripts merge above).
-- **`.lpv` warnings on `vendor/bin/lean-package-validator validate`**: each missing export-ignore line listed in the audit. Prompt user: add to `.lpv` AND to `.gitattributes` (inside the package-boost managed block).
+- **`.lpv` warnings on `vendor/bin/lean-package-validator validate`**: each artifact flagged in the audit. Prompt user: add the **bare path** (no `export-ignore` suffix) to `.lpv` AND the `<path> export-ignore` line to `.gitattributes` (inside the package-boost managed block). `.lpv` is a glob-pattern file, not `.gitattributes` syntax — see `references/gitattributes-managed-block.md` (`.lpv` file format).
 
 ## Run package-boost sync
 

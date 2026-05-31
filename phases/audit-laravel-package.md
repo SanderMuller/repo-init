@@ -120,6 +120,7 @@ Baseline (code-bearing) keys:
 - [ ] `qa` → `["@rector", "@format", "@phpstan-simplified"]`
 - [ ] `post-install-cmd` → `["SanderMuller\\PackageBoostLaravel\\Scripts\\AutoSync::run"]`
 - [ ] `post-update-cmd` → `["SanderMuller\\PackageBoostLaravel\\Scripts\\AutoSync::run"]`
+- [ ] **Floor coupling (ATOMIC)**: if either hook above is MISSING or MISMATCH, the fix MUST also bump `sandermuller/package-boost-laravel` in `require-dev` to `^0.10.0` in the same change — the façade class first ships in 0.10.0, and a façade callback below that floor silently no-ops the autosync hook (Composer skip-warns via its `class_exists()` guard). See the ATOMIC rule in this category's upgrade phase.
 
 Workbench keys (unconditional for `laravel-package` per RQ13/RQ39):
 
