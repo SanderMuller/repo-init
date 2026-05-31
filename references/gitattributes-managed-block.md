@@ -40,23 +40,32 @@ CHANGELOG.md            export-ignore
 phpstan-baseline.neon   export-ignore
 phpstan.neon.dist       export-ignore
 phpunit.xml             export-ignore
-phpunit.xml        export-ignore
 pint.json               export-ignore
 rector.php              export-ignore
-testbench.yaml          export-ignore
 tests/                  export-ignore
+```
+
+This universal set is seeded in `stubs/shared/_gitattributes` and shipped by every
+category. Two entries are **laravel-only** — added by the laravel categories'
+own `_gitattributes` (`laravel-package`, `laravel-package-spatie`, `filament-plugin`,
+`nova-tool`), NOT by the framework-agnostic shared block:
+
+```
+testbench.yaml          export-ignore
 workbench/              export-ignore
 ```
 
 Plus per-category extras:
 
-- `php-package`: also `.lpv`, `PUBLIC_API.md`
+- `php-package`, `composer-plugin`, `skill-bundle`: also `.lpv` (the
+  lean-package-validator glob file — see "`.lpv` file format" below). `php-package`
+  additionally ships `PUBLIC_API.md`.
 - `phpstan-extension`: also `extension.neon`
 - `rector-extension`: also `config/` (the extension's own rector config dir — careful, this is a real published path; only the test-fixture `config/` is `export-ignore`d when applicable)
 
 ## `.lpv` file format (NOT `.gitattributes` syntax)
 
-`.lpv` is lean-package-validator's glob-pattern file (`php-package` and `skill-bundle` ship one). It does **not** use `.gitattributes` syntax. Each line is a **bare glob pattern** — one artifact per line, with **no `export-ignore` suffix**:
+`.lpv` is lean-package-validator's glob-pattern file (`php-package`, `composer-plugin`, and `skill-bundle` ship one). It does **not** use `.gitattributes` syntax. Each line is a **bare glob pattern** — one artifact per line, with **no `export-ignore` suffix**:
 
 ```text
 .editorconfig

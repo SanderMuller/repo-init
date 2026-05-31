@@ -18,6 +18,27 @@ The `post-update-cmd` hook re-syncs the skill into `~/.claude/skills/sandermulle
 
 ---
 
+## 1.3.x → 1.4.0 (one-package-install façade)
+
+Additive — no breaking change to repo-init itself. `composer global update sandermuller/repo-init` (+ `composer global exec -- boost sync --scope=user --all`) and you are on 1.4.0.
+
+Scaffolds and the audit/upgrade phases now wire the boost auto-sync hook through each wrapper's own namespace façade instead of boost-core's transitive `BoostAutoSync` class — so a scaffolded package references only a class from its direct dependency and consumers require one boost package, not two.
+
+### Re-auditing repos set up before 1.4.0
+
+Running `audit` on an older scaffold now flags its `post-install-cmd` / `post-update-cmd` as NON-CANONICAL (they name `SanderMuller\BoostCore\Scripts\BoostAutoSync::run`; the new canonical is the per-category wrapper façade):
+
+| Category | New canonical callback | `require-dev` floor |
+|---|---|---|
+| php-package, composer-plugin, rector-extension, phpstan-extension | `SanderMuller\PackageBoostPhp\Scripts\AutoSync::run` | `sandermuller/package-boost-php: ^0.16.0` |
+| laravel-package (+ spatie / filament-plugin / nova-tool) | `SanderMuller\PackageBoostLaravel\Scripts\AutoSync::run` | `sandermuller/package-boost-laravel: ^0.10.0` |
+
+**Atomic rule:** the upgrade swaps the callback AND bumps the wrapper floor in the same change. A façade callback paired with a pre-façade floor references a class that isn't autoloadable, and Composer silently skips the hook (autosync stops) rather than failing loudly. The `upgrade-<category>` phases handle this automatically.
+
+Unchanged: `skill-bundle` keeps `BoostAutoSync::run` (it depends on `boost-core` directly); `laravel-project` keeps its `@php artisan project-boost:sync` hook. Requires the wrapper packages at their façade-introducing releases (`package-boost-php` 0.16.0+, `package-boost-laravel` 0.10.0+).
+
+---
+
 ## 0.8.x → 1.0.0
 
 Stability declaration — no content changes, no breaking changes, no migration steps. `composer global update sandermuller/repo-init` (+ `composer global exec -- boost sync --scope=user --all` per the post-0.8.0 install flow) and you are on 1.0.0.
