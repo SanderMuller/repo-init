@@ -7,6 +7,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Pre-`1.0.0` releases (0.x.x — historical) introduced breaking changes in MINOR bumps; from 1.0.0 onward repo-init follows standard SemVer (breaking changes ship as MAJOR only). The pre-1.0 entries below remain for reference.
 
+## [1.4.0](https://github.com/sandermuller/repo-init/compare/1.3.1...1.4.0) - 2026-05-31
+
+<!-- verified-sha: 4c05f83ba2d49f0d3a7c85d0a77a63c621700eb5 -->
+One-package install. Scaffolds, audits, and upgrades now wire the boost
+auto-sync hook through each wrapper's own namespace façade instead of
+boost-core's transitive `BoostAutoSync` class — so a scaffolded package
+references only a class from its direct dependency, and consumers require one
+boost package, not two.
+
+Requires `package-boost-php` 0.16.0+ and `package-boost-laravel` 0.10.0+ (the
+releases that introduced the façades), both live on Packagist.
+
+### Changed
+
+- The eight wrapper scaffolds now mint `post-install-cmd` / `post-update-cmd`
+  as their wrapper façade rather than `SanderMuller\BoostCore\Scripts\BoostAutoSync::run`:
+  
+  - php-wrapper (`php-package`, `composer-plugin`, `rector-extension`,
+    `phpstan-extension`) → `SanderMuller\PackageBoostPhp\Scripts\AutoSync::run`,
+    floor `sandermuller/package-boost-php: ^0.16.0`.
+  - laravel-wrapper (`laravel-package`, `laravel-package-spatie`,
+    `filament-plugin`, `nova-tool`) → `SanderMuller\PackageBoostLaravel\Scripts\AutoSync::run`,
+    floor `sandermuller/package-boost-laravel: ^0.10.0`.
+  
+  Callback swap and floor bump land as a single change per scaffold — a façade
+  callback is never written without the floor that ships it.
+  
+- The audit and upgrade phases enforce the family-correct callback per
+  category. `references/composer-scripts.md` is the source of truth: it now
+  carries a per-family canonical table plus the floor that ships each façade,
+  and the baseline scripts block forks the callback by wrapper family while
+  keeping every other key shared.
+  
+### Added
+
+- An atomic floor-coupling rule across the upgrade phases. Whenever an upgrade
+  writes a façade callback — inserting a missing hook *or* replacing an old
+  `BoostAutoSync::run` — it bumps the wrapper floor in the same patch. Without
+  this, upgrading a repo still on a pre-façade floor would leave the hook
+  pointing at a class that isn't autoloadable; Composer skip-warns past it via
+  its `class_exists()` guard and auto-sync silently stops running. The rule
+  closes both the swap and the partial-drift insert paths.
+
+### Unchanged
+
+- `skill-bundle` keeps `SanderMuller\BoostCore\Scripts\BoostAutoSync::run` — it
+  depends on `boost-core` directly, so that callback is already a direct-dep
+  class and the façade rule doesn't apply.
+- `laravel-project` keeps its `@php artisan project-boost:sync` hook — an
+  artisan command, never a class callback.
+
+**Full Changelog**: <https://github.com/SanderMuller/repo-init/compare/1.3.1...1.4.0>
+
 ## [1.3.1](https://github.com/sandermuller/repo-init/compare/1.3.0...1.3.1) - 2026-05-29
 
 <!-- verified-sha: 99da238951ec04b36a623f812fb4de06143af18e -->
@@ -23,7 +76,7 @@ Laravel categories are unchanged: they pull `boost-core` transitively through `p
 
 Resolves to boost-core 0.10.0 / package-boost-php 0.12.0 / boost-skills 1.9.2; no advisories.
 
-**Full Changelog**: <https://github.com/SanderMuller/repo-init/compare/1.3.0...1.3.1>
+**Full Changelog**: [https://github.com/SanderMuller/repo-init/compare/1.3.0...1.3.1](https://github.com/SanderMuller/repo-init/compare/1.3.0...1.3.1)
 
 ## [1.3.0](https://github.com/sandermuller/repo-init/compare/1.2.0...1.3.0) - 2026-05-29
 
@@ -118,6 +171,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 For existing scaffolded packages, the next audit walk will surface the `sandermuller/package-boost-php: true` entry as MEDIUM-stale. The upgrade phase handles removal correctly — bump first, then drop the entry.
@@ -206,6 +260,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 No further steps. Scaffold output, the `repo-init` skill, audit/upgrade phases, stubs — all identical to 0.8.1.
@@ -249,6 +304,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 The Composer archive for 0.8.1 contains the full stub tree; downstream scaffolders that broke on 0.8.0 work again.
@@ -277,6 +333,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 The `composer global exec --` form runs `boost` from Composer's global `vendor/bin/` regardless of the user's current directory; the literal `--` stops Composer from interpreting boost's flags as its own. `--scope=user --all` publishes every globally-installed package's `resources/boost/skills/` into `~/.{agent}/skills/<vendor>__<package>/`. See `references/boost-core-user-scope.md` for the full contract.
@@ -293,6 +350,7 @@ repo-init now uses the shared `sandermuller/boost-skills` library (code-review, 
 
 ```bash
 gh release create X.Y.Z --notes-file internal/release-notes-X.Y.Z.md
+
 
 
 
@@ -353,6 +411,7 @@ composer global exec -- boost sync --scope=user --all   # new: global skill refr
 
 
 
+
 ```
 
 `stubs/shared/boost.php` + repo-init's own `boost.php` docblocks updated accordingly.
@@ -382,6 +441,7 @@ Upgrade repo-init itself:
 ```bash
 composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
+
 
 
 
