@@ -31,7 +31,7 @@ Confirm derived `__NAMESPACE__` with the user once.
 
 **Skip per-file if:** the file exists at target path AND no literal `__VENDOR__`/`__PACKAGE__`/etc. placeholders remain.
 
-For each file under `$REPO_INIT_HOME/stubs/shared/`, copy to cwd. Substitute placeholders. Skip `tests/Pest.php` if `test-framework=phpunit`. **Skip `.mcp.json`** — the shared stub ships a Laravel/testbench MCP server config (`vendor/bin/testbench boost:mcp`) which has no equivalent for framework-agnostic Composer plugins.
+For each file under `$REPO_INIT_HOME/stubs/shared/`, copy to cwd. Substitute placeholders. Skip `tests/Pest.php` if `test-framework=phpunit`. **Skip `.mcp.json`** — the shared stub ships a Laravel/testbench MCP server config (`vendor/bin/testbench boost:mcp`) which has no equivalent for framework-agnostic Composer plugins. **Boost config:** the shared boost stub lives at `.config/boost.php` (canonical) — skip it if EITHER `.config/boost.php` OR a legacy root `boost.php` already exists; never create both (boost-core ≥ 0.17 errors on two configs). See `$REPO_INIT_HOME/references/placeholder-rules.md` (Boost config location).
 
 ### 3. Copy composer-plugin stubs (shape-agnostic)
 

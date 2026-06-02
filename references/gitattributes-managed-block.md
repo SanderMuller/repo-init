@@ -29,12 +29,12 @@ Inside the same block, repo-init appends:
 
 ```
 .cache/                 export-ignore
+.config/                export-ignore
 .editorconfig           export-ignore
 .gitattributes          export-ignore
 .gitignore              export-ignore
 .mcp.json               export-ignore
 .phpunit.cache          export-ignore
-boost.php               export-ignore
 composer.lock           export-ignore
 CHANGELOG.md            export-ignore
 phpstan-baseline.neon   export-ignore
@@ -46,7 +46,23 @@ tests/                  export-ignore
 ```
 
 This universal set is seeded in `stubs/shared/_gitattributes` and shipped by every
-category. Two entries are **laravel-only** — added by the laravel categories'
+category. `.config/` (whole-dir) replaced the old `boost.php` entry: it excludes both
+the canonical config `.config/boost.php` AND the gitignored sync-manifest dir
+`.config/boost/` (boost-core ≥ 0.17/0.18 layout) in one line. `.config/` is not part of
+package-boost-php's canonical `ManagedBlockWriter` set, so it is preserved as a *foreign*
+line inside the block on every `boost sync` — repo-init seeds it, the writer keeps it.
+
+> **Anchoring exception — `.config/` in repo-init's OWN `.gitattributes`.** In a
+> *generated package* (and in the stub `_gitattributes`) the entry is the UNANCHORED
+> `.config/ export-ignore` shown above — correct, because that file becomes the target's
+> own repo-root `.gitattributes`. But repo-init's OWN `.gitattributes` MUST use the
+> leading-slash form `/.config/ export-ignore`. repo-init ships `stubs/shared/.config/boost.php`,
+> so an unanchored `.config/` would match `stubs/**/.config/` too and exclude the stub
+> from repo-init's *own* published archive — silently breaking scaffolding. The leading
+> slash root-anchors the match. A maintenance pass that "normalizes" repo-init's self-file
+> down to the stub form would reintroduce that packaging bug — keep it anchored.
+
+Two entries are **laravel-only** — added by the laravel categories'
 own `_gitattributes` (`laravel-package`, `laravel-package-spatie`, `filament-plugin`,
 `nova-tool`), NOT by the framework-agnostic shared block:
 

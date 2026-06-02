@@ -76,7 +76,7 @@ A distributable Composer package whose deliverable is the AI agent skills it shi
 
 - **Denylist, not allowlist** — absent ⇒ copy all of `stubs/shared/`. Consistent with `shared-exclusions`; a newly-added shared stub is caught by the category's bootstrap phase + audit, so silent leakage into a lean category is low-risk.
 - **Entry form** — stub-relative paths, **PRE-rename**: `_gitattributes` (not `.gitattributes`). A trailing `/` marks a directory prefix (`tests/`).
-- Populated for `laravel-project` (Laravel ships its own equivalents; `boost.php` is boost-core-only) and `skill-bundle` (no PHP toolchain). The framework-agnostic categories also skip `.mcp.json` — currently expressed in their bootstrap-phase prose + audit per-category exclusions; the key can be extended to them if a consumer needs it machine-readable.
+- Populated for `laravel-project` (Laravel ships its own equivalents; `.config/boost.php` is boost-core-only) and `skill-bundle` (no PHP toolchain). The framework-agnostic categories also skip `.mcp.json` — currently expressed in their bootstrap-phase prose + audit per-category exclusions; the key can be extended to them if a consumer needs it machine-readable.
 
 ### `phpstan-extension` Laravel-aware
 

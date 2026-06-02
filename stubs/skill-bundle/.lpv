@@ -7,7 +7,7 @@
 .cache/
 CHANGELOG.md
 composer.lock
-boost.php
+.config/
 pint.json
 AGENTS.md
 CLAUDE.md

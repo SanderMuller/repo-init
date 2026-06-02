@@ -80,10 +80,20 @@ Run after every upgrade phase. If anything is red, stop and report to the user b
 - [ ] `.claude/skills/repo-init/SKILL.md` still present (sync didn't accidentally remove it).
 - [ ] `.claude/skills/`, `.cursor/skills/`, `.agents/skills/` reflect any new or updated `.ai/skills/` content from the upgrade.
 
+## Boost config layout (`.config/` canonical)
+
+Applies to every category except `laravel-project` (which has no boost-core config).
+
+- [ ] `.config/boost.php` is present (the canonical config location).
+- [ ] No root `boost.php` remains — if the upgrade migrated one, it was **moved**, not copied. Both present is a hard error (`AmbiguousBoostConfigException`).
+- [ ] The gitignored sync manifest is at `.config/boost/manifest.json` (not root `.boost/`); `vendor/bin/boost sync --check` may report a one-time stale-manifest cleanup as advisory — that is expected, not drift.
+- [ ] The `.gitattributes` managed block contains `.config/ export-ignore` and no stale `boost.php export-ignore` line.
+
 ## Stop conditions
 
 Stop and report to the user if ANY of:
 
+- BOTH `.config/boost.php` AND a root `boost.php` exist (boost-core hard error — every `boost` command throws until one is removed).
 - `composer install` fails post-upgrade.
 - A package was installed in BOTH `require` and `require-dev` (`composer show` reveals).
 - Both larastan + bare phpstan are installed.

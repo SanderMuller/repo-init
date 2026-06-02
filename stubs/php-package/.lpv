@@ -7,7 +7,7 @@
 .cache/
 CHANGELOG.md
 composer.lock
-boost.php
+.config/
 phpstan-baseline.neon
 phpstan.neon.dist
 phpunit.xml

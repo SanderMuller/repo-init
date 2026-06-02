@@ -84,6 +84,7 @@ Don't touch `extra.laravel.providers` for laravel-project — Laravel uses `extr
 - **Both larastan + bare phpstan**: prompt to remove `phpstan/phpstan`.
 - **`composer.lock` NOT committed** (rare — Laravel convention is to commit it for apps): prompt to add to git.
 - **Two managed blocks in `.gitattributes`**: same as upgrade-laravel-package.md.
+- **`minimum-stability` / `prefer-stable` deviation**: add `"minimum-stability": "stable"` + `"prefer-stable": true` to `composer.json` if absent or if `prefer-stable` isn't `true` (the Laravel skeleton ships both; see `references/version-defaults.md`). If `minimum-stability` is looser than `stable`, prompt before tightening; never loosen a passing `stable` baseline.
 
 ## Apply `.gitignore` append-only
 
