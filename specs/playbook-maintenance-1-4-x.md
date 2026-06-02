@@ -24,7 +24,7 @@ that — it addresses adjacent defects:
 
 - **Shipped-stub gap — composer-plugin `.lpv`.** `stubs/composer-plugin/` ships
   `validate-gitattributes` (in `qa`/`qa-check`) but no `.lpv`. `php-package` ships
-  one precisely so the validator checks project-specific artifacts (`boost.php`,
+  one precisely so the validator checks project-specific artifacts (`.config/`,
   `.ai/`, `.claude/`, `.cache/`) that lean-package-validator's default preset
   doesn't know about. Without it, composer-plugin's `validate-gitattributes` runs
   against the default preset and under-validates. (Verified.)

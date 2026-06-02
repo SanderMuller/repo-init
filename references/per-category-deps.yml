@@ -87,7 +87,7 @@ categories:
       - .gitignore          # append-only merge into Laravel's
       - phpunit.xml         # Laravel ships its own
       - README.md           # laravel-project appends via README.append.md
-      - boost.php           # laravel-project uses laravel/boost, not boost-core
+      - .config/boost.php   # laravel-project uses laravel/boost, not boost-core (stub at stubs/shared/.config/boost.php)
       - tests/              # Laravel ships its own test suite
 
   laravel-package:

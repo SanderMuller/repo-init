@@ -23,7 +23,25 @@ Exact derivation rules for the placeholders used in `stubs/`. No agent guessing.
 | `__TEST_COVERAGE_FLAG__` | per `--test-framework=`, the `test-coverage` script flag | `--coverage` (pest) or `--coverage-html=coverage` (phpunit) |
 | `__SKILL_TAGS__` | per the bootstrap skill-tag picker; a comma-separated list of quoted `sandermuller/boost-skills` tag strings, or empty | `'php', 'jira'` (or empty) |
 
-`__SKILL_TAGS__` is unique: it substitutes into a variadic call — `->withTags(__SKILL_TAGS__)` in `stubs/shared/boost.php`. The substitution is the bare argument list (`'php', 'jira'`) with NO surrounding brackets; an empty pick yields `->withTags()`, a valid no-op. Only `stubs/shared/boost.php` uses it.
+`__SKILL_TAGS__` is unique: it substitutes into a variadic call — `->withTags(__SKILL_TAGS__)` in `stubs/shared/.config/boost.php`. The substitution is the bare argument list (`'php', 'jira'`) with NO surrounding brackets; an empty pick yields `->withTags()`, a valid no-op. Only `stubs/shared/.config/boost.php` uses it.
+
+## Boost config location (canonical: `.config/boost.php`)
+
+boost-core ≥ 0.17 resolves its config from EITHER `.config/boost.php` OR a root
+`boost.php`, and **erroring out if both exist** (`AmbiguousBoostConfigException`).
+repo-init scaffolds the `.config/` layout as canonical: the shared stub lives at
+`stubs/shared/.config/boost.php`, and the bootstrap copy (which mirrors relative
+subpaths) lands it at `.config/boost.php` in the target. Under this layout boost-core
+also keeps its gitignored sync manifest at `.config/boost/` (not root `.boost/`) and
+ignores it via the managed `.gitignore` block — both handled automatically by
+`vendor/bin/boost sync`.
+
+**Both-present guard (bootstrap idempotency).** When copying the boost config, skip it
+if EITHER `.config/boost.php` OR a legacy root `boost.php` already exists in the target.
+Never create `.config/boost.php` alongside an existing root `boost.php` — two configs is
+a hard error in boost-core. Bootstrap does not migrate a legacy root `boost.php`; that is
+the upgrade phase's job (`upgrade-<category>.md`). `laravel-project` has no boost-core
+config at all — it uses `laravel/boost`.
 
 ## StudlyCase rule
 

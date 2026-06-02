@@ -32,7 +32,7 @@ Confirm derived `__NAMESPACE__` with the user once.
 
 **Skip per-file if:** the file exists at target path AND no literal placeholders remain.
 
-For each file under `$REPO_INIT_HOME/stubs/shared/`, copy to cwd. Substitute placeholders. **Use `phpunit.xml`, skip `tests/Pest.php`** (phpstan-extension uses PHPUnit per above). **Skip `.mcp.json`** — the shared stub ships a Laravel/testbench MCP server config with no equivalent for framework-agnostic phpstan extensions.
+For each file under `$REPO_INIT_HOME/stubs/shared/`, copy to cwd. Substitute placeholders. **Use `phpunit.xml`, skip `tests/Pest.php`** (phpstan-extension uses PHPUnit per above). **Skip `.mcp.json`** — the shared stub ships a Laravel/testbench MCP server config with no equivalent for framework-agnostic phpstan extensions. **Boost config:** the shared boost stub lives at `.config/boost.php` (canonical) — skip it if EITHER `.config/boost.php` OR a legacy root `boost.php` already exists; never create both (boost-core ≥ 0.17 errors on two configs). See `$REPO_INIT_HOME/references/placeholder-rules.md` (Boost config location).
 
 ### 3. Copy phpstan-extension stubs
 

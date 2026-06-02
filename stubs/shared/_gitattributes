@@ -11,6 +11,7 @@
 .cache/ export-ignore
 .claude/ export-ignore
 .cursor/ export-ignore
+.config/ export-ignore
 .editorconfig export-ignore
 .gitattributes export-ignore
 .github/ export-ignore
@@ -20,7 +21,6 @@
 .mcp.json export-ignore
 .phpunit.cache export-ignore
 AGENTS.md export-ignore
-boost.php export-ignore
 CHANGELOG.md export-ignore
 CLAUDE.md export-ignore
 composer.lock export-ignore

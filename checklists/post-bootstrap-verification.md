@@ -26,7 +26,8 @@ Still applies to `skill-bundle`: Composer integrity (it is a library — lockfil
 
 ## File presence
 
-- [ ] All shared stubs present: `.editorconfig`, `.gitattributes`, `.gitignore`, `boost.php` (all categories except `laravel-project`, which uses `laravel/boost`), `.mcp.json`, `pint.json`, `phpstan-baseline.neon`, `phpunit.xml` OR `tests/Pest.php` (per test-framework).
+- [ ] All shared stubs present: `.editorconfig`, `.gitattributes`, `.gitignore`, `.config/boost.php` (all categories except `laravel-project`, which uses `laravel/boost`), `.mcp.json`, `pint.json`, `phpstan-baseline.neon`, `phpunit.xml` OR `tests/Pest.php` (per test-framework).
+  - Boost config layout: a greenfield bootstrap produces `.config/boost.php` (canonical). If the target already had a **legacy root `boost.php`**, bootstrap deliberately left it in place (it does not copy a second config — two configs is a hard error). That is NOT a bootstrap failure — it's drift: do NOT add `.config/boost.php` alongside it. Route the user to `upgrade-<category>.md` to MIGRATE (move, not copy). Never both present.
 - [ ] Baseline OSS meta files present: `README.md`, `LICENSE`, `CHANGELOG.md`, `SECURITY.md`. Missing any of these is a stop condition. README content follows the `readme` skill from `sandermuller/package-boost`; `CHANGELOG.md` uses Keep a Changelog format with an `## [Unreleased]` section seeded but otherwise empty.
 - [ ] `.github/dependabot.yml` and all 4 shared workflows (`phpstan.yml`, `pint-check.yml`, `rector-check.yml`, `update-changelog.yml`) present.
 - [ ] Category-specific `.github/workflows/run-tests.yml` present.

@@ -19,7 +19,7 @@ None for `skill-bundle`. The category has no sub-flags.
 - [ ] `.editorconfig`
 - [ ] `.gitattributes` (with the `# >>> package-boost (managed) >>>` block)
 - [ ] `.gitignore`
-- [ ] `boost.php` (boost-core agent config — pins claude-code / copilot / codex)
+- [ ] `.config/boost.php` (boost-core agent config — pins claude-code / copilot / codex; canonical location, boost-core ≥ 0.17). A legacy root `boost.php` does NOT satisfy this — see NON-CANONICAL findings (it is flagged as drift to migrate).
 - [ ] `pint.json`
 - [ ] `.github/workflows/pint-check.yml`
 - [ ] `.github/workflows/update-changelog.yml`
@@ -70,6 +70,9 @@ For each file present, apply its merge mode from `$REPO_INIT_HOME/references/upg
 
 ## NON-CANONICAL findings
 
+- [ ] **`minimum-stability` / `prefer-stable` deviation** (LOW severity): canonical `composer.json` declares `"minimum-stability": "stable"` and `"prefer-stable": true` (see `references/version-defaults.md`). Flag NON-CANONICAL if either key is absent, if `prefer-stable` is not `true`, or if `minimum-stability` is looser than `stable` (`dev` / `alpha` / `beta` / `RC`). **Exception:** an early-stage v0.x package MAY intentionally set `minimum-stability: dev` WITH `prefer-stable: true` — confirm intent before flagging; that documented combination is not drift. Fix: add/normalise both keys via the matching `upgrade-<category>.md` (don't loosen a passing `stable` baseline).
+- [ ] **Legacy root `boost.php` (boost config not under `.config/`)** (MEDIUM severity, DRIFT): boost-core ≥ 0.17's canonical location is `.config/boost.php`. A root `boost.php` still works but is non-canonical. Flag NON-CANONICAL; suggest migration via `phases/upgrade-skill-bundle.md` (MOVE the file — never copy).
+- [ ] **BOTH `.config/boost.php` AND root `boost.php` present** (HIGH severity, URGENT): two configs is a hard error in boost-core ≥ 0.17 (`AmbiguousBoostConfigException`) — `vendor/bin/boost sync` / `install` / any config resolve will throw. Flag NON-CANONICAL; fix = remove the root `boost.php`, keep `.config/boost.php`.
 - [ ] **`config.allow-plugins` lists `sandermuller/boost-core`** (MEDIUM severity, stale post boost-core 0.6.0): from boost-core 0.6.0, `sandermuller/boost-core` is `type: library`, no longer a composer-plugin. The `sandermuller/boost-core: true` allow-plugins entry is a leftover from pre-0.6.0 scaffolds — Composer ignores it, harmless but stale. Flag NON-CANONICAL; suggest removal. (For `skill-bundle`, `config.allow-plugins` is typically empty post-0.6.0 — the category ships no other composer-plugin dev deps.)
 - [ ] **`sandermuller/boost-core` in `require-dev` instead of `require`** (HIGH severity): `require-dev` is not transitive — consumers of the skill-bundle would not receive boost-core and could not sync the shipped skills. Flag; move to `require`.
 - [ ] **`pestphp/pest` / `phpunit/phpunit` in `require-dev`** (LOW severity): a skill-bundle ships no PHP source — a test runner has nothing to run. Note it; suggest removal unless the bundle ships a genuine helper test suite (then it's EXTRA, not flagged).

@@ -49,7 +49,7 @@ The two variants differ in `composer.json` (spatie has `spatie/laravel-package-t
 
 **If precondition met:** skip — shared stubs already copied + substituted.
 
-**Otherwise:** for each file under `$REPO_INIT_HOME/stubs/shared/`, copy to the same relative path in cwd. Substitute placeholders per `$REPO_INIT_HOME/references/placeholder-rules.md`.
+**Otherwise:** for each file under `$REPO_INIT_HOME/stubs/shared/`, copy to the same relative path in cwd. Substitute placeholders per `$REPO_INIT_HOME/references/placeholder-rules.md`. **Boost config:** the shared boost stub lives at `.config/boost.php` (canonical) — skip it if EITHER `.config/boost.php` OR a legacy root `boost.php` already exists; never create both (boost-core ≥ 0.17 errors on two configs). See `placeholder-rules.md` (Boost config location).
 
 Special handling for `tests/`: copy `tests/Pest.php` only when `test-framework=pest`; skip when `phpunit`.
 

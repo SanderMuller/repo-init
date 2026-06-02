@@ -18,6 +18,25 @@ The `post-update-cmd` hook re-syncs the skill into `~/.claude/skills/sandermulle
 
 ---
 
+## 1.4.x → 1.5.0 (`.config/boost.php` canonical layout)
+
+Additive — no breaking change to repo-init itself. `composer global update sandermuller/repo-init` (+ `composer global exec -- boost sync --scope=user --all`) and you are on 1.5.0.
+
+boost-core 0.17 added `.config/boost.php` as an alternative config location and 0.18 moved the gitignored sync manifest to `.config/boost/` under that layout. From 1.5.0, repo-init scaffolds the **`.config/` layout as canonical**: bootstrap writes `.config/boost.php` (not a root `boost.php`), audit flags a legacy root `boost.php` as drift, and upgrade migrates it. The boost-core floor moved to `^0.18.0` (repo-init itself + the `skill-bundle` stub's direct require; the other categories get it transitively through `package-boost-php` ≥ 0.16.2 / `package-boost-laravel`, which already permit it).
+
+### Re-auditing repos set up before 1.5.0
+
+Running `audit` on an older scaffold flags two new NON-CANONICAL findings:
+
+- **Legacy root `boost.php`** (MEDIUM, drift) — boost-core still reads it, but `.config/boost.php` is canonical. `upgrade-<category>` migrates it: it **moves** (never copies) `boost.php → .config/boost.php`, ensures boost-core ≥ 0.18, and runs `vendor/bin/boost sync` (which auto-migrates the manifest `.boost/ → .config/boost/` and rewrites the managed `.gitignore` / `.gitattributes` blocks).
+- **Both `.config/boost.php` AND root `boost.php` present** (HIGH, urgent) — two configs is a hard error in boost-core ≥ 0.17 (`AmbiguousBoostConfigException`); any `boost` command throws. Fix: remove the root copy, keep `.config/boost.php`.
+
+The dist-exclusion entry in the `.gitattributes` managed block changed from `boost.php export-ignore` to `.config/ export-ignore` (one whole-dir entry covering both `.config/boost.php` and the gitignored `.config/boost/`). It is a preserved foreign line — `boost sync` keeps it. `.lpv` files swap their `boost.php` glob for `.config/`.
+
+Unchanged: `laravel-project` still has no boost-core config (it uses `laravel/boost`). Not breaking — a root `boost.php` keeps working; this only changes where repo-init *puts* it and what audit prefers.
+
+---
+
 ## 1.3.x → 1.4.0 (one-package-install façade)
 
 Additive — no breaking change to repo-init itself. `composer global update sandermuller/repo-init` (+ `composer global exec -- boost sync --scope=user --all`) and you are on 1.4.0.

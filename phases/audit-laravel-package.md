@@ -26,7 +26,7 @@ Check each expected path. If absent, mark MISSING and add to the report.
 - [ ] `.editorconfig`
 - [ ] `.gitattributes` (and the `# >>> package-boost (managed) >>>` block exists inside it)
 - [ ] `.gitignore`
-- [ ] `boost.php` (boost-core agent config — pins claude-code / copilot / codex)
+- [ ] `.config/boost.php` (boost-core agent config — pins claude-code / copilot / codex; canonical location, boost-core ≥ 0.17). A legacy root `boost.php` does NOT satisfy this — see NON-CANONICAL findings (it is flagged as drift to migrate).
 - [ ] `.mcp.json`
 - [ ] `pint.json`
 - [ ] `phpstan.neon.dist`
@@ -147,6 +147,9 @@ For each file present, look up its merge mode in `$REPO_INIT_HOME/references/upg
 
 ## NON-CANONICAL findings
 
+- [ ] **`minimum-stability` / `prefer-stable` deviation** (LOW severity): canonical `composer.json` declares `"minimum-stability": "stable"` and `"prefer-stable": true` (see `references/version-defaults.md`). Flag NON-CANONICAL if either key is absent, if `prefer-stable` is not `true`, or if `minimum-stability` is looser than `stable` (`dev` / `alpha` / `beta` / `RC`). **Exception:** an early-stage v0.x package MAY intentionally set `minimum-stability: dev` WITH `prefer-stable: true` — confirm intent before flagging; that documented combination is not drift. Fix: add/normalise both keys via the matching `upgrade-<category>.md` (don't loosen a passing `stable` baseline).
+- [ ] **Legacy root `boost.php` (boost config not under `.config/`)** (MEDIUM severity, DRIFT): boost-core ≥ 0.17's canonical location is `.config/boost.php`. A root `boost.php` still works but is non-canonical. Flag NON-CANONICAL; suggest migration via `phases/upgrade-laravel-package.md` (MOVE the file — never copy).
+- [ ] **BOTH `.config/boost.php` AND root `boost.php` present** (HIGH severity, URGENT): two configs is a hard error in boost-core ≥ 0.17 (`AmbiguousBoostConfigException`) — `vendor/bin/boost sync` / `install` / any config resolve will throw. Flag NON-CANONICAL; fix = remove the root `boost.php`, keep `.config/boost.php`.
 - [ ] **`config.allow-plugins` lists `sandermuller/package-boost-php`** (MEDIUM severity, stale post package-boost-php 0.9.0): a `composer.json` that requires `sandermuller/package-boost-laravel` (0.7.3+) transitively pulls `sandermuller/package-boost-php` — `type: library` from 0.9.0 (dropped the Composer plugin; subcommands moved to `vendor/bin/package-boost-php`). The `sandermuller/package-boost-php: true` entry is a leftover from pre-0.9.0 scaffolds — Composer ignores it, harmless but stale. Flag NON-CANONICAL; suggest removal.
 - [ ] **`config.allow-plugins` lists `sandermuller/boost-core`** (MEDIUM severity, stale post boost-core 0.6.0): boost-core is `type: library` from 0.6.0, no longer a composer-plugin. The `sandermuller/boost-core: true` entry is a leftover from pre-0.6.0 scaffolds — Composer ignores it, harmless but stale. Flag NON-CANONICAL; suggest removal.
 - [ ] **`config.allow-plugins` lists `sandermuller/package-boost-laravel`** (LOW severity, always-was-stale): `package-boost-laravel` has always been `type: library`, never a composer-plugin. The entry was never correct. Composer ignores it. Flag NON-CANONICAL; suggest removal.

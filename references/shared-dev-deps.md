@@ -42,7 +42,7 @@ Test-framework split (`test-framework=pest|phpunit`):
 - `tomasvotruba/type-coverage` — enforces 100% type coverage.
 - `nunomaduro/collision` — better error output in CLI.
 - `orchestra/testbench` — package-category test bootstrap (no longer required for AI sync; boost-core's standalone bin handles that).
-- `sandermuller/boost-skills` — the boost-skills skill library (generic dev-workflow skills: code-review, bug-fixing, write-spec, evaluate, …). Synced via boost-core; the active subset is filtered by the `withTags()` call in `boost.php`. **Excluded for `laravel-project`** — it uses `laravel/boost`, not boost-core, so boost-skills would be inert there. `skill-bundle` hand-lists it in its own `mandatory.require-dev` because it opts out of the shared list (`consumes-shared-dev-deps: false`).
+- `sandermuller/boost-skills` — the boost-skills skill library (generic dev-workflow skills: code-review, bug-fixing, write-spec, evaluate, …). Synced via boost-core; the active subset is filtered by the `withTags()` call in `.config/boost.php`. **Excluded for `laravel-project`** — it uses `laravel/boost`, not boost-core, so boost-skills would be inert there. `skill-bundle` hand-lists it in its own `mandatory.require-dev` because it opts out of the shared list (`consumes-shared-dev-deps: false`).
 
 The boost-family umbrella is assigned **per category** — see the line above the "Why these" heading and, for the full mapping + the `config.allow-plugins` rule, `per-category-deps.md` → "boost-family umbrella" (its single source of truth).
 
