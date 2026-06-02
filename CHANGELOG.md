@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Pre-`1.0.0` releases (0.x.x — historical) introduced breaking changes in MINOR bumps; from 1.0.0 onward repo-init follows standard SemVer (breaking changes ship as MAJOR only). The pre-1.0 entries below remain for reference.
 
+## [1.5.0](https://github.com/sandermuller/repo-init/compare/1.4.2...1.5.0) - 2026-06-02
+
+<!-- verified-sha: a45ac0f5a5a14315ae097e2c6af48b7a54896892 -->
+`.config/boost.php` is now the canonical boost-core config layout for everything repo-init scaffolds, audits, and upgrades.
+
+boost-core 0.17 introduced `.config/boost.php` as an alternative to a root `boost.php`, and 0.18 grouped the gitignored sync manifest under `.config/boost/`. From 1.5.0, repo-init treats the `.config/` layout as the default rather than the repo root — and dogfoods it in its own config.
+
+### Added
+
+- **Canonical `.config/boost.php` scaffolding.** New packages — every category except `laravel-project`, which uses `laravel/boost` — get their boost-core config at `.config/boost.php` instead of a root `boost.php`. Bootstrap skips the copy when either location already holds a config, so it never creates the two-config state boost-core rejects.
+- **`.config/` drift detection in audit.** Audit flags a legacy root `boost.php` as drift (migrate to `.config/`), and flags the both-present case as an urgent hard error — `AmbiguousBoostConfigException`, where every `boost` command throws until one config is removed.
+- **`.config/` migration in upgrade.** Each upgrade phase gained a step that moves a legacy root `boost.php` to `.config/boost.php` (move, never copy), ensures boost-core ≥ 0.18, and runs `boost sync` to migrate the manifest (`.boost/` → `.config/boost/`) and the managed `.gitignore` / `.gitattributes` blocks.
+- **`minimum-stability` / `prefer-stable` audit check.** All audit phases now flag a `composer.json` that is missing `"minimum-stability": "stable"` / `"prefer-stable": true`, or has them set looser. The early-stage `minimum-stability: dev` + `prefer-stable: true` combination is treated as an allowed exception, not drift.
+
+### Changed
+
+- **boost-core floor raised to `^0.18.0`** where it is a direct dependency — repo-init itself and the `skill-bundle` stub. The other categories receive boost-core 0.18 transitively through their boost umbrella (`package-boost-php` ≥ 0.16.2 / `package-boost-laravel`).
+- **Dist exclusion** in scaffolded `.gitattributes` and `.lpv` now uses a single whole-dir `.config/` entry covering both `.config/boost.php` and the gitignored `.config/boost/`.
+
+### Migration
+
+Existing packages keep working — a root `boost.php` is still valid boost-core config. Re-running `audit-<category>` on a pre-1.5.0 scaffold surfaces the root config as drift, and `upgrade-<category>` migrates it. See `UPGRADING.md` (`1.4.x → 1.5.0`) for the full migration, including the anchored-`.gitattributes` requirement and the both-present hard-error guard.
+
+**Full Changelog**: <https://github.com/SanderMuller/repo-init/compare/1.4.2...1.5.0>
+
 ## [1.4.2](https://github.com/sandermuller/repo-init/compare/1.4.1...1.4.2) - 2026-05-31
 
 <!-- verified-sha: 9c82475f50da1f9c1e1a4a76e2a0488e9bc8d079 -->
@@ -30,7 +55,7 @@ Documentation patch. No scaffold-output or behavior change.
   never relies on self-heal as a precondition, since the scaffold floor is
   `^0.16.0`). The legacy two-block fallback is marked superseded.
   
-**Full Changelog**: <https://github.com/SanderMuller/repo-init/compare/1.4.1...1.4.2>
+**Full Changelog**: [https://github.com/SanderMuller/repo-init/compare/1.4.1...1.4.2](https://github.com/SanderMuller/repo-init/compare/1.4.1...1.4.2)
 
 ## [1.4.1](https://github.com/sandermuller/repo-init/compare/1.4.0...1.4.1) - 2026-05-31
 
@@ -244,6 +269,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 For existing scaffolded packages, the next audit walk will surface the `sandermuller/package-boost-php: true` entry as MEDIUM-stale. The upgrade phase handles removal correctly — bump first, then drop the entry.
@@ -335,6 +361,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 No further steps. Scaffold output, the `repo-init` skill, audit/upgrade phases, stubs — all identical to 0.8.1.
@@ -381,6 +408,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 The Composer archive for 0.8.1 contains the full stub tree; downstream scaffolders that broke on 0.8.0 work again.
@@ -412,6 +440,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 The `composer global exec --` form runs `boost` from Composer's global `vendor/bin/` regardless of the user's current directory; the literal `--` stops Composer from interpreting boost's flags as its own. `--scope=user --all` publishes every globally-installed package's `resources/boost/skills/` into `~/.{agent}/skills/<vendor>__<package>/`. See `references/boost-core-user-scope.md` for the full contract.
@@ -428,6 +457,7 @@ repo-init now uses the shared `sandermuller/boost-skills` library (code-review, 
 
 ```bash
 gh release create X.Y.Z --notes-file internal/release-notes-X.Y.Z.md
+
 
 
 
@@ -494,6 +524,7 @@ composer global exec -- boost sync --scope=user --all   # new: global skill refr
 
 
 
+
 ```
 
 `stubs/shared/boost.php` + repo-init's own `boost.php` docblocks updated accordingly.
@@ -523,6 +554,7 @@ Upgrade repo-init itself:
 ```bash
 composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
+
 
 
 
