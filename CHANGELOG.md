@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Pre-`1.0.0` releases (0.x.x — historical) introduced breaking changes in MINOR bumps; from 1.0.0 onward repo-init follows standard SemVer (breaking changes ship as MAJOR only). The pre-1.0 entries below remain for reference.
 
+## [1.5.1](https://github.com/sandermuller/repo-init/compare/1.5.0...1.5.1) - 2026-06-03
+
+<!-- verified-sha: d6fe3777e385c050bd7d4e854883713d24a6d2e8 -->
+A guidance + floor refinement on top of 1.5.0's `.config/boost.php` work. Additive — a package on the previous floors keeps working, and `minimum-stability: stable` repos are unaffected.
+
+### Changed
+
+- **Firmer `minimum-stability` / `prefer-stable` audit guidance.** `stable` is now stated as the default expectation at every release. A looser `minimum-stability` (`dev` + `prefer-stable: true`) is treated as a *justified exception, not a free pass* — legitimate only while a package is actively co-developed against unreleased sibling packages. Being on `0.x` is not by itself a justification, and a package with downstream / production dependents should lean `stable` (the finding escalates to MEDIUM severity there). The audit's default recommendation is now to tighten to `stable`. Applied across all 7 audit phases, all 7 upgrade phases, and `references/version-defaults.md`.
+- **Canonical boost floors raised.** Scaffolded and recommended floors moved to `sandermuller/boost-core: ^0.19.0` (the `skill-bundle` direct require + repo-init itself) and `sandermuller/package-boost-php: ^0.17.0` (the framework-agnostic categories' umbrella). `package-boost-php` 0.17 requires `boost-core ^0.18||^0.19`, so the `.config/` layout — which needs boost-core ≥ 0.18 — stays satisfied transitively. `package-boost-laravel` is unchanged (`^0.10.0`). Re-auditing a pre-1.5.1 scaffold flags the old floor; the matching `upgrade-<category>` bumps it.
+
+### Internal
+
+- Removed repo-init's own orphaned root `.lpv` (a leftover of the long-removed, structurally-incompatible lean-package-validator gate). No consumer-facing effect.
+
+### Migration
+
+See `UPGRADING.md` (`1.5.0 → 1.5.1`). Nothing breaking: the prior floors still resolve, and a `stable` baseline is already canonical.
+
+**Full Changelog**: <https://github.com/SanderMuller/repo-init/compare/1.5.0...1.5.1>
+
 ## [1.5.0](https://github.com/sandermuller/repo-init/compare/1.4.2...1.5.0) - 2026-06-02
 
 <!-- verified-sha: a45ac0f5a5a14315ae097e2c6af48b7a54896892 -->
@@ -30,7 +50,7 @@ boost-core 0.17 introduced `.config/boost.php` as an alternative to a root `boos
 
 Existing packages keep working — a root `boost.php` is still valid boost-core config. Re-running `audit-<category>` on a pre-1.5.0 scaffold surfaces the root config as drift, and `upgrade-<category>` migrates it. See `UPGRADING.md` (`1.4.x → 1.5.0`) for the full migration, including the anchored-`.gitattributes` requirement and the both-present hard-error guard.
 
-**Full Changelog**: <https://github.com/SanderMuller/repo-init/compare/1.4.2...1.5.0>
+**Full Changelog**: [https://github.com/SanderMuller/repo-init/compare/1.4.2...1.5.0](https://github.com/SanderMuller/repo-init/compare/1.4.2...1.5.0)
 
 ## [1.4.2](https://github.com/sandermuller/repo-init/compare/1.4.1...1.4.2) - 2026-05-31
 
@@ -270,6 +290,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 For existing scaffolded packages, the next audit walk will surface the `sandermuller/package-boost-php: true` entry as MEDIUM-stale. The upgrade phase handles removal correctly — bump first, then drop the entry.
@@ -362,6 +383,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 No further steps. Scaffold output, the `repo-init` skill, audit/upgrade phases, stubs — all identical to 0.8.1.
@@ -409,6 +431,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 The Composer archive for 0.8.1 contains the full stub tree; downstream scaffolders that broke on 0.8.0 work again.
@@ -441,6 +464,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 The `composer global exec --` form runs `boost` from Composer's global `vendor/bin/` regardless of the user's current directory; the literal `--` stops Composer from interpreting boost's flags as its own. `--scope=user --all` publishes every globally-installed package's `resources/boost/skills/` into `~/.{agent}/skills/<vendor>__<package>/`. See `references/boost-core-user-scope.md` for the full contract.
@@ -457,6 +481,7 @@ repo-init now uses the shared `sandermuller/boost-skills` library (code-review, 
 
 ```bash
 gh release create X.Y.Z --notes-file internal/release-notes-X.Y.Z.md
+
 
 
 
@@ -525,6 +550,7 @@ composer global exec -- boost sync --scope=user --all   # new: global skill refr
 
 
 
+
 ```
 
 `stubs/shared/boost.php` + repo-init's own `boost.php` docblocks updated accordingly.
@@ -554,6 +580,7 @@ Upgrade repo-init itself:
 ```bash
 composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
+
 
 
 
