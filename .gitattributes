@@ -16,7 +16,6 @@
 /.github/ export-ignore
 /.gitignore export-ignore
 /.idea/ export-ignore
-/.lpv export-ignore
 /.markdownlint.json export-ignore
 /AGENTS.md export-ignore
 /CHANGELOG.md export-ignore
