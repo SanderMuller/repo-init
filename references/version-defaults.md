@@ -46,7 +46,7 @@ See `pest-vs-phpunit.md` for full rationale.
 - `minimum-stability: stable`
 - `prefer-stable: true`
 
-`composer.json` includes both. Exception: very-early-stage packages may opt into `dev` with `minimum-stability: dev` + `prefer-stable: true`. Phase file asks if the user wants this for v0.x packages.
+`composer.json` includes both — `stable` is the default and the expected value at every release. A looser `minimum-stability` (`dev` + `prefer-stable: true`) is a **justified exception, not a default**: legitimate only while a package is actively co-developed against UNRELEASED sibling packages, and only when the author deliberately opts in. Being on `0.x` does not by itself justify `dev`; a package with downstream / production dependents should lean `stable`, because `prefer-stable` narrows but does not remove the risk of resolving unreleased code into a tagged release. The audit's default recommendation is to tighten to `stable` unless the author confirms an active co-development reason to keep `dev`.
 
 ## Composer plugin allowlist
 

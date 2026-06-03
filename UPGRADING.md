@@ -18,6 +18,20 @@ The `post-update-cmd` hook re-syncs the skill into `~/.claude/skills/sandermulle
 
 ---
 
+## 1.5.0 → 1.5.1
+
+Additive — no breaking change to repo-init itself. `composer global update sandermuller/repo-init` (+ `composer global exec -- boost sync --scope=user --all`) and you are on 1.5.1.
+
+Three refinements:
+
+- **Firmer `minimum-stability` audit guidance.** `stable` is now stated as the **default expectation** at every release; a looser `minimum-stability` (`dev` + `prefer-stable: true`) is a *justified exception*, not a free pass — legitimate only while a package is actively co-developed against UNRELEASED sibling packages. Being on `0.x` is **not** by itself a justification, and a package with downstream / production dependents should lean `stable` (the finding escalates to MEDIUM severity there). The default recommendation is to tighten to `stable`.
+- **Canonical boost floors raised.** The scaffolded / recommended floors moved to `sandermuller/boost-core: ^0.19.0` (skill-bundle's direct require + repo-init itself) and `sandermuller/package-boost-php: ^0.17.0` (the framework-agnostic categories' umbrella). `package-boost-php` 0.17 requires `boost-core ^0.18||^0.19`, so the `.config/` layout (which needs boost-core ≥ 0.18) stays satisfied transitively. `package-boost-laravel` is unchanged (`^0.10.0`). Re-auditing a pre-1.5.1 scaffold flags the old floor; the matching `upgrade-<category>` bumps it.
+- **Internal cleanup.** Removed repo-init's own orphaned root `.lpv` (a leftover of the long-removed, structurally-incompatible lpv gate) — no consumer-facing effect.
+
+Not breaking: a package on the previous floors keeps working; `minimum-stability: stable` repos are unaffected.
+
+---
+
 ## 1.4.x → 1.5.0 (`.config/boost.php` canonical layout)
 
 Additive — no breaking change to repo-init itself. `composer global update sandermuller/repo-init` (+ `composer global exec -- boost sync --scope=user --all`) and you are on 1.5.0.
