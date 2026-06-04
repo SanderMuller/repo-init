@@ -31,7 +31,7 @@ None for `skill-bundle`. The category has no sub-flags.
 
 - [ ] `composer.json` with `type: library` and `sandermuller/boost-core` in `require`
 - [ ] `.lpv` — lean-package-validator config
-- [ ] `resources/boost/skills/` directory with at least one `<skill-name>/SKILL.md`
+- [ ] `resources/boost/skills/` directory with at least one skill present — canonically `<skill-name>/SKILL.md` (directory form). A flat top-level `<skill-name>.md` ALSO counts as PRESENT here (do NOT report MISSING); it is flagged separately as NON-CANONICAL drift below (see the flat-skill finding) and converted by `upgrade-skill-bundle.md`. Report MISSING only when neither form exists.
 
 ## MISSING runtime deps (must be in `require`)
 
