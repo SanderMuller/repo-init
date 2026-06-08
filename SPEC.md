@@ -190,30 +190,26 @@ The package itself ships only:
     "description": "AI playbook + stub library for bootstrapping the canonical Sander/hihaho repo setup. Install globally: `composer global require sandermuller/repo-init`.",
     "require": {
         "php": "^8.3",
-        "sandermuller/boost-core": "^0.6.0"
+        "sandermuller/boost-core": "^1.1"
     },
     "require-dev": {
         "laravel/pint": "^1.29",
-        "sandermuller/boost-skills": "^1.0",
-        "sandermuller/package-boost-php": "^0.5.0",
-        "stolt/lean-package-validator": "^5.7"
+        "sandermuller/boost-skills": "^2.0.0",
+        "sandermuller/package-boost-php": "^1.0"
     },
     "scripts": {
         "post-install-cmd": ["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"],
         "post-update-cmd": ["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"]
     },
     "config": {
-        "sort-packages": true,
-        "allow-plugins": {
-            "sandermuller/package-boost-php": true
-        }
+        "sort-packages": true
     }
 }
 ```
 
 `repo-init` is a `type: library` package distributed via **global install** (`composer global require sandermuller/repo-init`; see §3.3 and RQ40) — never as a `--dev` dependency of a target repo. Its sole runtime dependency is `sandermuller/boost-core` (`type: library` from 0.6.0), the skill-sync engine. Pre-0.6.0 boost-core was a `composer-plugin` and auto-synced the `repo-init` skill into `~/.{agent}/skills/sandermuller__repo-init/` on `composer global` install/update; 0.6.0 removed the plugin (Pattern C). The sync is now a one-line manual command after each install/update: `composer global exec -- boost sync --scope=user --all` (see `references/boost-core-user-scope.md`).
 
-Everything else sits in `require-dev` — `laravel/pint`, `sandermuller/boost-skills`, `sandermuller/package-boost-php`, `stolt/lean-package-validator` — repo-init's own maintenance tooling, not shipped to consumers. `config.allow-plugins` allow-lists `sandermuller/package-boost-php` (still `type: composer-plugin`); boost-core is no longer a plugin in 0.6.0 so its allow-plugins entry is gone.
+Everything else sits in `require-dev` — `laravel/pint`, `sandermuller/boost-skills`, `sandermuller/package-boost-php` — repo-init's own maintenance tooling, not shipped to consumers. There is no `config.allow-plugins` block: neither `sandermuller/boost-core` (`type: library` from 0.6.0) nor `sandermuller/package-boost-php` (`type: library` from 0.9.0) is a Composer plugin anymore, so neither needs allow-listing.
 
 An early draft instead placed `orchestra/testbench` + `sandermuller/package-boost` in `require`, so they would ride along when a target ran `composer require --dev sandermuller/repo-init`. That project-local model is superseded — see RQ35 and the v7 distribution decision in RQ40.
 

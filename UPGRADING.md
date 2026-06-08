@@ -18,6 +18,36 @@ The `post-update-cmd` hook re-syncs the skill into `~/.claude/skills/sandermulle
 
 ---
 
+## 1.5.1 → 1.6.0 (boost family `1.x` adoption)
+
+Additive — no breaking change to repo-init itself. `composer global update sandermuller/repo-init` (+ `composer global exec -- boost sync --scope=user --all`) and you are on 1.6.0.
+
+The boost family reached its stable `1.x` line, and repo-init's scaffold / recommended floors move onto it. The bump is mechanical: boost-core 1.0.0 is a drop-in over 0.23.3 (the SemVer freeze, no API change), package-boost-php 1.0.0 only narrows its boost-core requirement to `^1.0`, and package-boost-laravel 1.0.0 froze its surface. **No code migration** — the `boost.php` authoring API, the `AutoSync` façade hooks, and the CLI contract are all unchanged.
+
+- **Canonical boost floors raised to `1.x`:**
+  - `sandermuller/boost-core: ^1.1` — skill-bundle's direct `require` and repo-init itself (`^1.1` picks up the `laravel/boost` coexistence advisories added in boost-core 1.1; `.config/boost.php` still needs ≥ 0.18, satisfied).
+  - `sandermuller/package-boost-php: ^1.0` — the framework-agnostic categories' umbrella (`php-package`, `phpstan-extension`, `rector-extension`, `composer-plugin`).
+  - `sandermuller/package-boost-laravel: ^1.0` — the Laravel categories' umbrella (`laravel-package` + `laravel-package-spatie`, `filament-plugin`, `nova-tool`).
+  - `sandermuller/boost-skills: ^2.0.0` in the scaffolded stubs, aligning them with repo-init's own dev floor (they previously trailed at `^1.9.0`).
+- **package-boost-laravel 1.0.0 removed dead scaffolding** — its (empty) service provider, config file, config key, publish tag, and `extra.laravel.providers` discovery entry, and it moved `illuminate/*` to `require-dev`. **Impact: none for normal use** — repo-init's Laravel scaffolds never registered the provider or read the config, and the package now installs cleanly as a dev tool regardless of the consumer's Laravel major.
+
+**The one hand-edit the bump requires — `withTags()` array form.** boost-core 0.20 changed every `BoostConfig` builder method to take a single `array`; `withTags()` was the last variadic one. A package whose previous floor was below boost-core 0.20 (the pre-1.6.0 repo-init floor was `^0.19.0`) has a `boost.php` / `.config/boost.php` with a variadic call:
+
+```php
+// before (variadic — throws once boost-core >= 0.20 loads the config)
+->withTags(Tag::Php, Tag::Github)
+// after
+->withTags([Tag::Php, Tag::Github])
+```
+
+`boost sync` cannot auto-migrate it (loading the config executes the call first), so it is a manual edit. On boost-core ≥ 0.23 the error is a clear, catchable `InvalidBoostConfigException` with a migration hint; on 0.20–0.22 it is a raw `TypeError`. `audit-<category>` flags a variadic call; `upgrade-<category>` makes the edit.
+
+Re-auditing a pre-1.6.0 scaffold flags the old floors through the same floor-coupling path as before (`audit-<category>` → `upgrade-<category>`); the upgrade bumps them.
+
+Not breaking: a package on the previous `0.x` floors keeps working; the new floors only constrain freshly scaffolded or upgraded repos.
+
+---
+
 ## 1.5.0 → 1.5.1
 
 Additive — no breaking change to repo-init itself. `composer global update sandermuller/repo-init` (+ `composer global exec -- boost sync --scope=user --all`) and you are on 1.5.1.

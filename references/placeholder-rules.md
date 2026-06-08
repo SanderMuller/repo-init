@@ -23,7 +23,7 @@ Exact derivation rules for the placeholders used in `stubs/`. No agent guessing.
 | `__TEST_COVERAGE_FLAG__` | per `--test-framework=`, the `test-coverage` script flag | `--coverage` (pest) or `--coverage-html=coverage` (phpunit) |
 | `__SKILL_TAGS__` | per the bootstrap skill-tag picker; a comma-separated list of quoted `sandermuller/boost-skills` tag strings, or empty | `'php', 'jira'` (or empty) |
 
-`__SKILL_TAGS__` is unique: it substitutes into a variadic call — `->withTags(__SKILL_TAGS__)` in `stubs/shared/.config/boost.php`. The substitution is the bare argument list (`'php', 'jira'`) with NO surrounding brackets; an empty pick yields `->withTags()`, a valid no-op. Only `stubs/shared/.config/boost.php` uses it.
+`__SKILL_TAGS__` substitutes into the array argument of `->withTags([__SKILL_TAGS__])` in `stubs/shared/.config/boost.php`. The substitution is the bare element list (`'php', 'jira'`) with NO surrounding brackets — the stub already wraps the placeholder in `[ ]`. An empty pick yields `->withTags([])`, a valid no-op. Only `stubs/shared/.config/boost.php` uses it. (boost-core 0.20 changed `withTags()` / `withAgents()` from variadic to array arguments; the stub and this placeholder target the array form.)
 
 ## Boost config location (canonical: `.config/boost.php`)
 

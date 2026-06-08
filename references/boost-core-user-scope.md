@@ -64,7 +64,7 @@ repo-init is a pure-markdown package — it ships no bin and no `post-install-cm
 
 ## Constraints
 
-repo-init's `composer.json` requires `sandermuller/boost-core: ^0.19.0` (canonical floor; `.config/boost.php` needs ≥ 0.18, repo-init pins the current `^0.19.0`). The `--scope=user --all` flag combination is a 0.6.0 feature (the `--all` flag arrived alongside the plugin removal). Pre-0.6.0 boost-core supported `--scope=user` but not `--all` and did the auto-sync via the plugin instead.
+repo-init's `composer.json` requires `sandermuller/boost-core: ^1.1` (canonical floor; `.config/boost.php` needs ≥ 0.18, repo-init pins the current `^1.1`). The `--scope=user --all` flag combination is a 0.6.0 feature (the `--all` flag arrived alongside the plugin removal). Pre-0.6.0 boost-core supported `--scope=user` but not `--all` and did the auto-sync via the plugin instead.
 
 ## See also
 

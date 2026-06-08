@@ -63,9 +63,9 @@ No `sync-ai` script — `laravel/boost` owns AI-asset sync for applications (`ph
 
   | Category | Direct boost dep | Canonical `post-install-cmd` / `post-update-cmd` value | Floor that ships the façade |
   |---|---|---|---|
-  | `php-package`, `phpstan-extension`, `rector-extension`, `composer-plugin` | `sandermuller/package-boost-php` | `SanderMuller\PackageBoostPhp\Scripts\AutoSync::run` | `^0.17.0` |
-  | `laravel-package` (+ `laravel-package-spatie`, `filament-plugin`, `nova-tool`) | `sandermuller/package-boost-laravel` | `SanderMuller\PackageBoostLaravel\Scripts\AutoSync::run` | `^0.10.0` |
-  | `skill-bundle` | `sandermuller/boost-core` (direct `require`) | `SanderMuller\BoostCore\Scripts\BoostAutoSync::run` | `^0.19.0` (boost-core; canonical floor — `.config/boost.php` needs ≥ 0.18, scaffold pins the current `^0.19.0`) |
+  | `php-package`, `phpstan-extension`, `rector-extension`, `composer-plugin` | `sandermuller/package-boost-php` | `SanderMuller\PackageBoostPhp\Scripts\AutoSync::run` | `^1.0` |
+  | `laravel-package` (+ `laravel-package-spatie`, `filament-plugin`, `nova-tool`) | `sandermuller/package-boost-laravel` | `SanderMuller\PackageBoostLaravel\Scripts\AutoSync::run` | `^1.0` |
+  | `skill-bundle` | `sandermuller/boost-core` (direct `require`) | `SanderMuller\BoostCore\Scripts\BoostAutoSync::run` | `^1.1` (boost-core; canonical floor — `.config/boost.php` needs ≥ 0.18, scaffold pins the current `^1.1`) |
   | `laravel-project` | n/a (artisan command) | scaffold-conditional — see the `laravel-project` section above | n/a |
 
   **Why the fork:** the wrapper categories pull `boost-core` only *transitively* through their wrapper. Naming `BoostCore\Scripts\BoostAutoSync::run` there is a transitive-class reference — declaring a symbol the `composer.json` doesn't directly depend on. Each wrapper ships a namespace façade (`PackageBoostPhp\Scripts\AutoSync` / `PackageBoostLaravel\Scripts\AutoSync`) that delegates to `BoostAutoSync`, so the scaffold names only a class from its own direct dependency. `skill-bundle` requires `boost-core` *directly*, so `BoostAutoSync::run` is already a direct-dep class there — it keeps the boost-core callback, and the façade rule does not apply.
