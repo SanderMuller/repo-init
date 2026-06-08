@@ -35,5 +35,5 @@ return BoostConfig::configure()
         'sandermuller/package-boost-laravel',
         'sandermuller/package-boost-php',
     ])
-    ->withTags(__SKILL_TAGS__)
+    ->withTags([__SKILL_TAGS__])
     ->withDisabledEmitters([]);

@@ -20,11 +20,11 @@
     ],
     "require": {
         "php": "__PHP_VERSION__",
-        "sandermuller/boost-core": "^0.19.0"
+        "sandermuller/boost-core": "^1.1"
     },
     "require-dev": {
         "laravel/pint": "^1.29",
-        "sandermuller/boost-skills": "^1.9.0",
+        "sandermuller/boost-skills": "^2.0.0",
         "stolt/lean-package-validator": "^5.7"
     },
     "scripts": {

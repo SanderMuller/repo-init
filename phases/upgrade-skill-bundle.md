@@ -52,6 +52,7 @@ Per `$REPO_INIT_HOME/references/composer-scripts.md`:
 - **`config.allow-plugins` lists `sandermuller/boost-core`** (stale, post boost-core 0.6.0): remove the entry — boost-core 0.6.0 is `type: library`, the entry is harmless but unnecessary.
 - **Outdated POSIX-shell `post-install-cmd`** or **stale `::runWithSummary`**: replace with `::run` per the merge-keys patch above.
 - **`src/` directory with PHP source**: prompt "is this actually a `php-package`?" If the user confirms it ships real PHP, re-route to `audit-php-package.md`.
+- **Flat skill source files (`resources/boost/skills/<name>.md`)**: convert each flagged flat skill to the canonical directory form — `mkdir -p resources/boost/skills/<name> && git mv resources/boost/skills/<name>.md resources/boost/skills/<name>/SKILL.md` (the `mkdir -p` is required — `git mv` does NOT create the destination directory and fails without it; frontmatter + body preserved; `boost where` still discovers it by name). Convert all flagged flat skills; leave `resources/boost/guidelines/*.md` flat (DIR is skills-only). Re-run `vendor/bin/boost sync` after.
 - **`composer.lock` committed**: prompt `git rm --cached composer.lock`.
 - **PHP floor `^8.2`**: prompt bump to `^8.3`.
 - **`.gitattributes` missing `.ai/ export-ignore`**: insert `.ai/ export-ignore` after `.agents/ export-ignore` inside the `# >>> package-boost (managed) >>>` block.
@@ -66,10 +67,25 @@ Per `$REPO_INIT_HOME/references/composer-scripts.md`:
 boost-core ≥ 0.17's canonical config location is `.config/boost.php`; audit flags a legacy root `boost.php` as drift. To migrate:
 
 1. **MOVE the file** — `mkdir -p .config && git mv boost.php .config/boost.php`. **Never copy** — leaving both `boost.php` and `.config/boost.php` is a hard error (`AmbiguousBoostConfigException`); every `boost` command then throws.
-2. **Ensure boost-core ≥ 0.18** (the `.config/boost/` manifest layout): bump `sandermuller/boost-core` in `require` to `^0.19.0` (repo-init's canonical floor; skill-bundle depends on boost-core directly — `.config` needs ≥ 0.18, scaffold pins the current `^0.19.0`) and run `composer update sandermuller/boost-core`.
+2. **Ensure boost-core ≥ 0.18** (the `.config/boost/` manifest layout): bump `sandermuller/boost-core` in `require` to `^1.1` (repo-init's canonical floor; skill-bundle depends on boost-core directly — `.config` needs ≥ 0.18, scaffold pins the current `^1.1`) and run `composer update sandermuller/boost-core`.
 3. Run `vendor/bin/boost sync` — it auto-migrates the gitignored sync manifest `.boost/ → .config/boost/`, rewrites the managed `.gitignore` block to ignore `.config/boost/`, and refreshes the managed `.gitattributes` block. Migration is bidirectional + automatic; `vendor/bin/boost sync --check` reports the one-time stale-manifest cleanup as advisory only (never drift).
 4. **`.gitattributes`:** ensure `.config/ export-ignore` is in the `# >>> package-boost (managed) >>>` block (preserved as a foreign line by the writer); remove any stale `boost.php export-ignore` line. Also update `.lpv`: replace the `boost.php` glob with `.config/`.
 5. **Both-present guard:** if a prior bad copy left BOTH `boost.php` and `.config/boost.php`, do NOT run `boost sync` until resolved — delete the root `boost.php`, keep `.config/boost.php`.
+
+## Migrate the boost config API (`withTags` array form)
+
+**Skip if:** the boost config's `withTags(...)` / `withAgents(...)` calls already pass a single array argument (`->withTags([...])`).
+
+boost-core 0.20 changed every `BoostConfig` builder method to take a single `array` — `withTags()` was the last variadic one. A pre-0.20 call like `->withTags(Tag::Php, Tag::Github)` throws the moment `boost.php` / `.config/boost.php` is loaded (a raw `TypeError` on boost-core 0.20–0.22; a catchable `InvalidBoostConfigException` carrying a migration hint on ≥ 0.23), so `composer install`/`update` autosync and every `boost` command fail until it is fixed. `boost sync` cannot auto-migrate it — loading the config executes the call first. Fix by hand — wrap the arguments in brackets:
+
+```php
+// before (pre-0.20 variadic — breaks under boost-core >= 0.20)
+->withTags(Tag::Php, Tag::Github)
+// after
+->withTags([Tag::Php, Tag::Github])
+```
+
+Independent of the `.config/` location move above — this applies even to a repo already on the `.config/` layout. It is the one hand-edit the boost `1.x` floor bump requires, because that bump crosses the 0.20 break.
 
 ## Run boost-core sync
 
