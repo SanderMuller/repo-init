@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Pre-`1.0.0` releases (0.x.x — historical) introduced breaking changes in MINOR bumps; from 1.0.0 onward repo-init follows standard SemVer (breaking changes ship as MAJOR only). The pre-1.0 entries below remain for reference.
 
+## [1.6.0](https://github.com/sandermuller/repo-init/compare/1.5.1...1.6.0) - 2026-06-09
+
+<!-- verified-sha: 236a8f8f36298110b58aa2978d8ea2841f76801a -->
+The boost family reached its stable `1.x` line, and repo-init's scaffold, audit, and upgrade contract moves onto it. Additive — no breaking change to repo-init itself; a package on the previous `0.x` boost floors keeps working, and the new floors only constrain freshly scaffolded or upgraded repos.
+
+### Changed
+
+- **Canonical boost floors raised to the `1.x` line.** The scaffolded / recommended floors are now:
+  
+  - `sandermuller/boost-core: ^1.1` — skill-bundle's direct `require` and repo-init itself (`^1.1` picks up the `laravel/boost` coexistence advisories added in boost-core 1.1; `.config/boost.php` still needs ≥ 0.18, satisfied).
+  - `sandermuller/package-boost-php: ^1.0` — the framework-agnostic categories (`php-package`, `phpstan-extension`, `rector-extension`, `composer-plugin`).
+  - `sandermuller/package-boost-laravel: ^1.0` — the Laravel categories (`laravel-package` + `laravel-package-spatie`, `filament-plugin`, `nova-tool`).
+  - `sandermuller/boost-skills: ^2.0.0` in the scaffolded stubs, aligning them with repo-init's own dev floor (they previously trailed at `^1.9.0`).
+  
+  The bump is mechanical: boost-core 1.0.0 is a drop-in over 0.23.3 (the SemVer freeze, no API change), package-boost-php 1.0.0 only narrows its boost-core requirement to `^1.0`, and package-boost-laravel 1.0.0 froze its surface (and dropped a dead, empty service provider — no impact for normal consumers). Re-auditing a pre-1.6.0 scaffold flags the old floors through the existing floor-coupling path (`audit-<category>` → `upgrade-<category>`).
+  
+- **`withTags()` array-form migration in the audit/upgrade contract.** boost-core 0.20 changed every `BoostConfig` builder method to take a single `array`; `withTags()` was the last variadic one. Because the `1.x` floor bump crosses 0.20, a config with a pre-0.20 variadic `->withTags(Tag::Php, Tag::Github)` now throws on load (a `TypeError` on boost-core 0.20–0.22, a catchable `InvalidBoostConfigException` with a migration hint on ≥ 0.23). The scaffolded `.config/boost.php` and the placeholder rules now emit the array form (`->withTags([__SKILL_TAGS__])`); a new ungated "Migrate the boost config API" step was added to all six upgrade phases, and a variadic-drift finding to all six audit phases. It is the one hand-edit the boost `1.x` adoption requires.
+  
+### Fixed
+
+- **Dead `testbench package-boost:*` commands replaced with the `boost` bin.** The pre-boost-core-0.6 sync/install form `vendor/bin/testbench package-boost:sync` / `package-boost:install` no longer exists (boost-core 0.6 moved to the standalone `vendor/bin/boost` bin; package-boost-laravel 1.0 removed its service provider). The upgrade phases were updated long ago, but `bootstrap-php-package`, `bootstrap-laravel-package`, and two audit findings still carried the dead form. They now use `vendor/bin/boost sync` / `vendor/bin/boost install`, and the `.gitattributes` managed-block regeneration suggestion points at `vendor/bin/package-boost-php gitattributes` (boost sync does not write `.gitattributes` — that is a separate command). Drift-citation mentions of the legacy form are kept intact, since audit correctly flags them.
+  
+- **Directory skill-source layout enforced in the `skill-bundle` audit/upgrade.** Audit now flags a flat `resources/boost/skills/<name>.md` as LOW-severity drift (authoring uniformity, not correctness — boost-core's scanner accepts both shapes) and steers conversion to the canonical `resources/boost/skills/<name>/SKILL.md` directory form (`mkdir -p` + `git mv`, preserving frontmatter); guidelines correctly stay flat.
+  
+### Notes
+
+`UPGRADING.md` gained a `1.5.1 → 1.6.0` section covering the floors and the `withTags()` hand-edit. `SPEC.md`'s example `composer.json` was refreshed to match the current floors and drop a stale `allow-plugins` block.
+
+### What's Changed
+
+- Enforce DIR skill-source layout in skill-bundle audit + upgrade by @SanderMuller in <https://github.com/SanderMuller/repo-init/pull/3>
+
+### New Contributors
+
+- @SanderMuller made their first contribution in <https://github.com/SanderMuller/repo-init/pull/3>
+
+**Full Changelog**: <https://github.com/SanderMuller/repo-init/compare/1.5.1...1.6.0>
+
 ## [1.5.1](https://github.com/sandermuller/repo-init/compare/1.5.0...1.5.1) - 2026-06-03
 
 <!-- verified-sha: d6fe3777e385c050bd7d4e854883713d24a6d2e8 -->
@@ -25,7 +63,7 @@ A guidance + floor refinement on top of 1.5.0's `.config/boost.php` work. Additi
 
 See `UPGRADING.md` (`1.5.0 → 1.5.1`). Nothing breaking: the prior floors still resolve, and a `stable` baseline is already canonical.
 
-**Full Changelog**: <https://github.com/SanderMuller/repo-init/compare/1.5.0...1.5.1>
+**Full Changelog**: [https://github.com/SanderMuller/repo-init/compare/1.5.0...1.5.1](https://github.com/SanderMuller/repo-init/compare/1.5.0...1.5.1)
 
 ## [1.5.0](https://github.com/sandermuller/repo-init/compare/1.4.2...1.5.0) - 2026-06-02
 
@@ -291,6 +329,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 For existing scaffolded packages, the next audit walk will surface the `sandermuller/package-boost-php: true` entry as MEDIUM-stale. The upgrade phase handles removal correctly — bump first, then drop the entry.
@@ -384,6 +423,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 No further steps. Scaffold output, the `repo-init` skill, audit/upgrade phases, stubs — all identical to 0.8.1.
@@ -432,6 +472,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 The Composer archive for 0.8.1 contains the full stub tree; downstream scaffolders that broke on 0.8.0 work again.
@@ -465,6 +506,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 The `composer global exec --` form runs `boost` from Composer's global `vendor/bin/` regardless of the user's current directory; the literal `--` stops Composer from interpreting boost's flags as its own. `--scope=user --all` publishes every globally-installed package's `resources/boost/skills/` into `~/.{agent}/skills/<vendor>__<package>/`. See `references/boost-core-user-scope.md` for the full contract.
@@ -481,6 +523,7 @@ repo-init now uses the shared `sandermuller/boost-skills` library (code-review, 
 
 ```bash
 gh release create X.Y.Z --notes-file internal/release-notes-X.Y.Z.md
+
 
 
 
@@ -551,6 +594,7 @@ composer global exec -- boost sync --scope=user --all   # new: global skill refr
 
 
 
+
 ```
 
 `stubs/shared/boost.php` + repo-init's own `boost.php` docblocks updated accordingly.
@@ -580,6 +624,7 @@ Upgrade repo-init itself:
 ```bash
 composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
+
 
 
 
