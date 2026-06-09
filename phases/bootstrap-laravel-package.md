@@ -144,13 +144,13 @@ On failure, consult `$REPO_INIT_HOME/references/composer-failure-modes.md`.
 
 **If precondition met:** skip — AI assets already available.
 
-**If only the skill check passes** but `.claude/`/`AGENTS.md`/etc. are missing in target: `package-boost:sync` never ran (likely because composer install used `--no-scripts`). Run `vendor/bin/testbench package-boost:sync` regardless of repo-init install scope — the target's own AI tooling is independent of repo-init's skill location.
+**If only the skill check passes** but `.claude/`/`AGENTS.md`/etc. are missing in target: the boost autosync hook never ran (likely because composer install used `--no-scripts`). Run `vendor/bin/boost sync` regardless of repo-init install scope — the target's own AI tooling is independent of repo-init's skill location.
 
 **Otherwise:** for project-local repo-init users (escape hatch per SPEC §3.4), or when the user explicitly wants this package to have its OWN target-local skill copy:
 
 ```bash
-vendor/bin/testbench package-boost:install --all   # or --agents=claude_code per user preference
-vendor/bin/testbench package-boost:sync
+vendor/bin/boost install   # interactively picks agents + vendor allowlist
+vendor/bin/boost sync
 ```
 
 For the default global-install case, the user-level `~/.claude/skills/` already has repo-init's skill via the global `composer global require sandermuller/repo-init` post-install hook. This new package doesn't need its own copy — skip step 9 unless the user is creating a package that will itself ship AI skills (i.e. the new package's own `.ai/skills/` dir).
@@ -159,7 +159,7 @@ If skipping, instead just sync the `.ai/skills/`/`.ai/guidelines/` that ship wit
 
 ```bash
 mkdir -p .ai/skills .ai/guidelines
-vendor/bin/testbench package-boost:sync
+vendor/bin/boost sync
 ```
 
 This wires up the project-local sync so adding a skill later is one command away.

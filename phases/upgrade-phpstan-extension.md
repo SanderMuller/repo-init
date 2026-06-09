@@ -101,8 +101,10 @@ Independent of the `.config/` location move above — this applies even to a rep
 ## Run package-boost sync
 
 ```bash
-vendor/bin/testbench package-boost:sync
+vendor/bin/boost sync
 ```
+
+`vendor/bin/boost` is boost-core's standalone bin (pulled transitively via `sandermuller/package-boost-php`); the framework-agnostic categories carry no `orchestra/testbench`, so the old `vendor/bin/testbench package-boost:sync` form does not apply. The `post-install-cmd` / `post-update-cmd` autosync hook runs the same sync automatically on `composer install`/`update`.
 
 ## Verification
 

@@ -94,7 +94,7 @@ Default for php-package is NO project-local AI assets — repo-init's global ski
 
 ```bash
 mkdir -p .ai/skills .ai/guidelines
-vendor/bin/testbench package-boost:sync
+vendor/bin/boost sync
 ```
 
 Otherwise skip.
