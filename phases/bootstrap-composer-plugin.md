@@ -39,7 +39,7 @@ For each file under `$REPO_INIT_HOME/stubs/shared/`, copy to cwd. Substitute pla
 
 For each file under `$REPO_INIT_HOME/stubs/composer-plugin/` (excluding `src/Plugin.*.php` variants — those are resolved in step 4):
 
-- `composer.json` — substitute placeholders. Note: `type: composer-plugin`, `require: composer-plugin-api: ^2.6`, `require-dev: composer/composer: ^2.6`, `extra.class: __NAMESPACE_ESCAPED__\\Plugin`, `config.allow-plugins` includes self-allow entry.
+- `composer.json` — substitute placeholders. Note: `type: composer-plugin`, `require: composer-plugin-api: ^2.6`, `require-dev: composer/composer: ^2.6`, `extra.class: __NAMESPACE_ESCAPED__\\Plugin`, `config.allow-plugins` includes self-allow entry. Symplify dep is PHP-floor-conditional: the stub ships `symplify/phpstan-extensions: ^12.0` (installable on every accepted floor; matches the default `php=8.3`); if `php=8.4` or `8.5`, replace it with `symplify/phpstan-rules: ^14.11` AND align the `run-tests.yml` matrix with the chosen floor — drop cells below it and add cells the stub matrix lacks (it ships 8.3/8.4 cells only, so `php=8.5` needs an 8.5 cell) (see `references/shared-dev-deps.md` "Symplify formatter dep").
 - `.github/workflows/run-tests.yml` — copy (framework-agnostic, 3-cell PHP-only matrix, no Laravel axis; defaults to Pest — the test-framework swap in step 5 retargets it to `vendor/bin/phpunit` if PHPUnit was chosen).
 - `.lpv` — copy (lean-package-validator glob-pattern file; bare globs, no `export-ignore` suffix — see `references/gitattributes-managed-block.md`).
 

@@ -53,7 +53,7 @@ From shared (`$REPO_INIT_HOME/references/shared-dev-deps.md`):
 - [ ] `rector/rector`
 - [ ] `rector/type-perfect`
 - [ ] `spaze/phpstan-disallowed-calls`
-- [ ] `symplify/phpstan-extensions`
+- [ ] `symplify/phpstan-rules: ^14.11` (PHP floor >= 8.4) — PHP 8.3 floor: `symplify/phpstan-extensions: ^12.0` satisfies this line instead (abandoned upstream; ADVISORY: bump PHP floor to drop it). A `phpstan-rules` constraint that can resolve below 14.11 does NOT count (no error formatter before 14.11); `phpstan-extensions` on a PHP >= 8.4 floor = NON-CANONICAL. See `$REPO_INIT_HOME/references/shared-dev-deps.md` "Symplify formatter dep".
 - [ ] `tomasvotruba/cognitive-complexity`
 - [ ] `tomasvotruba/type-coverage`
 - [ ] `nunomaduro/collision`

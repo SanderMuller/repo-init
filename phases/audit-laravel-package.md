@@ -82,7 +82,7 @@ From `$REPO_INIT_HOME/references/shared-dev-deps.md` (universal):
 - [ ] `rector/rector`
 - [ ] `rector/type-perfect`
 - [ ] `spaze/phpstan-disallowed-calls`
-- [ ] `symplify/phpstan-extensions`
+- [ ] `symplify/phpstan-rules: ^14.11` (PHP floor >= 8.4) — PHP 8.3 floor: `symplify/phpstan-extensions: ^12.0` satisfies this line instead (abandoned upstream; ADVISORY: bump PHP floor to drop it). A `phpstan-rules` constraint that can resolve below 14.11 does NOT count (no error formatter before 14.11); `phpstan-extensions` on a PHP >= 8.4 floor = NON-CANONICAL. See `$REPO_INIT_HOME/references/shared-dev-deps.md` "Symplify formatter dep".
 - [ ] `tomasvotruba/cognitive-complexity`
 - [ ] `tomasvotruba/type-coverage`
 - [ ] `nunomaduro/collision`
@@ -139,7 +139,7 @@ MISMATCH cases worth a HIGH-severity flag (common drift):
 
 For each file present, look up its merge mode in `$REPO_INIT_HOME/references/upgrade-merge-modes.md`:
 
-- **`replace` files** (workflows, dependabot.yml, .editorconfig, .mcp.json, testbench.yaml, workbench provider, run-tests.yml, tests/Pest.php OR phpunit.xml): diff against `$REPO_INIT_HOME/stubs/<shared|laravel-package|laravel-package-spatie>/<path>` (with placeholders substituted using the audit's known values for vendor/name). Any difference → OUTDATED.
+- **`replace` files** (workflows, dependabot.yml, .editorconfig, .mcp.json, testbench.yaml, workbench provider, run-tests.yml, tests/Pest.php OR phpunit.xml): diff against `$REPO_INIT_HOME/stubs/<shared|laravel-package|laravel-package-spatie>/<path>` (with placeholders substituted using the audit's known values for vendor/name). Any difference → OUTDATED. Exception: a `run-tests.yml` matrix aligned to the repo's `require.php` floor (cells below the floor removed, and/or cells added for floors above the stub's 8.3/8.4 coverage — e.g. no `8.3` cells plus an `8.5` cell on a `^8.5` floor) is correct, not OUTDATED — the stub matrix assumes the default `^8.3` floor.
 - **`managed-block` files** (`.gitattributes`): diff only inside the `# >>> package-boost (managed) >>>` block. Flag OUTDATED if our entries inside the block drift from `$REPO_INIT_HOME/stubs/shared/.gitattributes` content (within its own block). Don't flag content outside the block.
 - **`append-only` files** (`.gitignore`): for each line in `$REPO_INIT_HOME/stubs/shared/.gitignore` not present in the target's `.gitignore`, flag MISSING-line. Never flag OUTDATED for extra lines (user-added).
 - **`merge-keys` files** (`composer.json`): walk each documented key — `scripts`, `extra.laravel.providers`, `config.allow-plugins`, `config.sort-packages`. For each expected key missing, flag MISSING-key. Don't flag whole-file diff.

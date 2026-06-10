@@ -10,6 +10,8 @@ Per-knob defaults for bootstrap mode, plus the hard floors that audit enforces.
 
 Rationale: matches `laravel/pao`'s `^8.3` floor (our strictest shared dep). Existing `^8.2` repos audited by repo-init are flagged as `NON-CANONICAL` on the `require.php` constraint; the upgrade phase offers to bump the floor as a single composer.json edit.
 
+Note: a `^8.3` floor keeps the repo on the abandoned `symplify/phpstan-extensions` (its successor `symplify/phpstan-rules: ^14.11` requires PHP ^8.4) — see `shared-dev-deps.md` → "Symplify formatter dep". Bumping the floor to `^8.4` is the way to drop the abandoned package.
+
 ## Laravel (laravel-package only)
 
 - **Default**: `^12.0||^13.0`

@@ -345,7 +345,7 @@ phpstan/phpstan-phpunit
 rector/rector
 rector/type-perfect
 spaze/phpstan-disallowed-calls
-symplify/phpstan-extensions
+symplify/phpstan-rules
 tomasvotruba/cognitive-complexity
 tomasvotruba/type-coverage
 nunomaduro/collision
@@ -354,6 +354,8 @@ orchestra/testbench
 ```
 
 `laravel/pao` ("Agent-optimized output for PHP testing tools") wraps phpunit/pest/pint/phpstan/rector/paratest with agent-friendly output formatting — load-bearing for an AI-driven dev setup. It's framework-agnostic (require: `php`, `laravel/agent-detector`) so it applies to every category. Its PHP floor `^8.3` matches our hard floor (§5.7), so no fallback path is needed.
+
+`symplify/phpstan-rules` is PHP-floor-conditional: `^14.11` (the release that absorbed the abandoned `symplify/phpstan-extensions`, including the `symplify` error formatter) requires PHP ^8.4, so PHP 8.3-floor targets keep `symplify/phpstan-extensions: ^12.0` instead. Normative table: `references/shared-dev-deps.md` → "Symplify formatter dep".
 
 ### 5.1.1 Per-category exclusions from the shared list
 

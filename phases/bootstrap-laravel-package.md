@@ -41,7 +41,7 @@ Set `STUB_CATEGORY_DIR` based on the `variant`:
 - `sander` → `$REPO_INIT_HOME/stubs/laravel-package/`
 - `spatie` → `$REPO_INIT_HOME/stubs/laravel-package-spatie/`
 
-The two variants differ in `composer.json` (spatie has `spatie/laravel-package-tools` in `require`, uses PHPUnit by default) and `src/__PACKAGE_STUDLY__ServiceProvider.php` (spatie extends `PackageServiceProvider`).
+The two variants differ in `composer.json` (spatie has `spatie/laravel-package-tools` in `require`, uses PHPUnit by default) and `src/__PACKAGE_STUDLY__ServiceProvider.php` (spatie extends `PackageServiceProvider`). Symplify dep is PHP-floor-conditional: the stub ships `symplify/phpstan-extensions: ^12.0` (installable on every accepted floor; matches the default `php=8.3`); if `php=8.4` or `8.5`, replace it with `symplify/phpstan-rules: ^14.11` AND align the `run-tests.yml` matrix with the chosen floor — drop cells below it and add cells the stub matrix lacks (it ships 8.3/8.4 cells only, so `php=8.5` needs an 8.5 cell) (see `references/shared-dev-deps.md` "Symplify formatter dep").
 
 ### 3. Copy shared stubs
 

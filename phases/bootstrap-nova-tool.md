@@ -50,7 +50,7 @@ For each file under `$REPO_INIT_HOME/stubs/shared/`, copy to cwd. Substitute pla
 
 For each file under `$REPO_INIT_HOME/stubs/nova-tool/`:
 
-- `composer.json` — has `laravel/nova: ^5.0` in `require` AND a `repositories` block pointing at `https://nova.laravel.com` (mandatory — Nova isn't on Packagist).
+- `composer.json` — has `laravel/nova: ^5.0` in `require` AND a `repositories` block pointing at `https://nova.laravel.com` (mandatory — Nova isn't on Packagist). Symplify dep is PHP-floor-conditional: the stub ships `symplify/phpstan-extensions: ^12.0` (installable on every accepted floor; matches the default `php=8.3`); if `php=8.4` or `8.5`, replace it with `symplify/phpstan-rules: ^14.11` AND align the `run-tests.yml` matrix with the chosen floor — drop cells below it and add cells the stub matrix lacks (it ships 8.3/8.4 cells only, so `php=8.5` needs an 8.5 cell) (see `references/shared-dev-deps.md` "Symplify formatter dep").
 - `src/__PACKAGE_STUDLY__ServiceProvider.php` — boots the tool's routes + assets when Nova is being served.
 - `src/__PACKAGE_STUDLY__.php` — the actual `Laravel\Nova\Tool` subclass with `menu()` + `boot()`.
 - `routes/inertia.php` — placeholder for tool routes (commented out in stub).

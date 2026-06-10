@@ -23,7 +23,7 @@ Per-file declaration of how the upgrade phase reconciles a stub against an exist
 - `.github/dependabot.yml`
 - `tests/Pest.php` (pest-only; replaced when test-framework is pest)
 - `phpunit.xml` (phpunit-only)
-- Category-specific run-tests workflows: `.github/workflows/run-tests.yml`
+- Category-specific run-tests workflows: `.github/workflows/run-tests.yml` — exception: a matrix aligned to the repo's `require.php` floor (cells below the floor removed, and/or cells added above the stub's 8.3/8.4 coverage — e.g. no `8.3` cells plus an `8.5` cell on a `^8.5` floor) is correct, not OUTDATED; the stub matrix assumes the default `^8.3` floor
 - `testbench.yaml` (laravel-package only)
 - `workbench/app/Providers/WorkbenchServiceProvider.php` (laravel-package only)
 - `extension.neon` skeleton (phpstan-extension only; the `services:` block is user-owned past bootstrap — but the file structure is `replace` and the user is expected to edit only the inner blocks)

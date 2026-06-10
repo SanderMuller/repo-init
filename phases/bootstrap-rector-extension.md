@@ -43,7 +43,7 @@ For each file under `$REPO_INIT_HOME/stubs/shared/`, copy to cwd. Substitute pla
 
 For each file under `$REPO_INIT_HOME/stubs/rector-extension/`:
 
-- `composer.json` — substitute placeholders. Note: `type: rector-extension`, `extra.rector.includes: ["config/config.php"]`, `rector/rector: ^2` in `require` (NOT `require-dev` — per `references/shared-dev-deps.md` §5.1.1 exclusion), `symplify/rule-doc-generator-contracts` in `require`, `rector/extension-installer` in `allow-plugins`.
+- `composer.json` — substitute placeholders. Note: `type: rector-extension`, `extra.rector.includes: ["config/config.php"]`, `rector/rector: ^2` in `require` (NOT `require-dev` — per `references/shared-dev-deps.md` §5.1.1 exclusion), `symplify/rule-doc-generator-contracts` in `require`, `rector/extension-installer` in `allow-plugins`. Symplify dep is PHP-floor-conditional: the stub ships `symplify/phpstan-extensions: ^12.0` (installable on every accepted floor; matches the default `php=8.3`); if `php=8.4` or `8.5`, replace it with `symplify/phpstan-rules: ^14.11` AND align the `run-tests.yml` matrix with the chosen floor — drop cells below it and add cells the stub matrix lacks (it ships 8.3/8.4 cells only, so `php=8.5` needs an 8.5 cell) (see `references/shared-dev-deps.md` "Symplify formatter dep").
 - `config/config.php` — copy (already has `RectorConfig::configure()->withRules([])` skeleton).
 - `src/Rector/.gitkeep`, `tests/Rector/.gitkeep` — copy.
 - `phpstan.neon.dist`, `rector.php` — copy + substitute `__PHP_VERSION_NEON__`. The rector.php has `withPaths(src tests config)` — `config/` included because the extension's own config/config.php is non-trivial PHP.
