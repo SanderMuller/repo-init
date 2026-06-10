@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Pre-`1.0.0` releases (0.x.x — historical) introduced breaking changes in MINOR bumps; from 1.0.0 onward repo-init follows standard SemVer (breaking changes ship as MAJOR only). The pre-1.0 entries below remain for reference.
 
+## [1.7.0](https://github.com/sandermuller/repo-init/compare/1.6.0...1.7.0) - 2026-06-10
+
+<!-- verified-sha: fd0f20a36f969a4492b373b430c3f73985249906 -->
+`symplify/phpstan-extensions` was abandoned upstream at 12.0.2; its `symplify` error formatter (used by the canonical `phpstan-simplified` script) and return-type extensions were merged into `symplify/phpstan-rules` 14.11.0. The successor requires PHP ^8.4 — above the canonical `^8.3` default floor — so the canonical dep is now conditional on the target's `require.php` floor instead of a flat swap.
+
+### Added
+
+- **`php-floor-conditional` key in `references/per-category-deps.yml`** (additive — existing consumers are unaffected): structured form of the symplify substitution, so CLI consumers can resolve it from data instead of prose. PHP ≥ 8.4 floor → `symplify/phpstan-rules: ^14.11`; PHP 8.3 floor → `symplify/phpstan-extensions: ^12.0`.
+- **"Symplify formatter dep is PHP-floor-conditional" section in `references/shared-dev-deps.md`** — the normative table plus the derived bootstrap/audit/upgrade rules. `--error-format symplify` works unchanged on the successor; no extra rules are enabled by default.
+
+### Changed
+
+- **Bootstrap phases** (all package categories): stubs keep shipping `symplify/phpstan-extensions: ^12.0` (installable on every accepted floor, matching the default `php=8.3`); when `php=8.4`/`8.5` is picked, the phase swaps it for `symplify/phpstan-rules: ^14.11` and aligns the `run-tests.yml` matrix with the chosen floor (dropping cells below it, adding cells the stub matrix lacks — e.g. an `8.5` cell).
+- **Audit phases**: the formatter checklist line is now floor-aware — `symplify/phpstan-rules: ^14.11` on a ≥ 8.4 floor, `symplify/phpstan-extensions: ^12.0` on an 8.3 floor (with an ADVISORY to bump the floor and drop the abandoned package). `phpstan-extensions` on a ≥ 8.4 floor is NON-CANONICAL; a `phpstan-rules` constraint that can resolve below 14.11 does not count (no formatter before 14.11). A `run-tests.yml` matrix aligned to the repo's PHP floor is no longer flagged OUTDATED.
+- **Upgrade phases**: repos on a ≥ 8.4 floor migrate via `composer remove --dev symplify/phpstan-extensions && composer require --dev symplify/phpstan-rules:^14.11` — no config changes needed.
+- **`references/version-defaults.md`**: notes that a `^8.3` floor keeps the repo on the abandoned package, and that bumping to `^8.4` is the way off it.
+
+**Full Changelog**: <https://github.com/SanderMuller/repo-init/compare/1.6.0...1.7.0>
+
 ## [1.6.0](https://github.com/sandermuller/repo-init/compare/1.5.1...1.6.0) - 2026-06-09
 
 <!-- verified-sha: 236a8f8f36298110b58aa2978d8ea2841f76801a -->
@@ -37,13 +56,13 @@ The boost family reached its stable `1.x` line, and repo-init's scaffold, audit,
 
 ### What's Changed
 
-- Enforce DIR skill-source layout in skill-bundle audit + upgrade by @SanderMuller in <https://github.com/SanderMuller/repo-init/pull/3>
+- Enforce DIR skill-source layout in skill-bundle audit + upgrade by @SanderMuller in [https://github.com/SanderMuller/repo-init/pull/3](https://github.com/SanderMuller/repo-init/pull/3)
 
 ### New Contributors
 
-- @SanderMuller made their first contribution in <https://github.com/SanderMuller/repo-init/pull/3>
+- @SanderMuller made their first contribution in [https://github.com/SanderMuller/repo-init/pull/3](https://github.com/SanderMuller/repo-init/pull/3)
 
-**Full Changelog**: <https://github.com/SanderMuller/repo-init/compare/1.5.1...1.6.0>
+**Full Changelog**: [https://github.com/SanderMuller/repo-init/compare/1.5.1...1.6.0](https://github.com/SanderMuller/repo-init/compare/1.5.1...1.6.0)
 
 ## [1.5.1](https://github.com/sandermuller/repo-init/compare/1.5.0...1.5.1) - 2026-06-03
 
@@ -330,6 +349,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 For existing scaffolded packages, the next audit walk will surface the `sandermuller/package-boost-php: true` entry as MEDIUM-stale. The upgrade phase handles removal correctly — bump first, then drop the entry.
@@ -424,6 +444,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 No further steps. Scaffold output, the `repo-init` skill, audit/upgrade phases, stubs — all identical to 0.8.1.
@@ -473,6 +494,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 The Composer archive for 0.8.1 contains the full stub tree; downstream scaffolders that broke on 0.8.0 work again.
@@ -507,6 +529,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 The `composer global exec --` form runs `boost` from Composer's global `vendor/bin/` regardless of the user's current directory; the literal `--` stops Composer from interpreting boost's flags as its own. `--scope=user --all` publishes every globally-installed package's `resources/boost/skills/` into `~/.{agent}/skills/<vendor>__<package>/`. See `references/boost-core-user-scope.md` for the full contract.
@@ -523,6 +546,7 @@ repo-init now uses the shared `sandermuller/boost-skills` library (code-review, 
 
 ```bash
 gh release create X.Y.Z --notes-file internal/release-notes-X.Y.Z.md
+
 
 
 
@@ -595,6 +619,7 @@ composer global exec -- boost sync --scope=user --all   # new: global skill refr
 
 
 
+
 ```
 
 `stubs/shared/boost.php` + repo-init's own `boost.php` docblocks updated accordingly.
@@ -624,6 +649,7 @@ Upgrade repo-init itself:
 ```bash
 composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
+
 
 
 
