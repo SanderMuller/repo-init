@@ -214,8 +214,13 @@ categories:
     shared-exclusions: []
     # shared-stub-skip — see laravel-project above for the key's contract.
     # skill-bundle ships pure-markdown skills and no PHP toolchain, so it skips
-    # the PHPStan / Rector / MCP / phpunit shared stubs.
+    # the PHPStan / Rector / MCP / phpunit shared stubs. It also provides its own
+    # lean _gitattributes (the generic shared block ships PHP-toolchain export-ignore
+    # lines lean-package-validator rejects for a skill-bundle) and its own README
+    # (skill-bundle install + boost sync, not a PHP usage / `composer test` example).
     shared-stub-skip:
+      - _gitattributes
+      - README.md
       - .github/workflows/phpstan.yml
       - .github/workflows/rector-check.yml
       - .mcp.json
