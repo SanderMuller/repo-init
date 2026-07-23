@@ -36,8 +36,10 @@ Check each expected path. If absent, mark MISSING and add to the report.
 - [ ] `.github/workflows/phpstan.yml`
 - [ ] `.github/workflows/pint-check.yml`
 - [ ] `.github/workflows/rector-check.yml`
+- [ ] `.github/workflows/zizmor.yml`
 - [ ] `.github/workflows/run-tests.yml`
 - [ ] `.github/workflows/update-changelog.yml`
+- [ ] `.github/zizmor.yml` (zizmor rule config — disables `unpinned-uses`, since every workflow here is tag-pinned by convention)
 - [ ] `.github/dependabot.yml`
 
 **Category-specific (laravel-package):**

@@ -6,7 +6,7 @@ Run after every bootstrap phase. If anything is red, stop and report to the user
 
 `skill-bundle` ships pure-markdown skills and no PHP source, so several checks below — written for code-bearing categories — do NOT apply and would false-fail. For a `skill-bundle` target, **skip**:
 
-- **File presence**: `.mcp.json`, `phpstan-baseline.neon`, `phpstan.neon.dist`, `rector.php`, `phpunit.xml` / `tests/Pest.php`, `run-tests.yml`, and the `phpstan.yml` / `rector-check.yml` workflows are NOT expected (only `pint-check.yml` + `update-changelog.yml` ship).
+- **File presence**: `.mcp.json`, `phpstan-baseline.neon`, `phpstan.neon.dist`, `rector.php`, `phpunit.xml` / `tests/Pest.php`, `run-tests.yml`, and the `phpstan.yml` / `rector-check.yml` workflows are NOT expected (only `pint-check.yml` + `zizmor.yml` + `update-changelog.yml` ship).
 - **Tooling smoke tests**: only `vendor/bin/pint --test` applies — there is no phpstan / rector / pest.
 - **Larastan vs phpstan**: neither is installed — skip the section entirely.
 
@@ -29,7 +29,7 @@ Still applies to `skill-bundle`: Composer integrity (it is a library — lockfil
 - [ ] All shared stubs present: `.editorconfig`, `.gitattributes`, `.gitignore`, `.config/boost.php` (all categories except `laravel-project`, which uses `laravel/boost`), `.mcp.json`, `pint.json`, `phpstan-baseline.neon`, `phpunit.xml` OR `tests/Pest.php` (per test-framework).
   - Boost config layout: a greenfield bootstrap produces `.config/boost.php` (canonical). If the target already had a **legacy root `boost.php`**, bootstrap deliberately left it in place (it does not copy a second config — two configs is a hard error). That is NOT a bootstrap failure — it's drift: do NOT add `.config/boost.php` alongside it. Route the user to `upgrade-<category>.md` to MIGRATE (move, not copy). Never both present.
 - [ ] Baseline OSS meta files present: `README.md`, `LICENSE`, `CHANGELOG.md`, `SECURITY.md`. Missing any of these is a stop condition. README content follows the `readme` skill from `sandermuller/package-boost`; `CHANGELOG.md` uses Keep a Changelog format with an `## [Unreleased]` section seeded but otherwise empty.
-- [ ] `.github/dependabot.yml` and all 4 shared workflows (`phpstan.yml`, `pint-check.yml`, `rector-check.yml`, `update-changelog.yml`) present.
+- [ ] `.github/dependabot.yml`, `.github/zizmor.yml` (rule config), and all 5 shared workflows (`phpstan.yml`, `pint-check.yml`, `rector-check.yml`, `zizmor.yml`, `update-changelog.yml`) present.
 - [ ] Category-specific `.github/workflows/run-tests.yml` present.
 - [ ] `composer.json` present with substituted placeholders (no `__VENDOR__` / `__PACKAGE__` strings left).
 - [ ] `phpstan.neon.dist` + `rector.php` present.

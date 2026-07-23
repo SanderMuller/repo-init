@@ -32,6 +32,8 @@ Ask the user (with auto-inferred defaults):
 - [ ] `.github/workflows/phpstan.yml`
 - [ ] `.github/workflows/pint-check.yml`
 - [ ] `.github/workflows/rector-check.yml`
+- [ ] `.github/workflows/zizmor.yml`
+- [ ] `.github/zizmor.yml` (zizmor rule config — disables `unpinned-uses`, since every workflow here is tag-pinned by convention)
 - [ ] `.github/workflows/update-changelog.yml`
 - [ ] `.github/dependabot.yml`
 - [ ] `.github/workflows/run-tests.yml` — for laravel-project this may be Laravel's own `tests.yml` instead; tolerate either name, just confirm CI runs the suite.

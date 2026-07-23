@@ -19,6 +19,8 @@ Per-file declaration of how the upgrade phase reconciles a stub against an exist
 - `.github/workflows/phpstan.yml`
 - `.github/workflows/pint-check.yml`
 - `.github/workflows/rector-check.yml`
+- `.github/workflows/zizmor.yml`
+- `.github/zizmor.yml`
 - `.github/workflows/update-changelog.yml`
 - `.github/dependabot.yml`
 - `tests/Pest.php` (pest-only; replaced when test-framework is pest)

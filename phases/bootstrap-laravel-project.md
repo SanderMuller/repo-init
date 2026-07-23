@@ -119,7 +119,7 @@ Likely conflicts:
 - `.gitattributes` — Laravel's is minimal; ours adds the package-boost managed block. **Use `managed-block` merge mode** (per `$REPO_INIT_HOME/references/upgrade-merge-modes.md`) — don't replace; insert our entries inside (or alongside) Laravel's content.
 - `phpunit.xml` — already present from Laravel. **Skip ours** (Laravel's is more app-appropriate).
 - `tests/Pest.php` — skip unless user opted into Pest in step 5.
-- `.github/workflows/` — Laravel may have its own (`tests.yml`, etc.); ours adds `phpstan.yml`, `pint-check.yml`, `rector-check.yml`, `update-changelog.yml`. Different filenames → no conflict; just add.
+- `.github/workflows/` — Laravel may have its own (`tests.yml`, etc.); ours adds `phpstan.yml`, `pint-check.yml`, `rector-check.yml`, `zizmor.yml`, `update-changelog.yml`, plus the `.github/zizmor.yml` rule config (disables `unpinned-uses`). Different filenames → no conflict; just add.
 - `.mcp.json` — `laravel/boost` writes this on install. If absent (user opted out of Boost), copy ours.
 - `.config/boost.php` — **skip; do not copy.** `.config/boost.php` configures `sandermuller/boost-core`, which a `laravel-project` does not carry (it uses `laravel/boost`). It would be inert here. The other categories get it from `stubs/shared/.config/boost.php`; `laravel-project` is the one exclusion.
 

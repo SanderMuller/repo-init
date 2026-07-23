@@ -32,7 +32,8 @@ Detect `test-framework` from existing deps (`pestphp/pest` vs `phpunit/phpunit`)
 - [ ] `phpstan-baseline.neon`
 - [ ] `rector.php`
 - [ ] `phpunit.xml` (if test-framework=phpunit) OR `tests/Pest.php` (if pest)
-- [ ] 4 shared workflows + `run-tests.yml` (PHP-only matrix, no Laravel axis)
+- [ ] 5 shared workflows (`phpstan.yml`, `pint-check.yml`, `rector-check.yml`, `zizmor.yml`, `update-changelog.yml`) + `run-tests.yml` (PHP-only matrix, no Laravel axis)
+- [ ] `.github/zizmor.yml` (zizmor rule config — disables `unpinned-uses`, since every workflow here is tag-pinned by convention)
 - [ ] `.github/dependabot.yml`
 
 **Per-category exclusion**: `.mcp.json` from the shared stub set is SKIPPED for `composer-plugin`. The canonical `.mcp.json` ships a Laravel/testbench MCP server config (`vendor/bin/testbench boost:mcp`) which has no equivalent for framework-agnostic Composer plugins. Don't flag MISSING.
