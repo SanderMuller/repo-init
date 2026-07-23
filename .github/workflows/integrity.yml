@@ -36,6 +36,8 @@ jobs:
     timeout-minutes: 2
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - run: bash .github/scripts/check-layout.sh
 
   paths:
@@ -44,6 +46,8 @@ jobs:
     timeout-minutes: 2
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - run: bash .github/scripts/check-paths.sh
 
   phase-coverage:
@@ -52,6 +56,8 @@ jobs:
     timeout-minutes: 2
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - run: bash .github/scripts/check-phase-coverage.sh
 
   dep-sync:
@@ -60,6 +66,8 @@ jobs:
     timeout-minutes: 2
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Setup Python
         uses: actions/setup-python@v6
@@ -77,6 +85,8 @@ jobs:
     timeout-minutes: 2
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - run: bash .github/scripts/check-placeholders.sh
 
   merge-keys:
@@ -85,6 +95,8 @@ jobs:
     timeout-minutes: 2
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - run: bash .github/scripts/check-merge-keys-coverage.sh
 
   audit-scoping:
@@ -93,6 +105,8 @@ jobs:
     timeout-minutes: 2
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - run: bash .github/scripts/check-audit-scoping.sh
 
   yaml-validity:
@@ -101,6 +115,8 @@ jobs:
     timeout-minutes: 2
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Setup Python
         uses: actions/setup-python@v6
@@ -118,6 +134,8 @@ jobs:
     timeout-minutes: 2
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Setup PHP + Composer
         uses: shivammathur/setup-php@v2
@@ -133,4 +151,6 @@ jobs:
     timeout-minutes: 2
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - run: bash .github/scripts/check-bootstrap-idempotency.sh

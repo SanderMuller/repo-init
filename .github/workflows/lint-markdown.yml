@@ -26,6 +26,8 @@ jobs:
     timeout-minutes: 3
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Setup Node
         uses: actions/setup-node@v6

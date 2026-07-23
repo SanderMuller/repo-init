@@ -5,3 +5,9 @@
 rules:
   unpinned-uses:
     disable: true
+  # update-changelog.yml needs persist-credentials (the default) so
+  # git-auto-commit-action can push the CHANGELOG commit with the
+  # checkout's stored credential — this is deliberate, not an oversight.
+  artipacked:
+    ignore:
+      - update-changelog.yml
