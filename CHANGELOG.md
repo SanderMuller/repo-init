@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Pre-`1.0.0` releases (0.x.x — historical) introduced breaking changes in MINOR bumps; from 1.0.0 onward repo-init follows standard SemVer (breaking changes ship as MAJOR only). The pre-1.0 entries below remain for reference.
 
+## [1.8.0](https://github.com/sandermuller/repo-init/compare/1.7.1...1.8.0) - 2026-07-24
+
+<!-- verified-sha: 50e6e6a818ecd53c72f001a27f98a336c27ac8f9 -->
+### Added
+
+- `zizmor` GitHub Actions security scanning, added as a shared workflow (`zizmor.yml`) alongside `phpstan.yml` / `pint-check.yml` / `rector-check.yml` / `update-changelog.yml`, ships to every scaffolded category including `skill-bundle`.
+- `.github/zizmor.yml` rule config shipped alongside the workflow — disables the `unpinned-uses` rule (this project's convention is tag-pinned, not SHA-pinned, Actions) and ignores `artipacked` for `update-changelog.yml`, which needs its checkout's persisted credential to push the CHANGELOG commit.
+
+### Fixed
+
+- Every `actions/checkout` step across this repo's own workflows and the shipped stubs now sets `persist-credentials: false`, and both `dependabot.yml` files carry a `cooldown.default-days: 7` — real findings from the first live zizmor run.
+
+**Full Changelog**: <https://github.com/SanderMuller/repo-init/compare/1.7.1...1.8.0>
+
 ## [1.7.1](https://github.com/sandermuller/repo-init/compare/1.7.0...1.7.1) - 2026-06-13
 
 <!-- verified-sha: 3e01b73b487d519b9b4c5c3474303f886fa72e66 -->
@@ -20,7 +34,7 @@ Pre-`1.0.0` releases (0.x.x — historical) introduced breaking changes in MINOR
   - boost install/sync), and skip the shared versions for the category via `shared-stub-skip`. The
     `bootstrap-skill-bundle` phase prose is updated to match.
   
-**Full Changelog**: <https://github.com/SanderMuller/repo-init/compare/1.7.0...1.7.1>
+**Full Changelog**: [https://github.com/SanderMuller/repo-init/compare/1.7.0...1.7.1](https://github.com/SanderMuller/repo-init/compare/1.7.0...1.7.1)
 
 ## [1.7.0](https://github.com/sandermuller/repo-init/compare/1.6.0...1.7.0) - 2026-06-10
 
@@ -366,6 +380,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 For existing scaffolded packages, the next audit walk will surface the `sandermuller/package-boost-php: true` entry as MEDIUM-stale. The upgrade phase handles removal correctly — bump first, then drop the entry.
@@ -462,6 +477,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 No further steps. Scaffold output, the `repo-init` skill, audit/upgrade phases, stubs — all identical to 0.8.1.
@@ -513,6 +529,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 The Composer archive for 0.8.1 contains the full stub tree; downstream scaffolders that broke on 0.8.0 work again.
@@ -549,6 +566,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 The `composer global exec --` form runs `boost` from Composer's global `vendor/bin/` regardless of the user's current directory; the literal `--` stops Composer from interpreting boost's flags as its own. `--scope=user --all` publishes every globally-installed package's `resources/boost/skills/` into `~/.{agent}/skills/<vendor>__<package>/`. See `references/boost-core-user-scope.md` for the full contract.
@@ -565,6 +583,7 @@ repo-init now uses the shared `sandermuller/boost-skills` library (code-review, 
 
 ```bash
 gh release create X.Y.Z --notes-file internal/release-notes-X.Y.Z.md
+
 
 
 
@@ -641,6 +660,7 @@ composer global exec -- boost sync --scope=user --all   # new: global skill refr
 
 
 
+
 ```
 
 `stubs/shared/boost.php` + repo-init's own `boost.php` docblocks updated accordingly.
@@ -670,6 +690,7 @@ Upgrade repo-init itself:
 ```bash
 composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
+
 
 
 
