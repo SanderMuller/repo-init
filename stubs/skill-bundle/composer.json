@@ -25,7 +25,7 @@
     "require-dev": {
         "laravel/pint": "^1.29",
         "sandermuller/boost-skills": "^2.0.0",
-        "stolt/lean-package-validator": "^5.7"
+        "stolt/lean-package-validator": "^6.0"
     },
     "scripts": {
         "post-install-cmd": [

@@ -69,11 +69,11 @@ Plus shared (`$REPO_INIT_HOME/references/shared-dev-deps.md`) minus what Laravel
 - [ ] `phpstan/phpstan-deprecation-rules`
 - [ ] `phpstan/phpstan-phpunit`
 - [ ] `rector/rector`
-- [ ] `rector/type-perfect`
+- [ ] `rector/type-perfect: ^2.1` — **PHP 8.3 floor ONLY**. On a PHP >= 8.4 floor this package MUST be ABSENT (`tomasvotruba/type-coverage: ^2.3` bundles its rules); present there = NON-CANONICAL, see the duplicate-registration rule below. Abandoned upstream. See `$REPO_INIT_HOME/references/shared-dev-deps.md` "Type-perfect dep".
 - [ ] `spaze/phpstan-disallowed-calls`
 - [ ] `symplify/phpstan-rules: ^14.11` (PHP floor >= 8.4) — PHP 8.3 floor: `symplify/phpstan-extensions: ^12.0` satisfies this line instead (abandoned upstream; ADVISORY: bump PHP floor to drop it). A `phpstan-rules` constraint that can resolve below 14.11 does NOT count (no error formatter before 14.11); `phpstan-extensions` on a PHP >= 8.4 floor = NON-CANONICAL. See `$REPO_INIT_HOME/references/shared-dev-deps.md` "Symplify formatter dep".
 - [ ] `tomasvotruba/cognitive-complexity`
-- [ ] `tomasvotruba/type-coverage`
+- [ ] `tomasvotruba/type-coverage` — constraint is PHP-floor-conditional: `>=2.2.0 <2.2.2` on a PHP 8.3 floor (the `<2.2.2` cap is MANDATORY — 2.2.2 and 2.3.0 both require PHP ^8.4), `^2.3` on a PHP >= 8.4 floor (`^2.2` does NOT satisfy the line there — 2.2.2 registers no `type_perfect` params). See "Type-perfect dep".
 - [ ] `nunomaduro/collision` (Laravel ships)
 - [ ] `orchestra/testbench` — typically NOT in laravel-project (it's a package-dev tool). Skip flagging.
 
@@ -128,6 +128,8 @@ Same logic as `audit-laravel-package.md` §OUTDATED — apply each file's mode f
 - `notify-only`: `phpstan.neon.dist`, `rector.php`, `phpstan-baseline.neon`, `pint.json`. Mention drift but don't push.
 
 ## NON-CANONICAL findings
+
+- [ ] **`rector/type-perfect` present alongside a `tomasvotruba/type-coverage` constraint that can resolve to >= 2.3** (HIGH severity, PHPStan does not boot): `tomasvotruba/type-coverage` 2.3.0 absorbed type-perfect and now includes `packages/type-perfect/config/extension.neon` itself. With both installed, `phpstan/extension-installer` includes that file twice and PHPStan aborts at startup on the duplicate `MethodNodeAnalyser` service. Composer resolves against the **runtime** PHP, not `require.php` — so an uncapped `^2.2` (what every repo scaffolded before this rule landed carries) is green on the PHP 8.3 CI cell and dead on the 8.4 cell. Flag NON-CANONICAL: on a PHP 8.3 floor, cap the constraint to `>=2.2.0 <2.2.2`; on a PHP >= 8.4 floor, remove `rector/type-perfect` and move to `tomasvotruba/type-coverage: ^2.3`. The fix is ATOMIC — see the matching `upgrade-<category>.md`.
 
 - [ ] **`minimum-stability` / `prefer-stable`** (LOW severity; MEDIUM for a deployed app): canonical `composer.json` declares `"minimum-stability": "stable"` and `"prefer-stable": true` (the Laravel skeleton ships both; see `references/version-defaults.md`). Flag NON-CANONICAL if either key is absent, if `prefer-stable` is not `true`, or if `minimum-stability` is looser than `stable` (`dev` / `alpha` / `beta` / `RC`). **`stable` is the default expectation — recommend tightening to it.** A deployed application almost never has a legitimate standing reason for a looser floor; `dev` is justified only for short-lived spikes against unreleased dependencies, never as a default. Fix: add/normalise both keys; never loosen a passing `stable` baseline.
 - [ ] `phpunit.xml` (without `.dist`) — Laravel ships it as `.xml` historically; some hihaho projects renamed to `.dist`. Mild NON-CANONICAL. Suggest rename only if `.dist` not already present.

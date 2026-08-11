@@ -10,6 +10,27 @@ Run `$REPO_INIT_HOME/checklists/preflight.md` AND re-run audit: open `$REPO_INIT
 
 Same as `upgrade-laravel-package.md` §Honor the safety rails. Honour the never-touch list at `$REPO_INIT_HOME/checklists/per-category-never-touch.md` and the git-dirty rule before every write. Verify category-fit one more time via `$REPO_INIT_HOME/references/detection-rules.md` before mutating; dep expectations come from `$REPO_INIT_HOME/references/per-category-deps.md`.
 
+## Allow-list Composer plugins (BEFORE any composer command in this phase)
+
+Runs first — before the runtime-dep step, the type-perfect migration, and the dev-dep step, all of which invoke Composer. This phase targets an EXISTING repo whose `composer.json` may predate the current stub, and the `config.allow-plugins` merge-keys patch happens much further down. Composer loads plugins at command startup, so a plugin that is installed-but-not-allow-listed can abort a later command before the safeguard is ever reached — and requiring one that isn't allow-listed prompts interactively and hard-fails with `blocked-plugin` non-interactively.
+
+```bash
+composer config --no-plugins allow-plugins.phpstan/extension-installer true
+composer config --no-plugins allow-plugins.rector/extension-installer true
+# pest only:
+composer config --no-plugins allow-plugins.pestphp/pest-plugin true
+```
+
+`--no-plugins` is what makes this safe to run first: it keeps the config write itself from being blocked by the very plugin state it is fixing.
+
+Per key, read the current `config.allow-plugins` value first:
+
+- **`true`** — already satisfied, skip.
+- **absent** — write it (command above).
+- **`false`** — an *explicit denial*, not a satisfied entry: Composer keeps the plugin disabled and suppresses the prompt, so `phpstan/extension-installer` never registers the PHPStan extensions (and `rector/extension-installer` never auto-discovers Rector extensions). Do NOT silently flip it — surface the explicit `false` to the user and ask before changing it.
+
+The merge-keys step later is then a no-op for these keys. See `$REPO_INIT_HOME/references/composer-failure-modes.md` → "Allow-plugins prompt / blocked plugin".
+
 ## Apply MISSING files
 
 Stubs from `$REPO_INIT_HOME/stubs/<shared|rector-extension>/<path>`.
@@ -26,6 +47,44 @@ Single `composer require <list>` (NOT `--dev`):
 - `rector/rector: ^2` (mandatory)
 - `symplify/rule-doc-generator-contracts` (mandatory)
 - `driftingly/rector-laravel` (only if Laravel-aware opt-in confirmed)
+
+## Migrate the `type-coverage` / `type-perfect` pair (ATOMIC)
+
+**Runs BEFORE "Apply MISSING dev deps" below** — that step bumps `tomasvotruba/type-coverage` to its canonical constraint, which on a PHP >= 8.4 floor is `^2.3`; doing that while `rector/type-perfect` is still in `require-dev` *creates* the broken pair this section exists to prevent.
+
+Trigger: `rector/type-perfect` is in the target's `require-dev`, on ANY floor and regardless of the current `tomasvotruba/type-coverage` constraint. Do NOT gate this on the audit's duplicate-registration finding — that finding only fires for a constraint already able to resolve `>= 2.3`, and an older target sitting on e.g. `^2.1` is equally broken the moment the dep step raises it. Normative table: `$REPO_INIT_HOME/references/shared-dev-deps.md` → "Type-perfect dep".
+
+Why it matters: `tomasvotruba/type-coverage` 2.3.0 absorbed `rector/type-perfect` — it autoloads `Rector\TypePerfect\` from its own `packages/type-perfect/src` and lists that package's `extension.neon` in `extra.phpstan.includes`. With both installed, `phpstan/extension-installer` includes that config twice and PHPStan aborts at boot on a duplicate `Rector\TypePerfect\Reflection\MethodNodeAnalyser` service. Neither package declares a Composer `conflict`, so nothing stops the pair from installing. Composer resolves against the **runtime** PHP, not `require.php` — so an uncapped constraint keeps the repo green on a PHP 8.3 CI cell and dead on the 8.4 one.
+
+Branch on the target's `require.php` floor:
+
+**PHP >= 8.4 floor** — drop the abandoned package in a SINGLE resolution:
+
+```bash
+composer remove --dev rector/type-perfect --no-update
+composer require --dev tomasvotruba/type-coverage:^2.3
+```
+
+`--no-update` makes the first command a pure `composer.json` edit — nothing is installed or removed until the `require` runs, so `vendor/` never holds both packages at once. Equivalently: hand-edit both `require-dev` lines, then one `composer update rector/type-perfect tomasvotruba/type-coverage`. **Never** run a plain `composer remove --dev rector/type-perfect` first: that resolves immediately, and with `tomasvotruba/type-coverage` still `< 2.3` it leaves `parameters.type_perfect:` in `phpstan.neon.dist` unregistered — PHPStan then fails boot the other way (`Unexpected item 'parameters › type_perfect'`).
+
+**PHP 8.3 floor** — keep both, cap the constraint (`>=2.2.0 <2.2.2` — 2.2.2 already requires PHP ^8.4):
+
+```bash
+composer require --dev "tomasvotruba/type-coverage:>=2.2.0 <2.2.2"
+```
+
+`rector/type-perfect: ^2.1` stays. Raise the standing ADVISORY: bumping `require.php` to `^8.4` drops two abandoned packages (`rector/type-perfect` and `symplify/phpstan-extensions`) and lifts this cap.
+
+Either way, leave `phpstan.neon.dist`'s `parameters.type_perfect:` block alone — exactly one of the two packages registers those params on every accepted floor.
+
+Verify before moving on:
+
+```bash
+composer show --direct | grep -E 'type-coverage|type-perfect'
+vendor/bin/phpstan analyse --memory-limit=2G
+```
+
+Expect exactly one line on a PHP >= 8.4 floor (`tomasvotruba/type-coverage` at `2.3.x`) and two on a PHP 8.3 floor (`tomasvotruba/type-coverage` at `2.2.x` + `rector/type-perfect`). PHPStan must reach analysis — a boot-time duplicate-service error is the failure this step exists to remove.
 
 ## Apply MISSING dev deps
 

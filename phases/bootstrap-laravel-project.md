@@ -84,7 +84,7 @@ Build the list from `$REPO_INIT_HOME/references/per-category-deps.md#laravel-pro
 - `laravel/pail`
 - `laravel/tinker` (Laravel may already include this — check)
 - `driftingly/rector-laravel`
-- All shared deps from `$REPO_INIT_HOME/references/shared-dev-deps.md` minus anything Laravel installer already pulled. Read the freshly-generated `composer.json` to determine what's already there. Common already-installed by `laravel new`: `laravel/pint`, `nunomaduro/collision`, `phpunit/phpunit` (when test-framework=phpunit). Anything else from the shared list needs explicit `composer require --dev`: `laravel/pao`, `phpstan/extension-installer`, `phpstan/phpstan-strict-rules`, `phpstan/phpstan-deprecation-rules`, `phpstan/phpstan-phpunit`, `rector/rector`, `rector/type-perfect`, `spaze/phpstan-disallowed-calls`, `symplify/phpstan-rules` (`^14.11`, PHP >= 8.4 floor; PHP 8.3 floor keeps `symplify/phpstan-extensions: ^12.0` — see shared-dev-deps.md "Symplify formatter dep"), `tomasvotruba/cognitive-complexity`, `tomasvotruba/type-coverage`. (`laravel-project` does NOT take `sandermuller/package-boost-php` — `laravel/boost`, above, is its boost-family tool.)
+- All shared deps from `$REPO_INIT_HOME/references/shared-dev-deps.md` minus anything Laravel installer already pulled. Read the freshly-generated `composer.json` to determine what's already there. Common already-installed by `laravel new`: `laravel/pint`, `nunomaduro/collision`, `phpunit/phpunit` (when test-framework=phpunit). Anything else from the shared list needs explicit `composer require --dev`: `laravel/pao`, `phpstan/extension-installer`, `phpstan/phpstan-strict-rules`, `phpstan/phpstan-deprecation-rules`, `phpstan/phpstan-phpunit`, `rector/rector`, `rector/type-perfect` (`^2.1` — PHP 8.3 floor ONLY; DROP on a PHP >= 8.4 floor), `spaze/phpstan-disallowed-calls`, `symplify/phpstan-rules` (`^14.11`, PHP >= 8.4 floor; PHP 8.3 floor keeps `symplify/phpstan-extensions: ^12.0` — see shared-dev-deps.md "Symplify formatter dep"), `tomasvotruba/cognitive-complexity`, `tomasvotruba/type-coverage` (`>=2.2.0 <2.2.2` on a PHP 8.3 floor — the `<2.2.2` cap is mandatory; `^2.3` on a PHP >= 8.4 floor, where it replaces `rector/type-perfect` — see shared-dev-deps.md "Type-perfect dep"). (`laravel-project` does NOT take `sandermuller/package-boost-php` — `laravel/boost`, above, is its boost-family tool.)
 
 **OPTIONAL (only when opted in):**
 
@@ -96,7 +96,17 @@ Build the list from `$REPO_INIT_HOME/references/per-category-deps.md#laravel-pro
 - For PHPUnit: nothing extra (Laravel includes `phpunit/phpunit`).
 - For Pest: also add `pestphp/pest`, `pestphp/pest-plugin-arch`, `pestphp/pest-plugin-laravel`, `mrpunyapal/rector-pest`. Note: switching from PHPUnit to Pest changes how `php artisan test` resolves; the user must `vendor/bin/pest --init` separately to migrate.
 
-Single batched call:
+**Allow-list the plugin dev deps FIRST** (mandatory — do not fold this into the require call):
+
+```bash
+composer config --no-plugins allow-plugins.phpstan/extension-installer true
+# pest only:
+composer config --no-plugins allow-plugins.pestphp/pest-plugin true
+```
+
+Unlike the package categories, `laravel-project` has no stub `composer.json` — the file comes from `laravel new`, whose `config.allow-plugins` allow-lists exactly two entries — `pestphp/pest-plugin` and `php-http/discovery` — and nothing else. `composer require --dev phpstan/extension-installer` against that file installs a plugin Composer isn't allowed to run: interactively it prompts, and in a non-interactive/CI run it hard-fails with `blocked-plugin`. Writing the allow-plugins entry first (`--no-plugins` so the config write itself can't trip the same block) makes the require call clean. If a key is already present as `false` — possible when this phase re-runs against a target someone hand-edited — that is an explicit denial, not a satisfied entry: surface it and ask before flipping it to `true`. This mirrors what every stub `composer.json` ships — see `$REPO_INIT_HOME/references/version-defaults.md` "Composer plugin allowlist".
+
+Then the single batched call:
 
 ```bash
 composer require --dev <pkg1> <pkg2> <pkg3> ...

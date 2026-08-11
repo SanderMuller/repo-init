@@ -14,22 +14,35 @@ shared:
       - phpstan/phpstan-deprecation-rules
       - phpstan/phpstan-phpunit
       - rector/rector
-      - rector/type-perfect
+      - rector/type-perfect  # PHP 8.3 floor ONLY — abandoned upstream; dropped on PHP >= 8.4 where tomasvotruba/type-coverage ^2.3 bundles its rules (see shared-dev-deps.md "Type-perfect dep")
       - spaze/phpstan-disallowed-calls
       - symplify/phpstan-rules  # PHP >= 8.4 floor; PHP 8.3 floor uses symplify/phpstan-extensions ^12.0 instead (see shared-dev-deps.md "Symplify formatter dep")
       - tomasvotruba/cognitive-complexity
-      - tomasvotruba/type-coverage
+      - tomasvotruba/type-coverage  # constraint is PHP-floor-conditional: >=2.2.0 <2.2.2 (PHP 8.3) / ^2.3 (PHP >= 8.4) — see php-floor-conditional below
       - nunomaduro/collision
       - orchestra/testbench
       - sandermuller/boost-skills  # the boost-skills skill library; synced via boost-core. Excluded for laravel-project (no boost-core). skill-bundle hand-lists it (consumes-shared-dev-deps: false).
   # Structured form of the symplify formatter conditional (normative prose:
   # shared-dev-deps.md "Symplify formatter dep"). Consumers resolving the
   # `always.require-dev` list MUST apply this substitution by the target's
-  # require.php floor — symplify/phpstan-rules ^14.11 requires PHP ^8.4.
+  # require.php floor — symplify/phpstan-rules ^14.12 requires PHP ^8.4.
+  #
+  # The type-coverage / type-perfect pair is conditional for a different reason:
+  # tomasvotruba/type-coverage 2.3.0 absorbed rector/type-perfect's config, so
+  # installing both double-registers MethodNodeAnalyser and PHPStan aborts at
+  # boot. Composer resolves against the RUNTIME php, not require.php — so on a
+  # PHP 8.3 floor the constraint must be capped `<2.2.2` (2.2.2 and 2.3.0 both
+  # require PHP ^8.4) or the 8.4 CI cell / an 8.4-generated lockfile breaks it.
   php-floor-conditional:
     symplify/phpstan-rules:
-      'php>=8.4': 'symplify/phpstan-rules: ^14.11'
+      'php>=8.4': 'symplify/phpstan-rules: ^14.12'
       'php==8.3': 'symplify/phpstan-extensions: ^12.0'  # abandoned upstream but functional; ADVISORY: bump PHP floor to drop it
+    tomasvotruba/type-coverage:
+      'php>=8.4': 'tomasvotruba/type-coverage: ^2.3'  # bundles the type-perfect rules; ^2.2 is NOT acceptable here (2.2.2 registers no type_perfect params)
+      'php==8.3': 'tomasvotruba/type-coverage: >=2.2.0 <2.2.2'  # 2.2.1 is the newest release installable on PHP 8.3
+    rector/type-perfect:
+      'php>=8.4': null  # DROP — tomasvotruba/type-coverage ^2.3 bundles it; keeping both fails PHPStan boot
+      'php==8.3': 'rector/type-perfect: ^2.1'  # abandoned upstream but functional; ADVISORY: bump PHP floor to drop it
   # boost-family umbrella is NOT shared — it is assigned per category below:
   #   framework-agnostic Composer package  -> sandermuller/package-boost-php
   #   Laravel-specific Composer package    -> sandermuller/package-boost-laravel

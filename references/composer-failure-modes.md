@@ -61,14 +61,30 @@ Causes:
 - Run `composer validate --check-lock`. If failing, run `composer update --lock` (regenerates lockfile from existing `composer.json`).
 - If the user has uncommitted changes to `composer.lock` from a different workflow, stop and ask before regenerating.
 
-## Allow-plugins prompt
+## Allow-plugins prompt / blocked plugin
 
-**Symptom**: `composer install` interactively prompts whether to allow a plugin (`Do you trust pestphp/pest-plugin to execute code?`).
+**Symptom**: `composer install` / `composer require` interactively prompts whether to allow a plugin (`Do you trust phpstan/extension-installer to execute code?`) — or, non-interactively (CI, `--no-interaction`, an agent-driven run), fails outright with `blocked-plugin` / `... is blocked by your allow-plugins config`.
+
+Note the two faces of the same cause: a plugin dep is being installed while `config.allow-plugins` has no entry for it. Interactive runs prompt; non-interactive runs abort. Do not assume "it will just prompt".
+
+**Cause by category**:
+
+- **Package categories** (`php-package`, `laravel-package`, `composer-plugin`, `phpstan-extension`, `rector-extension`, `filament-plugin`, `nova-tool`): the stub `composer.json` ships the allowlist (see `version-defaults.md` "Composer plugin allowlist"), written before any composer command runs — so this shouldn't fire.
+- **`laravel-project`**: it has NO stub `composer.json` — the file comes from `laravel new`, whose `config.allow-plugins` carries exactly two entries: `pestphp/pest-plugin` and `php-http/discovery`. `phpstan/extension-installer` is not among them, so the shared-dev-deps require call hits this every time. The bootstrap and upgrade phases both allow-list it explicitly before requiring.
 
 **Resolution playbook**:
 
-- Bootstrap stubs declare the allowlist in `composer.json` `config.allow-plugins` (see `version-defaults.md`), so this shouldn't fire after the first install.
-- If it does fire (existing target with stale `composer.json`), the upgrade phase's `composer.json` merge-keys step will add the missing entries on the next run.
+- Write the entry first, then retry the require:
+
+  ```bash
+  composer config --no-plugins allow-plugins.phpstan/extension-installer true
+  ```
+
+  `--no-plugins` matters: without it the config write can itself be refused by the same block.
+- **An existing `false` value is not a satisfied entry.** `"phpstan/extension-installer": false` is an *explicit denial* — Composer keeps the plugin disabled and stops prompting, so the symptom silently changes from "blocked" to "PHPStan runs with none of its extensions registered". Never flip a `false` to `true` unprompted; surface it and ask.
+- Same shape for any other plugin dep in play — `pestphp/pest-plugin`, `rector/extension-installer` (mandatory for `rector-extension`), a `composer-plugin` category's self-allow entry.
+- For an existing target with a stale `composer.json`, the upgrade phase's `composer.json` merge-keys step writes the missing entries — but it runs AFTER dep application, so the config-first command above is still the fix in the moment.
+- Never work around it with `--no-plugins` on the `require`/`install` itself: `phpstan/extension-installer` is what auto-includes the PHPStan extension configs, so a `--no-plugins` install silently produces a repo where PHPStan runs with none of its rule packs.
 
 ## Memory exhaustion
 

@@ -359,6 +359,8 @@ orchestra/testbench
 
 `symplify/phpstan-rules` is PHP-floor-conditional: `^14.11` (the release that absorbed the abandoned `symplify/phpstan-extensions`, including the `symplify` error formatter) requires PHP ^8.4, so PHP 8.3-floor targets keep `symplify/phpstan-extensions: ^12.0` instead. Normative table: `references/shared-dev-deps.md` → "Symplify formatter dep".
 
+The `tomasvotruba/type-coverage` / `rector/type-perfect` pair is PHP-floor-conditional for the same reason: `tomasvotruba/type-coverage` 2.3.0 (PHP ^8.4) absorbed the abandoned `rector/type-perfect`, and installing both double-registers `MethodNodeAnalyser` so PHPStan aborts at boot. PHP ≥ 8.4 floors take `tomasvotruba/type-coverage: ^2.3` alone; PHP 8.3 floors keep `rector/type-perfect: ^2.1` and cap `tomasvotruba/type-coverage: >=2.2.0 <2.2.2` (the cap matters — Composer resolves against the runtime PHP, so an uncapped `^2.2` pulls 2.3.0 on an 8.4 CI cell). Normative table: `references/shared-dev-deps.md` → "Type-perfect dep".
+
 ### 5.1.1 Per-category exclusions from the shared list
 
 When a category puts a package in its **`require`** (§5.2), we drop it from the dev-deps install for that category — Composer rejects a package being in both `require` and `require-dev`.
