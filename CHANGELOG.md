@@ -7,6 +7,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Pre-`1.0.0` releases (0.x.x — historical) introduced breaking changes in MINOR bumps; from 1.0.0 onward repo-init follows standard SemVer (breaking changes ship as MAJOR only). The pre-1.0 entries below remain for reference.
 
+## [1.9.0](https://github.com/sandermuller/repo-init/compare/1.8.0...1.9.0) - 2026-08-11
+
+<!-- verified-sha: 4812daf5a18016eee77305c1b479e60c99ccb049 -->
+### Fixed
+
+#### Scaffolds no longer pair `rector/type-perfect` with `tomasvotruba/type-coverage` 2.3
+
+`tomasvotruba/type-coverage` 2.3.0 absorbed the abandoned `rector/type-perfect`. It autoloads `Rector\TypePerfect\` from its own `packages/type-perfect/src` and lists that package's `extension.neon` in `extra.phpstan.includes`. With both packages installed, `phpstan/extension-installer` includes that config twice and PHPStan aborts at boot on a duplicate `Rector\TypePerfect\Reflection\MethodNodeAnalyser` service — the tool does not start at all. Neither package declares a Composer `conflict`, so nothing upstream stops the pair from installing.
+
+The scaffolded constraint was `"tomasvotruba/type-coverage": "^2.2"`. Composer resolves against the **runtime** PHP, not `require.php`, so that constraint pulled 2.2.1 on the PHP 8.3 CI cell and 2.3.0 on the 8.4 cell — green on one leg, dead on the other. Every repo scaffolded before this release is in that state.
+
+Both 2.2.2 and 2.3.0 require PHP `^8.4`, while repo-init's hard floor is `^8.3`, so the pair is now PHP-floor-conditional — the same shape as the symplify formatter dep introduced in 1.7.0:
+
+| `require.php` floor | Canonical deps |
+|---|---|
+| `^8.4` / `^8.5` | `tomasvotruba/type-coverage: ^2.3`, no `rector/type-perfect` |
+| `^8.3` | `tomasvotruba/type-coverage: ">=2.2.0 <2.2.2"` plus `rector/type-perfect: ^2.1` |
+
+The 8.3-floor cap is `<2.2.2`, not `<2.3`: 2.2.2 is already PHP 8.4-only, so an uncapped-to-2.2.x constraint lets a developer on 8.4 lock a version the 8.3 CI cell then cannot install. Bumping a repo's PHP floor to `^8.4` now sheds two abandoned packages — `rector/type-perfect` and `symplify/phpstan-extensions` — and lifts the cap.
+
+Normative table: `references/shared-dev-deps.md` → "Type-perfect dep", mirrored in `references/per-category-deps.yml` `php-floor-conditional` and `SPEC.md` §5.1. All eight stub `composer.json` files carry the capped constraint.
+
+Audit phases gained a HIGH-severity rule for the duplicate registration. Upgrade phases gained a migration section that runs **before** the missing-dev-deps step — that step raises `type-coverage` to its canonical constraint, which on a PHP ≥ 8.4 floor would otherwise *create* the broken pair — and performs the swap in a single resolution:
+
+```bash
+composer remove --dev rector/type-perfect --no-update
+composer require --dev tomasvotruba/type-coverage:^2.3
+
+```
+
+`--no-update` keeps the removal a pure `composer.json` edit, so `vendor/` never holds both packages. Running a plain `composer remove` first resolves immediately and leaves `parameters.type_perfect:` in `phpstan.neon.dist` unregistered while `type-coverage` is still below 2.3 — PHPStan then fails boot the other way.
+
+#### `phpstan/extension-installer` is allow-listed before any Composer command runs
+
+`laravel new` ships a `config.allow-plugins` block with exactly two entries: `pestphp/pest-plugin` and `php-http/discovery`. Because `laravel-project` is the one category with no stub `composer.json`, requiring `phpstan/extension-installer` into that file installed a Composer plugin that was never allow-listed — an interactive prompt locally, a hard `blocked-plugin` failure in CI or any non-interactive run.
+
+Every upgrade phase now allow-lists its plugin dev deps in a dedicated section placed **before any Composer command** in the phase. Composer loads plugins at command startup, so a safeguard sitting after the runtime-dep or migration step is already too late. `bootstrap-laravel-project` does the same ahead of its batched `composer require --dev`.
+
+Two details the phases now spell out:
+
+- The command is `composer config --no-plugins allow-plugins.<pkg> true`. Without `--no-plugins`, the config write itself can be refused by the very plugin state it is fixing.
+- An existing value of `false` is an **explicit denial**, not a satisfied entry. Composer keeps the plugin disabled and stops prompting, so the symptom silently changes from "blocked" to "PHPStan runs with none of its extensions registered". The phases surface it and ask rather than flipping it.
+
+`references/composer-failure-modes.md` → "Allow-plugins prompt / blocked plugin" was rewritten around both faces of the failure (prompt when interactive, abort when not) and now names which categories are exposed.
+
+### Internal
+
+- `actions/checkout`, `actions/setup-node`, and `actions/setup-python` pinned to `v7` across this repo's workflows and the shipped stub workflows.
+- Stub dev-dependency constraints refreshed: `rector/rector` `^2.5`, `spaze/phpstan-disallowed-calls` `^4.13`, `stolt/lean-package-validator` `^6.0`, `tomasvotruba/cognitive-complexity` `^1.2`.
+
+**Full Changelog**: <https://github.com/SanderMuller/repo-init/compare/1.8.0...1.9.0>
+
 ## [1.8.0](https://github.com/sandermuller/repo-init/compare/1.7.1...1.8.0) - 2026-07-24
 
 <!-- verified-sha: 50e6e6a818ecd53c72f001a27f98a336c27ac8f9 -->
@@ -19,7 +71,7 @@ Pre-`1.0.0` releases (0.x.x — historical) introduced breaking changes in MINOR
 
 - Every `actions/checkout` step across this repo's own workflows and the shipped stubs now sets `persist-credentials: false`, and both `dependabot.yml` files carry a `cooldown.default-days: 7` — real findings from the first live zizmor run.
 
-**Full Changelog**: <https://github.com/SanderMuller/repo-init/compare/1.7.1...1.8.0>
+**Full Changelog**: [https://github.com/SanderMuller/repo-init/compare/1.7.1...1.8.0](https://github.com/SanderMuller/repo-init/compare/1.7.1...1.8.0)
 
 ## [1.7.1](https://github.com/sandermuller/repo-init/compare/1.7.0...1.7.1) - 2026-06-13
 
@@ -381,6 +433,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 For existing scaffolded packages, the next audit walk will surface the `sandermuller/package-boost-php: true` entry as MEDIUM-stale. The upgrade phase handles removal correctly — bump first, then drop the entry.
@@ -478,6 +531,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 No further steps. Scaffold output, the `repo-init` skill, audit/upgrade phases, stubs — all identical to 0.8.1.
@@ -530,6 +584,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 The Composer archive for 0.8.1 contains the full stub tree; downstream scaffolders that broke on 0.8.0 work again.
@@ -567,6 +622,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 The `composer global exec --` form runs `boost` from Composer's global `vendor/bin/` regardless of the user's current directory; the literal `--` stops Composer from interpreting boost's flags as its own. `--scope=user --all` publishes every globally-installed package's `resources/boost/skills/` into `~/.{agent}/skills/<vendor>__<package>/`. See `references/boost-core-user-scope.md` for the full contract.
@@ -583,6 +639,7 @@ repo-init now uses the shared `sandermuller/boost-skills` library (code-review, 
 
 ```bash
 gh release create X.Y.Z --notes-file internal/release-notes-X.Y.Z.md
+
 
 
 
@@ -661,6 +718,7 @@ composer global exec -- boost sync --scope=user --all   # new: global skill refr
 
 
 
+
 ```
 
 `stubs/shared/boost.php` + repo-init's own `boost.php` docblocks updated accordingly.
@@ -690,6 +748,7 @@ Upgrade repo-init itself:
 ```bash
 composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
+
 
 
 
