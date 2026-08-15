@@ -16,7 +16,7 @@ Walks an AI agent (Claude Code, Cursor, GitHub Copilot, …) through **bootstrap
 - `.editorconfig`, `.gitattributes` (with the `# >>> package-boost (managed) >>>` block — sentinel name preserved for backward compat; owned by `package-boost-php`), `.gitignore`
 - `.mcp.json` (Laravel-aware categories only; the framework-agnostic categories — `php-package`, `composer-plugin`, `phpstan-extension`, `rector-extension`, `skill-bundle` — skip it)
 - `.config/boost.php` — boost-core agent config, pinning Claude Code / Copilot / Codex (every category except `laravel-project`, which uses `laravel/boost`). The `.config/` layout is canonical (boost-core ≥ 0.17); the sync manifest lives at `.config/boost/`
-- `sandermuller/boost-skills` — the shared dev-workflow skill library, added to `require-dev` + `.config/boost.php`; bootstrap interactively picks which skill tags (`php` / `frontend` / `github` / `jira`) to activate
+- `sandermuller/boost-skills` (floor `^2.27.0`) — the shared dev-workflow skill library, added to `require-dev` + `.config/boost.php`; bootstrap interactively picks which skill tags (`php` / `frontend` / `github` / `jira`) to activate. The `voice` tag is always on and is not part of that pick — it ships the writing-voice guideline every repo in this setup uses
 - Shared `.github/workflows/{phpstan,pint-check,rector-check,zizmor,update-changelog}.yml` + `.github/zizmor.yml` (rule config) + per-category `run-tests.yml` + `dependabot.yml`
 - `tests/Pest.php` or `phpunit.xml` (vendor-driven default)
 - Per-category extras (testbench.yaml, workbench/, ServiceProvider, extension.neon, src/Plugin.{shape}.php for composer-plugin, etc.)
