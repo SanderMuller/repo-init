@@ -192,11 +192,11 @@ The package itself ships only:
     "description": "AI playbook + stub library for bootstrapping the canonical Sander/hihaho repo setup. Install globally: `composer global require sandermuller/repo-init`.",
     "require": {
         "php": "^8.3",
-        "sandermuller/boost-core": "^1.1"
+        "sandermuller/boost-core": "^1.6"
     },
     "require-dev": {
-        "laravel/pint": "^1.29",
-        "sandermuller/boost-skills": "^2.0.0",
+        "laravel/pint": "^1.30",
+        "sandermuller/boost-skills": "^2.27.0",
         "sandermuller/package-boost-php": "^1.0"
     },
     "scripts": {

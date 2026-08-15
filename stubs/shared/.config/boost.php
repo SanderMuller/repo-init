@@ -18,9 +18,12 @@ use SanderMuller\BoostCore\Enums\Agent;
  *
  * `withTags()` filters `sandermuller/boost-skills`: with no tags you still get
  * the universal skills; each tag adds its capability-specific set (e.g. `php`
- * adds backend-quality / pre-release, `jira` adds the jira-* skills). Re-run
- * `vendor/bin/boost install` to change agents/vendors/tags interactively, or
- * hand-edit this file; then run `vendor/bin/boost sync`.
+ * adds backend-quality / pre-release, `jira` adds the jira-* skills). `voice`
+ * is always on — it ships the writing-voice guideline every repo in this setup
+ * uses; keep it in the list. Hand-edit this file to change tags, then run
+ * `vendor/bin/boost sync`. `vendor/bin/boost install` also works, but it
+ * REWRITES the whole `withTags()` list from the picker (and drops the call when
+ * you select nothing) — keep `voice` checked there, or add it back afterwards.
  *
  * Docs: https://github.com/sandermuller/boost-core
  */
@@ -35,5 +38,5 @@ return BoostConfig::configure()
         'sandermuller/package-boost-laravel',
         'sandermuller/package-boost-php',
     ])
-    ->withTags([__SKILL_TAGS__])
+    ->withTags(['voice'__SKILL_TAGS__])
     ->withDisabledEmitters([]);

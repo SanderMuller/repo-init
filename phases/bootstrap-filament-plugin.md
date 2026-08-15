@@ -56,7 +56,7 @@ On failure, consult `$REPO_INIT_HOME/references/composer-failure-modes.md`.
 
 ### 6. Run `composer require --dev` for the per-category dep list
 
-Build the list the same as `bootstrap-laravel-package.md` step 7 (shared + laravel-package mandatory per `$REPO_INIT_HOME/references/per-category-deps.md#laravel-package`). filament-plugin doesn't add extra dev deps beyond what laravel-package already requires.
+Build the list the same as `bootstrap-laravel-package.md` step 7 (shared + laravel-package mandatory per `$REPO_INIT_HOME/references/per-category-deps.md#laravel-package`). filament-plugin doesn't add extra dev deps beyond what laravel-package already requires. That includes the boost-family member: `sandermuller/package-boost-laravel`, already in the stub `composer.json` `require-dev` — never the bare `sandermuller/package-boost-php`.
 
 Suggest: depending on the plugin shape, the user may want `filament/forms`, `filament/tables`, `filament/notifications` etc. in `require-dev` for tests. Defer to user choice.
 

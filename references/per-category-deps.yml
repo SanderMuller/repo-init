@@ -21,7 +21,7 @@ shared:
       - tomasvotruba/type-coverage  # constraint is PHP-floor-conditional: >=2.2.0 <2.2.2 (PHP 8.3) / ^2.3 (PHP >= 8.4) — see php-floor-conditional below
       - nunomaduro/collision
       - orchestra/testbench
-      - sandermuller/boost-skills  # the boost-skills skill library; synced via boost-core. Excluded for laravel-project (no boost-core). skill-bundle hand-lists it (consumes-shared-dev-deps: false).
+      - sandermuller/boost-skills  # the boost-skills skill library; synced via boost-core. Canonical floor ^2.27.0 (ships the voice guideline the always-on `voice` tag needs). Excluded for laravel-project (no boost-core). skill-bundle hand-lists it (consumes-shared-dev-deps: false).
   # Structured form of the symplify formatter conditional (normative prose:
   # shared-dev-deps.md "Symplify formatter dep"). Consumers resolving the
   # `always.require-dev` list MUST apply this substitution by the target's
@@ -211,10 +211,10 @@ categories:
   skill-bundle:
     mandatory:
       require:
-        - sandermuller/boost-core  # runtime require — consumers need it to discover the shipped skills; require-dev is not transitive
+        - sandermuller/boost-core  # runtime require — consumers need it to discover the shipped skills; require-dev is not transitive. Canonical floor ^1.6
       require-dev:
         - laravel/pint
-        - sandermuller/boost-skills  # hand-listed: skill-bundle skips the shared block (consumes-shared-dev-deps: false) but still wants the boost-skills library
+        - sandermuller/boost-skills  # hand-listed: skill-bundle skips the shared block (consumes-shared-dev-deps: false) but still wants the boost-skills library. Canonical floor ^2.27.0
         - stolt/lean-package-validator
     optional: {}
     # consumes-shared-dev-deps: false → a consumer/CLI building this category's

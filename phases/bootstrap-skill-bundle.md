@@ -26,9 +26,9 @@ Run `$REPO_INIT_HOME/checklists/preflight.md`. Stop if anything is red. Verify c
 
 **Skip if:** `composer.json` already exists in cwd.
 
-Copy `$REPO_INIT_HOME/stubs/skill-bundle/composer.json`, substitute placeholders per `$REPO_INIT_HOME/references/placeholder-rules.md`. No `composer init` prelude needed. The stub already declares `sandermuller/boost-core` in `require` and allow-lists it in `config.allow-plugins` — do not strip either.
+Copy `$REPO_INIT_HOME/stubs/skill-bundle/composer.json`, substitute placeholders per `$REPO_INIT_HOME/references/placeholder-rules.md`. No `composer init` prelude needed. The stub already declares `sandermuller/boost-core` in `require` — the correct boost-family member for this category (a skill-bundle depends on the engine directly, never on a `package-boost-*` umbrella). Do not strip it and do not swap it for an umbrella. The stub's `config` block carries NO `allow-plugins` entry, which is correct: boost-core is `type: library` from 0.6.0 — do not add one.
 
-The stub's dependency set is the canonical skill-bundle list — see `$REPO_INIT_HOME/references/per-category-deps.md#skill-bundle` (`sandermuller/boost-core` in `require`; `laravel/pint`, `stolt/lean-package-validator` in `require-dev`). The shared dev-dep list does NOT apply — a skill-bundle ships no PHP source and carries no test runner.
+The stub's dependency set is the canonical skill-bundle list — see `$REPO_INIT_HOME/references/per-category-deps.md#skill-bundle` (`sandermuller/boost-core` in `require`; `laravel/pint`, `sandermuller/boost-skills`, `stolt/lean-package-validator` in `require-dev`). The shared dev-dep list does NOT apply — a skill-bundle ships no PHP source and carries no test runner.
 
 ### 3. Install dependencies
 

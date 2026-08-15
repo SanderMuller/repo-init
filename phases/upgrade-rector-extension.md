@@ -150,6 +150,23 @@ boost-core 0.20 changed every `BoostConfig` builder method to take a single `arr
 
 Independent of the `.config/` location move above — this applies even to a repo already on the `.config/` layout. It is the one hand-edit the boost `1.x` floor bump requires, because that bump crosses the 0.20 break.
 
+## Ensure the `voice` tag is set
+
+**Skip if:** the boost config has a `withTags([...])` call that already contains `'voice'` AND `sandermuller/boost-skills` in `require-dev` is at `^2.27.0` or higher.
+
+The canonical setup keeps the `voice` tag on in every repo that carries `sandermuller/boost-skills`. The tag ships that package's writing-voice guideline (`resources/boost/guidelines/voice.md`, mapped to `voice` in its `resources/boost/guidelines/.boost-tags.yaml`); without the tag the guideline never reaches `AGENTS.md` / `CLAUDE.md`. It is structural, not a user knob — never prompt to drop it.
+
+```php
+// before
+->withTags([Tag::Php, Tag::Github])
+// after
+->withTags(['voice', Tag::Php, Tag::Github])
+```
+
+1. Add `'voice'` to the `withTags([...])` array — put it first, keep the other tags as they are (see the example above). If the config has NO `withTags(...)` call (a `boost install` run with nothing selected removes it), add `->withTags(['voice'])` to the builder chain.
+2. **Floor coupling (ATOMIC):** in the same change, ensure `sandermuller/boost-skills` in `require-dev` cannot resolve below 2.27.0. Run `composer require --dev "sandermuller/boost-skills:^2.27.0"` ONLY when the declared constraint allows an older version; leave a constraint whose floor is already 2.27.0 or later (`^2.27.0`, `^3.0`, …) exactly as it is — rewriting it would downgrade the package. The tag is a silent no-op on a resolved version that does not ship the guideline, so the tag and the floor move together.
+3. Run `vendor/bin/boost sync` and confirm the voice guideline lands in `AGENTS.md` / `CLAUDE.md`.
+
 ## Run package-boost sync
 
 ```bash

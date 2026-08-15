@@ -68,6 +68,8 @@ From `$REPO_INIT_HOME/references/per-category-deps.md#phpstan-extension`:
 - Plus `nikic/php-parser` (needed for rule tests).
 - `phpunit/phpunit` (already in shared list for `test-framework=phpunit`).
 
+**Boost-family member:** `sandermuller/package-boost-php` — the framework-agnostic umbrella, already in the stub `composer.json` `require-dev`. It is the only correct family member for this category. Never swap it for `sandermuller/package-boost-laravel` (Laravel categories only) or for a direct `sandermuller/boost-core` require (`skill-bundle` only), and keep the `post-install-cmd` / `post-update-cmd` callback on the matching `PackageBoostPhp` façade. See `$REPO_INIT_HOME/references/per-category-deps.md` (boost-family umbrella) and `$REPO_INIT_HOME/references/composer-scripts.md`.
+
 **OPTIONAL (Laravel-aware opt-in):**
 
 - Adds `larastan/larastan` to `require-dev` (REPLACES bare `phpstan/phpstan` in dev-deps — per `references/per-category-deps.md` Laravel-aware row). The require-side `phpstan/phpstan: ^2` stays so the extension declares its own phpstan dep cleanly for consumers.

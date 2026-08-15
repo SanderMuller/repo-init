@@ -72,7 +72,7 @@ On other failures, consult `$REPO_INIT_HOME/references/composer-failure-modes.md
 
 ### 6. Run `composer require --dev` for the per-category dep list
 
-Same as `bootstrap-laravel-package.md` step 7 (shared + laravel-package mandatory per `$REPO_INIT_HOME/references/per-category-deps.md#laravel-package`). nova-tool doesn't add extra dev deps.
+Same as `bootstrap-laravel-package.md` step 7 (shared + laravel-package mandatory per `$REPO_INIT_HOME/references/per-category-deps.md#laravel-package`). nova-tool doesn't add extra dev deps. The boost-family member is `sandermuller/package-boost-laravel`, already in the stub `composer.json` `require-dev` — never the bare `sandermuller/package-boost-php`.
 
 ### 7. Install + sync target-local AI assets (optional)
 

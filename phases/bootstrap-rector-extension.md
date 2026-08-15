@@ -73,6 +73,8 @@ From `$REPO_INIT_HOME/references/per-category-deps.md#rector-extension`:
 - Shared deps from `$REPO_INIT_HOME/references/shared-dev-deps.md` minus `rector/rector` (already in `require` per §5.1.1 exclusion).
 - `nikic/php-parser` (needed for rule tests / AST traversal).
 
+**Boost-family member:** `sandermuller/package-boost-php` — the framework-agnostic umbrella, already in the stub `composer.json` `require-dev`. It is the only correct family member for this category. Never swap it for `sandermuller/package-boost-laravel` (Laravel categories only) or for a direct `sandermuller/boost-core` require (`skill-bundle` only), and keep the `post-install-cmd` / `post-update-cmd` callback on the matching `PackageBoostPhp` façade. See `$REPO_INIT_HOME/references/per-category-deps.md` (boost-family umbrella) and `$REPO_INIT_HOME/references/composer-scripts.md`.
+
 **OPTIONAL (Laravel-aware opt-in via `--with-laravel-sets`):**
 
 - Adds `driftingly/rector-laravel` to `require` (not `require-dev`) so the extension can wire Laravel rector sets internally in its own `config/config.php`. Edit the just-generated `composer.json` to add this.

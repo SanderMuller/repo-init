@@ -19,7 +19,7 @@ tomasvotruba/cognitive-complexity
 tomasvotruba/type-coverage    # constraint is PHP-floor-conditional: >=2.2.0 <2.2.2 (PHP 8.3 floor) / ^2.3 (PHP >= 8.4) — see "Type-perfect dep" below
 nunomaduro/collision
 orchestra/testbench
-sandermuller/boost-skills
+sandermuller/boost-skills    # floor ^2.27.0 — the version that ships the voice guideline the always-on `voice` tag needs
 ```
 
 The boost-family umbrella (`sandermuller/package-boost-php` / `package-boost-laravel`) is **NOT** in this shared list — it is assigned per category. See `per-category-deps.md` → "boost-family umbrella".
@@ -43,7 +43,7 @@ Test-framework split (`test-framework=pest|phpunit`):
 - `tomasvotruba/type-coverage` — enforces 100% type coverage. From 2.3.0 it also absorbs `rector/type-perfect`'s rules — constraint is PHP-floor-conditional, see "Type-perfect dep" below.
 - `nunomaduro/collision` — better error output in CLI.
 - `orchestra/testbench` — package-category test bootstrap (no longer required for AI sync; boost-core's standalone bin handles that).
-- `sandermuller/boost-skills` — the boost-skills skill library (generic dev-workflow skills: code-review, bug-fixing, write-spec, evaluate, …). Synced via boost-core; the active subset is filtered by the `withTags()` call in `.config/boost.php`. **Excluded for `laravel-project`** — it uses `laravel/boost`, not boost-core, so boost-skills would be inert there. `skill-bundle` hand-lists it in its own `mandatory.require-dev` because it opts out of the shared list (`consumes-shared-dev-deps: false`).
+- `sandermuller/boost-skills` — the boost-skills skill library (generic dev-workflow skills: code-review, bug-fixing, write-spec, evaluate, …). Synced via boost-core; the active subset is filtered by the `withTags()` call in `.config/boost.php`. **Canonical floor `^2.27.0`** — it is the version verified to ship `resources/boost/guidelines/voice.md` plus its `.boost-tags.yaml` `voice` mapping, which the always-on `voice` tag needs; a lower resolved version makes that tag a silent no-op. See `placeholder-rules.md` (`__SKILL_TAGS__`). **Excluded for `laravel-project`** — it uses `laravel/boost`, not boost-core, so boost-skills would be inert there. `skill-bundle` hand-lists it in its own `mandatory.require-dev` because it opts out of the shared list (`consumes-shared-dev-deps: false`).
 
 The boost-family umbrella is assigned **per category** — see the line above the "Why these" heading and, for the full mapping + the `config.allow-plugins` rule, `per-category-deps.md` → "boost-family umbrella" (its single source of truth).
 

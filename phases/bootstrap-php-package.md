@@ -84,6 +84,8 @@ From `$REPO_INIT_HOME/references/per-category-deps.md#php-package`:
 
 **Plus shared deps** (`$REPO_INIT_HOME/references/shared-dev-deps.md`).
 
+**Boost-family member:** `sandermuller/package-boost-php` — the framework-agnostic umbrella, already in the stub `composer.json` `require-dev`. It is the only correct family member for this category. Never swap it for `sandermuller/package-boost-laravel` (Laravel categories only) or for a direct `sandermuller/boost-core` require (`skill-bundle` only), and keep the `post-install-cmd` / `post-update-cmd` callback on the matching `PackageBoostPhp` façade. See `$REPO_INIT_HOME/references/per-category-deps.md` (boost-family umbrella) and `$REPO_INIT_HOME/references/composer-scripts.md`.
+
 Single batched call. On failure, consult composer-failure-modes.md.
 
 ### 7. Sync AI assets (project-local, optional)

@@ -2,6 +2,8 @@
 
 Per-major / per-minor upgrade notes for `sandermuller/repo-init`. Each section is anchored so release notes can deep-link to the relevant breaking-change explanation.
 
+> **Every version constraint below is historical — it records the floor that shipped in that release, not the current one.** Never copy a constraint out of this file into a target repo. The live canonical floors are `references/shared-dev-deps.md`, `references/per-category-deps.md` (+ `.yml`), and the `stubs/` `composer.json` files; the phase files cite those.
+
 ## From 0.x to 0.x (pre-1.0 cadence — historical)
 
 Pre-`1.0.0` releases (0.1.0 through 0.8.x) introduced breaking changes in MINOR bumps; each is documented in the CHANGELOG and the per-version-pair sections below. From 1.0.0 onward repo-init follows standard SemVer: breaking changes ship as MAJOR only, additive as MINOR, fixes as PATCH.

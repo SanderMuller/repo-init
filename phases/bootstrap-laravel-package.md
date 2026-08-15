@@ -118,10 +118,12 @@ On failure, consult `$REPO_INIT_HOME/references/composer-failure-modes.md`.
 **Otherwise:** build the list:
 
 - Shared `require-dev` from `$REPO_INIT_HOME/references/shared-dev-deps.md` (universal list), minus any per-category exclusions (`laravel-package` has none).
-- Category-mandatory `require-dev` from `$REPO_INIT_HOME/references/per-category-deps.md#laravel-package`: `larastan/larastan`, `driftingly/rector-laravel`.
+- Category-mandatory `require-dev` from `$REPO_INIT_HOME/references/per-category-deps.md#laravel-package`: `larastan/larastan`, `laravel/boost`, `driftingly/rector-laravel`. (`laravel/boost` is mandatory: `testbench.yaml` lists `Laravel\Boost\BoostServiceProvider`, so a missing dep fatals every testbench-based command.)
 - Conditional opt-ins:
   - `--with-hihaho-rules` (default `y` for vendor=hihaho): adds nothing for `laravel-package` (those are laravel-project-only).
   - `variant=spatie`: `spatie/laravel-package-tools` is in `require` (already in the spatie stub composer.json), not `require-dev`.
+
+**Boost-family member:** `sandermuller/package-boost-laravel` — the Laravel-flavoured umbrella (it pulls `sandermuller/boost-core` and `sandermuller/package-boost-php` transitively), already in the stub `composer.json` `require-dev`. It is the only correct family member for `laravel-package` and its variants (`laravel-package-spatie`, `filament-plugin`, `nova-tool`). Never leave the bare `sandermuller/package-boost-php` here (framework-agnostic categories only) and never require `sandermuller/boost-core` directly (`skill-bundle` only); keep the `post-install-cmd` / `post-update-cmd` callback on the matching `PackageBoostLaravel` façade. See `$REPO_INIT_HOME/references/per-category-deps.md` (boost-family umbrella) and `$REPO_INIT_HOME/references/composer-scripts.md`.
 
 Run as a single batched `composer require --dev <pkg1> <pkg2> ...` call FOR THE MISSING ones only. Respect the larastan-vs-phpstan exclusivity (use `larastan/larastan`; never also `phpstan/phpstan`).
 

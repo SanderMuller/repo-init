@@ -36,7 +36,7 @@
         "phpstan/phpstan-strict-rules": "^2.0",
         "rector/rector": "^2.5",
         "rector/type-perfect": "^2.1",
-        "sandermuller/boost-skills": "^2.0.0",
+        "sandermuller/boost-skills": "^2.27.0",
         "sandermuller/package-boost-php": "^1.0",
         "spaze/phpstan-disallowed-calls": "^4.13",
         "stolt/lean-package-validator": "^6.0",

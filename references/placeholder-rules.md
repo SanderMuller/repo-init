@@ -21,9 +21,24 @@ Exact derivation rules for the placeholders used in `stubs/`. No agent guessing.
 | `__YEAR__` | current year, four digits | `2026` |
 | `__TEST_RUNNER__` | per `--test-framework=`, the binary basename | `pest` or `phpunit` |
 | `__TEST_COVERAGE_FLAG__` | per `--test-framework=`, the `test-coverage` script flag | `--coverage` (pest) or `--coverage-html=coverage` (phpunit) |
-| `__SKILL_TAGS__` | per the bootstrap skill-tag picker; a comma-separated list of quoted `sandermuller/boost-skills` tag strings, or empty | `'php', 'jira'` (or empty) |
+| `__SKILL_TAGS__` | per the bootstrap skill-tag picker; each picked `sandermuller/boost-skills` tag rendered as `, '<tag>'` — a LEADING comma-space per element — or the empty string when nothing is picked. Never carries `'voice'` — the stub hard-codes that one | `, 'php', 'jira'` (or empty) |
 
-`__SKILL_TAGS__` substitutes into the array argument of `->withTags([__SKILL_TAGS__])` in `stubs/shared/.config/boost.php`. The substitution is the bare element list (`'php', 'jira'`) with NO surrounding brackets — the stub already wraps the placeholder in `[ ]`. An empty pick yields `->withTags([])`, a valid no-op. Only `stubs/shared/.config/boost.php` uses it. (boost-core 0.20 changed `withTags()` / `withAgents()` from variadic to array arguments; the stub and this placeholder target the array form.)
+`__SKILL_TAGS__` substitutes into the array argument of `->withTags(['voice'__SKILL_TAGS__])` in `stubs/shared/.config/boost.php`. The substitution carries its own leading separators and NO surrounding brackets — the stub supplies the brackets and the first element. The result is exact in both cases, with no cleanup step:
+
+```php
+// picked: php, jira  →  __SKILL_TAGS__ = ", 'php', 'jira'"
+->withTags(['voice', 'php', 'jira'])
+// picked: nothing    →  __SKILL_TAGS__ = ""
+->withTags(['voice'])
+```
+
+Only `stubs/shared/.config/boost.php` uses it. (boost-core 0.20 changed `withTags()` / `withAgents()` from variadic to array arguments; the stub and this placeholder target the array form.)
+
+**`'voice'` is hard-coded in the stub, not part of the picker.** The `voice` tag ships `sandermuller/boost-skills`' writing-voice guideline (`resources/boost/guidelines/voice.md`, tagged `voice` in that package's `.boost-tags.yaml`) — the canonical setup wants it in every repo that carries boost-skills, so it is structural, not a knob. Never offer it in the picker, never substitute it through `__SKILL_TAGS__`, and never drop it from a scaffolded or upgraded `.config/boost.php`. The stub floor `sandermuller/boost-skills: ^2.27.0` guarantees the guideline is present — 2.27.0 is verified to ship `voice.md` plus its `.boost-tags.yaml` entry. An older resolved version makes the tag a silent no-op, which is why the tag and the floor move together.
+
+`vendor/bin/boost install` can drop the tag. Its picker rewrites the whole `withTags()` list from the operator's selection, and an empty selection removes the call entirely (`BoostConfigWriter::write()`, `$tags === []` branch). So a later interactive install silently un-does the always-on tag. The audit phases' voice-tag finding is the safety net; the stub comment warns about it.
+
+`laravel-project` is the one category with no `.config/boost.php` (it carries `laravel/boost`, not boost-core, and no boost-skills) — the `voice` tag does not apply there.
 
 ## Boost config location (canonical: `.config/boost.php`)
 
