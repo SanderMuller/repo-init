@@ -7,6 +7,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Pre-`1.0.0` releases (0.x.x — historical) introduced breaking changes in MINOR bumps; from 1.0.0 onward repo-init follows standard SemVer (breaking changes ship as MAJOR only). The pre-1.0 entries below remain for reference.
 
+## [1.10.0](https://github.com/sandermuller/repo-init/compare/1.9.0...1.10.0) - 2026-08-15
+
+<!-- verified-sha: 9f4dd5a349061265bcfed0e148039be36868d58b -->
+### Added
+
+#### The `voice` skill tag is always on
+
+Scaffolded repos now carry the `voice` tag in `.config/boost.php`, so `sandermuller/boost-skills` syncs its writing-voice guideline into `AGENTS.md` / `CLAUDE.md`. The guideline decides which voice rule applies to which surface — chat replies, PR text, issues, commit messages, and end-user copy — and it applies to every repo in this setup, so it is structural rather than a per-repo choice.
+
+The tag left the interactive skill-tag picker. The stub hard-codes it:
+
+```php
+->withTags(['voice'__SKILL_TAGS__])
+
+```
+
+`__SKILL_TAGS__` now renders each picked tag with a **leading** comma (`, 'php', 'jira'`), so both cases substitute exactly, with no cleanup step:
+
+| Picked tags | Result |
+|---|---|
+| `php`, `jira` | `->withTags(['voice', 'php', 'jira'])` |
+| none | `->withTags(['voice'])` |
+
+Audit phases gained a MEDIUM-severity finding for a missing `voice` tag. It also covers a config with **no** `withTags(...)` call at all: `vendor/bin/boost install` rewrites the whole tag list from its picker and removes the call when nothing is selected, so an absent call is drift, not an opt-out. The scaffolded config's own comment now warns about that rewrite. Upgrade phases gained a matching section that adds the tag and re-syncs.
+
+#### `sandermuller/boost-skills` floor raised to `^2.27.0`
+
+2.27.0 is the version that ships `resources/boost/guidelines/voice.md` and its `voice` mapping in `.boost-tags.yaml`. Below it the tag resolves to nothing, so the tag and the floor move together: audit flags a constraint that can resolve below 2.27.0 on its own, even when the tag is already present, and the upgrade step raises only a constraint that allows an older version — a constraint whose floor is already 2.27.0 or later is left alone rather than downgraded.
+
+#### Canonical `sandermuller/boost-core` floor raised to `^1.6`
+
+boost-core 1.6.0 is additive over 1.1 — no API or config change. It makes `boost sync` delete only the files boost owns (the ownership manifest that fixes `laravel/boost` coexistence), adds coexistence output to `boost doctor`, and bundles the `boost-command-surfaces` skill. `skill-bundle` is the category that requires boost-core directly; the other categories keep receiving it through their `package-boost-*` umbrella.
+
+### Fixed
+
+#### Boost-family routing is stated where the scaffold happens
+
+Which boost package a category installs was documented in `references/`, but the bootstrap phases named it only for `composer-plugin` and `skill-bundle`. Each bootstrap phase now states its own family member and the swaps that are wrong, so a phase read on its own cannot drift from the reference table.
+
+Four documentation faults are corrected:
+
+- `bootstrap-skill-bundle` told the agent not to strip a `config.allow-plugins` entry for boost-core. The stub has no such entry, and boost-core has been `type: library` since 0.6.0 — adding one was the actual error.
+- The Laravel row of the boost-family table omitted `laravel-package-spatie`.
+- The `laravel-package` mandatory dep list omitted `laravel/boost`, which `testbench.yaml` needs to boot.
+- The `skill-bundle` dep list omitted `sandermuller/boost-skills`.
+
+### Internal
+
+- `UPGRADING.md` now states up front that every constraint in it is historical, and points at `references/` and `stubs/` for the live floors.
+- Repo dev deps: `laravel/pint` `^1.30`, `sandermuller/boost-skills` `^2.27.0`, `sandermuller/boost-core` `^1.6`.
+
+**Full Changelog**: <https://github.com/SanderMuller/repo-init/compare/1.9.0...1.10.0>
+
 ## [1.9.0](https://github.com/sandermuller/repo-init/compare/1.8.0...1.9.0) - 2026-08-11
 
 <!-- verified-sha: 4812daf5a18016eee77305c1b479e60c99ccb049 -->
@@ -35,6 +88,7 @@ Audit phases gained a HIGH-severity rule for the duplicate registration. Upgrade
 composer remove --dev rector/type-perfect --no-update
 composer require --dev tomasvotruba/type-coverage:^2.3
 
+
 ```
 
 `--no-update` keeps the removal a pure `composer.json` edit, so `vendor/` never holds both packages. Running a plain `composer remove` first resolves immediately and leaves `parameters.type_perfect:` in `phpstan.neon.dist` unregistered while `type-coverage` is still below 2.3 — PHPStan then fails boot the other way.
@@ -57,7 +111,7 @@ Two details the phases now spell out:
 - `actions/checkout`, `actions/setup-node`, and `actions/setup-python` pinned to `v7` across this repo's workflows and the shipped stub workflows.
 - Stub dev-dependency constraints refreshed: `rector/rector` `^2.5`, `spaze/phpstan-disallowed-calls` `^4.13`, `stolt/lean-package-validator` `^6.0`, `tomasvotruba/cognitive-complexity` `^1.2`.
 
-**Full Changelog**: <https://github.com/SanderMuller/repo-init/compare/1.8.0...1.9.0>
+**Full Changelog**: [https://github.com/SanderMuller/repo-init/compare/1.8.0...1.9.0](https://github.com/SanderMuller/repo-init/compare/1.8.0...1.9.0)
 
 ## [1.8.0](https://github.com/sandermuller/repo-init/compare/1.7.1...1.8.0) - 2026-07-24
 
@@ -434,6 +488,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 For existing scaffolded packages, the next audit walk will surface the `sandermuller/package-boost-php: true` entry as MEDIUM-stale. The upgrade phase handles removal correctly — bump first, then drop the entry.
@@ -532,6 +587,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 No further steps. Scaffold output, the `repo-init` skill, audit/upgrade phases, stubs — all identical to 0.8.1.
@@ -569,6 +625,7 @@ If you installed 0.8.0:
 ```bash
 composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
+
 
 
 
@@ -623,6 +680,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 The `composer global exec --` form runs `boost` from Composer's global `vendor/bin/` regardless of the user's current directory; the literal `--` stops Composer from interpreting boost's flags as its own. `--scope=user --all` publishes every globally-installed package's `resources/boost/skills/` into `~/.{agent}/skills/<vendor>__<package>/`. See `references/boost-core-user-scope.md` for the full contract.
@@ -639,6 +697,7 @@ repo-init now uses the shared `sandermuller/boost-skills` library (code-review, 
 
 ```bash
 gh release create X.Y.Z --notes-file internal/release-notes-X.Y.Z.md
+
 
 
 
@@ -719,6 +778,7 @@ composer global exec -- boost sync --scope=user --all   # new: global skill refr
 
 
 
+
 ```
 
 `stubs/shared/boost.php` + repo-init's own `boost.php` docblocks updated accordingly.
@@ -748,6 +808,7 @@ Upgrade repo-init itself:
 ```bash
 composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
+
 
 
 
