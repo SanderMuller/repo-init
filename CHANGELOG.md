@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Pre-`1.0.0` releases (0.x.x — historical) introduced breaking changes in MINOR bumps; from 1.0.0 onward repo-init follows standard SemVer (breaking changes ship as MAJOR only). The pre-1.0 entries below remain for reference.
 
+## [1.11.0](https://github.com/sandermuller/repo-init/compare/1.10.0...1.11.0) - 2026-08-19
+
+<!-- verified-sha: d6586aab777809f9f0e66b4dfaf0545604c8e00b -->
+Pest 5 is the canonical test runner for scaffolded repos. It requires PHP `^8.4` and PHPUnit 13, so a Pest repo now has an `^8.4` floor — which also drops the two abandoned packages an `^8.3` floor carries. PHPUnit categories keep the `^8.3` floor unchanged. `stolt/lean-package-validator` 6.0.1 widened `sebastian/diff` to `^8||^9`, which is what allows PHPUnit 13 in the categories that carry the validator.
+
+### Changed
+
+- Pest floor raised to `^5.0`, with `pest-plugin-arch`, `pest-plugin-laravel`, `pest-plugin-rector`, `pest-plugin-phpstan`, and `pest-plugin-agent` all on `^5.0`.
+- `pestphp/pest-plugin-rector` replaces `mrpunyapal/rector-pest`. `rector.php` now imports `Pest\Rector\Set\PestSetList` and uses the single set `PestSetList::CODING_STYLE`, which carries what `PEST_CODE_QUALITY`, `PEST_CHAIN`, and `PEST_LARAVEL` used to split.
+- Pest scaffolds take a PHP `^8.4` floor and the PHP >= 8.4 dep set: `symplify/phpstan-rules: ^14.12`, `tomasvotruba/type-coverage: ^2.3`, and no `rector/type-perfect`. `--test-framework=pest` with `--php=8.3` is now rejected.
+- `orchestra/testbench: ^11.0` for every Pest repo. Pest 5 needs `symfony/process: ^8.1` and testbench 10 pins `^7.2`, so the two cannot install together. Laravel packages keep `illuminate/*: ^12.0||^13.0` in `require` for consumers, but their suite and CI matrix run Laravel 13 only.
+- `php-package` and `composer-plugin` stubs pin `stolt/lean-package-validator: ^6.0.1` — the first version that installs next to PHPUnit 13.
+- Pest CI matrices moved to PHP 8.4 cells.
+
+### Added
+
+- The Tia engine (test impact analysis) in the shipped `tests/Pest.php`, through `pest()->tia()->locally()`. It re-runs only the tests a change touched, on developer machines. `locally()` switches Tia off for any run carrying `--ci`, which is what the stub workflow passes, so CI keeps the full suite. Tia needs a coverage driver (PCOV or Xdebug) for its first recording run, and at least one commit in the repository — run `vendor/bin/pest --no-tia` before the initial commit.
+- A "Migrate Pest 4 → 5 (ATOMIC)" step in every upgrade phase. It bumps the PHP floor, the plugins, and the PHP >= 8.4 dep set in one resolution, and routes a Pest 3 target through the 3 → 4 pass (`vendor/bin/pest --init`) first.
+- Audit findings for Pest below `^5.0`, `mrpunyapal/rector-pest` in `require-dev`, a `tests/Pest.php` without the Tia call, `orchestra/testbench: ^10.0||^11.0` on a Pest repo, and a `stolt/lean-package-validator` constraint below 6.0.1.
+
+### Upgrading
+
+Run the `upgrade` phase for the repo's category — it carries the atomic Pest 4 → 5 step. Pest 5 builds on PHPUnit 13, so a suite that uses removed PHPUnit APIs needs a hand pass. Note that PHPUnit 13 requires PHP `>= 8.4.1`, while a `^8.4` constraint also accepts 8.4.0. A package that must test against Laravel 12 stays on Pest 4 as a deliberate exception. See [UPGRADING.md](https://github.com/SanderMuller/repo-init/blob/main/UPGRADING.md#110x--1110-pest-5--tia-canonical).
+
+```bash
+composer global update sandermuller/repo-init
+composer global exec -- boost sync --scope=user --all
+
+```
+
+**Full Changelog**: <https://github.com/SanderMuller/repo-init/compare/1.10.0...1.11.0>
+
 ## [1.10.0](https://github.com/sandermuller/repo-init/compare/1.9.0...1.10.0) - 2026-08-15
 
 <!-- verified-sha: 9f4dd5a349061265bcfed0e148039be36868d58b -->
@@ -20,6 +52,7 @@ The tag left the interactive skill-tag picker. The stub hard-codes it:
 
 ```php
 ->withTags(['voice'__SKILL_TAGS__])
+
 
 ```
 
@@ -58,7 +91,7 @@ Four documentation faults are corrected:
 - `UPGRADING.md` now states up front that every constraint in it is historical, and points at `references/` and `stubs/` for the live floors.
 - Repo dev deps: `laravel/pint` `^1.30`, `sandermuller/boost-skills` `^2.27.0`, `sandermuller/boost-core` `^1.6`.
 
-**Full Changelog**: <https://github.com/SanderMuller/repo-init/compare/1.9.0...1.10.0>
+**Full Changelog**: [https://github.com/SanderMuller/repo-init/compare/1.9.0...1.10.0](https://github.com/SanderMuller/repo-init/compare/1.9.0...1.10.0)
 
 ## [1.9.0](https://github.com/sandermuller/repo-init/compare/1.8.0...1.9.0) - 2026-08-11
 
@@ -87,6 +120,7 @@ Audit phases gained a HIGH-severity rule for the duplicate registration. Upgrade
 ```bash
 composer remove --dev rector/type-perfect --no-update
 composer require --dev tomasvotruba/type-coverage:^2.3
+
 
 
 ```
@@ -489,6 +523,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 For existing scaffolded packages, the next audit walk will surface the `sandermuller/package-boost-php: true` entry as MEDIUM-stale. The upgrade phase handles removal correctly — bump first, then drop the entry.
@@ -588,6 +623,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 No further steps. Scaffold output, the `repo-init` skill, audit/upgrade phases, stubs — all identical to 0.8.1.
@@ -625,6 +661,7 @@ If you installed 0.8.0:
 ```bash
 composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
+
 
 
 
@@ -681,6 +718,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 The `composer global exec --` form runs `boost` from Composer's global `vendor/bin/` regardless of the user's current directory; the literal `--` stops Composer from interpreting boost's flags as its own. `--scope=user --all` publishes every globally-installed package's `resources/boost/skills/` into `~/.{agent}/skills/<vendor>__<package>/`. See `references/boost-core-user-scope.md` for the full contract.
@@ -697,6 +735,7 @@ repo-init now uses the shared `sandermuller/boost-skills` library (code-review, 
 
 ```bash
 gh release create X.Y.Z --notes-file internal/release-notes-X.Y.Z.md
+
 
 
 
@@ -779,6 +818,7 @@ composer global exec -- boost sync --scope=user --all   # new: global skill refr
 
 
 
+
 ```
 
 `stubs/shared/boost.php` + repo-init's own `boost.php` docblocks updated accordingly.
@@ -808,6 +848,7 @@ Upgrade repo-init itself:
 ```bash
 composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
+
 
 
 
