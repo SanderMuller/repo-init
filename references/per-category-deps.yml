@@ -50,19 +50,29 @@ shared:
   # All three pull sandermuller/boost-core transitively (the skill-sync engine).
   test-framework:
     pest:
+      # Pest 5 requires PHP ^8.4 and PHPUnit 13 — a `pest` repo can NOT have a
+      # `^8.3` floor, and always takes the 'php>=8.4' rows above (no
+      # rector/type-perfect, symplify/phpstan-rules instead of -extensions).
+      # pestphp/pest-plugin-rector is first-party and replaces the former
+      # mrpunyapal/rector-pest entry.
       require-dev:
-        - pestphp/pest
-        - pestphp/pest-plugin-arch
-        - mrpunyapal/rector-pest
+        - "pestphp/pest: ^5.0"
+        - "pestphp/pest-plugin-arch: ^5.0"
+        - "pestphp/pest-plugin-rector: ^5.0"
+        - "pestphp/pest-plugin-phpstan: ^5.0"  # self-registers via phpstan/extension-installer
+        - "pestphp/pest-plugin-agent: ^5.0"    # `pest --agent='<php>'` for AI agents
     pest-laravel-only:
       # added on top of pest when category in {laravel-project, laravel-package}
-      # NOTE: pestphp/pest-plugin-laravel ^4.1+ required for Laravel 13 support.
       # For laravel-project: Laravel ships PHPUnit by default; pest is opt-in
       # via `--test-framework=pest` (then user runs `vendor/bin/pest --init`
       # separately to migrate). CLI default for laravel-project is phpunit
       # (not pest) for vendors outside the sander/hihaho convention.
       require-dev:
-        - "pestphp/pest-plugin-laravel: ^4.1"
+        - "pestphp/pest-plugin-laravel: ^5.0"
+      # Pest 5 needs symfony/process ^8.1; orchestra/testbench 10 pins ^7.2, so
+      # a Pest 5 Laravel package takes `orchestra/testbench: ^11.0` (NOT
+      # ^10.0||^11.0) and its CI matrix runs Laravel 13 cells only. The runtime
+      # `require` range stays ^12.0||^13.0 for consumers.
     phpunit:
       require-dev:
         - phpunit/phpunit

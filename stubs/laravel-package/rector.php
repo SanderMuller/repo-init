@@ -1,5 +1,6 @@
 <?php declare(strict_types=1);
 
+use Pest\Rector\Set\PestSetList;
 use Rector\Caching\ValueObject\Storage\FileCacheStorage;
 use Rector\CodeQuality\Rector\ClassMethod\InlineArrayReturnAssignRector;
 use Rector\CodeQuality\Rector\If_\ExplicitBoolCompareRector;
@@ -11,7 +12,6 @@ use Rector\Php81\Rector\FuncCall\NullToStrictStringFuncCallArgRector;
 use Rector\Privatization\Rector\ClassMethod\PrivatizeFinalClassMethodRector;
 use Rector\TypeDeclaration\Rector\ArrowFunction\AddArrowFunctionReturnTypeRector;
 use RectorLaravel\Set\LaravelSetList;
-use RectorPest\Set\PestSetList;
 
 return RectorConfig::configure()
     ->withCache(
@@ -50,9 +50,7 @@ return RectorConfig::configure()
             LaravelSetList::LARAVEL_FACADE_ALIASES_TO_FULL_NAMES,
         ],
         class_exists(PestSetList::class) ? [
-            PestSetList::PEST_CODE_QUALITY,
-            PestSetList::PEST_CHAIN,
-            PestSetList::PEST_LARAVEL,
+            PestSetList::CODING_STYLE,
         ] : [],
     ))
     ->withSkip([

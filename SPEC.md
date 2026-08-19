@@ -240,7 +240,7 @@ The skill also lists the seven user-facing knobs the agent must collect or infer
 
 - `vendor` (sandermuller / hihaho / custom)
 - `name` (kebab-case, OPTIONAL — see §7.target-dir-rule: if provided, scaffolds into `./<name>/`; if absent, scaffolds into cwd which must be empty modulo `.git/`)
-- `php` (8.3 / 8.4 / 8.5 — default 8.3; 8.2 rejected, see §5.7)
+- `php` (8.3 / 8.4 / 8.5 — default 8.3 with `test-framework=phpunit`, 8.4 with `test-framework=pest` (Pest 5 needs PHP `^8.4`); 8.2 rejected, see §5.7)
 - `laravel` (only for laravel-package — `^11||^12||^13`, `^12||^13`, `^13`)
 - `test-framework` (pest / phpunit — vendor-driven default per `references/pest-vs-phpunit.md`)
 - `with-hihaho-rules` (y/N — default y for vendor=hihaho)
@@ -376,7 +376,7 @@ Audit honours these: a `rector-extension` repo with `rector/rector` in `require`
 
 Note: §5.1 shared dev deps do not directly list bare `phpstan/phpstan` — but `larastan/larastan` (in Laravel categories) requires it transitively. For non-Laravel categories `php-package` and `phpstan-extension`, `phpstan/phpstan` is required explicitly via §5.2 ("Adds to `require-dev`" for php-package; "Adds to `require`" for phpstan-extension).
 
-When `test-framework=pest`: add `pestphp/pest`, `pestphp/pest-plugin-arch`, `mrpunyapal/rector-pest`. Laravel categories also add `pestphp/pest-plugin-laravel`.
+When `test-framework=pest`: add `pestphp/pest: ^5.0`, `pestphp/pest-plugin-arch: ^5.0`, `pestphp/pest-plugin-rector: ^5.0`, `pestphp/pest-plugin-phpstan: ^5.0`, `pestphp/pest-plugin-agent: ^5.0`. Laravel categories also add `pestphp/pest-plugin-laravel: ^5.0`. Pest 5 requires PHP `^8.4`, so a pest repo always takes the PHP >= 8.4 dep set.
 
 When `test-framework=phpunit`: add `phpunit/phpunit`.
 
@@ -513,8 +513,8 @@ Per-category `withPaths` and `withSets`:
 | Category | `withPaths` | Extra `withSets` |
 |---|---|---|
 | `laravel-project` | `app, routes, config, database, tests` | `LaravelSetList::LARAVEL_*`, `Hihaho\RectorRules\Sets::ALL` when `--with-hihaho-rules` |
-| `laravel-package` | `src, tests, workbench` | `LaravelSetList::LARAVEL_*`, `PestSetList::*` when pest |
-| `php-package` | `src, tests` | `PestSetList::*` when pest |
+| `laravel-package` | `src, tests, workbench` | `LaravelSetList::LARAVEL_*`, `Pest\Rector\Set\PestSetList::CODING_STYLE` when pest |
+| `php-package` | `src, tests` | `Pest\Rector\Set\PestSetList::CODING_STYLE` when pest |
 | `phpstan-extension` | `src, tests` | (none) |
 | `rector-extension` | `src, tests, config` | (none) |
 
@@ -563,7 +563,7 @@ Run checklists/preflight.md first. Stop if anything is red.
 ## Inputs to collect
 - vendor (required)
 - name (optional, kebab-case — see target-dir rule below)
-- php (default 8.3)
+- php (default 8.3 with phpunit, 8.4 with pest)
 - laravel (default ^11||^12||^13)
 - test-framework (default pest)
 - description (one line)
@@ -785,7 +785,7 @@ Brief summary of each reference file's purpose. Each is a flat markdown doc the 
 - `references/phpstan-config.md` — §5.5
 - `references/rector-config.md` — §5.6
 - `references/canonical-repos.md` — links to the reference repos per category: `SanderMuller/laravel-queue-insights`, `SanderMuller/solana-pubkey`, `SanderMuller/laravel-fluent-validation-phpstan`, `SanderMuller/laravel-fluent-validation-rector`, `hihaho/pipedrive-migration-tool`. Includes "what to look at" notes per file.
-- `references/version-defaults.md` — default PHP (`8.3`), Laravel range (`^11||^12||^13`), Pest (`^4.0`), test-framework defaults per vendor.
+- `references/version-defaults.md` — default PHP (`8.3` with phpunit, `8.4` with pest), Laravel range (`^11||^12||^13`), Pest (`^5.0`), test-framework defaults per vendor.
 - `references/pest-vs-phpunit.md` — when to use which; vendor-driven default (sander=pest, hihaho=phpunit, phpstan-extension=always phpunit).
 - `references/gitattributes-managed-block.md` — explains the package-boost managed block, why repo-init's stub appends to it rather than creating a second block, and the fallback if package-boost's block is absent.
 - `references/upgrade-merge-modes.md` — per-file merge mode declaration: `replace` / `managed-block` / `append-only` / `merge-keys` / `notify-only`. Audit + upgrade phases consult this so OUTDATED detection isn't a blunt whole-file diff (codex v3 #7).
@@ -939,7 +939,7 @@ The "dogfood" property therefore reduces to: every stub in `stubs/` was generate
 
 16. **Git-dirty guard.** **Decision:** Agent runs `git status --porcelain` before any write and skips paths flagged as modified/staged/untracked. Override only with explicit per-file user opt-in. **Rationale:** Untracked-file hole flagged in v2 review; agent enforces in phase files.
 
-17. **Pest floor for shipped stub.** **Decision:** Pin shared dep to `^4.0`. Bundled `tests/Pest.php` uses Pest 4 idioms. **Rationale:** One stub, no agent-side choice. Document the Pest 3 → 4 upgrade in `references/version-defaults.md` for adopters bumping into the new floor.
+17. **Pest floor for shipped stub.** **Decision:** Pin shared dep to `^5.0`, with every `pestphp/*` plugin on `^5.0`. Bundled `tests/Pest.php` uses Pest 5 idioms and turns on the Tia engine with `pest()->tia()->locally()`. Pest 5 requires PHP `^8.4` and PHPUnit 13, so a pest scaffold has a `^8.4` floor and takes the PHP >= 8.4 dep set. **Rationale:** One stub, no agent-side choice. `stolt/lean-package-validator` 6.0.1 widened `sebastian/diff` to `^8||^9`, which is what let the validator-carrying categories move to PHPUnit 13. Document the Pest 3 → 4 → 5 path in `references/version-defaults.md` for adopters bumping into the new floor.
 
 18. **Hihaho L-package spatie variant.** **Decision:** Ship a separate `stubs/laravel-package-spatie/` tree. Detector sub-flag `hihaho-package-tools-flavoured` (or explicit `--variant=spatie`) selects the full alternate tree. **Rationale:** Agent never mutates code mid-flow; just copies the right tree. Small duplication of composer.json + ServiceProvider + config stubs is cheaper than the two failure modes of mid-flow code rewriting.
 

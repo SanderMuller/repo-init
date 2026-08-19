@@ -13,7 +13,7 @@ Run `$REPO_INIT_HOME/checklists/preflight.md`. Stop if anything is red. Verify c
 - `vendor` — required.
 - `name` (kebab-case) — optional per target-dir rule.
 - `description` — required.
-- `php` — default `8.3`.
+- `php` — default `8.4` with `test-framework=pest` (Pest 5 requires PHP `^8.4`), `8.3` with `test-framework=phpunit`. Accepted: `8.3`, `8.4`, `8.5`. Reject `8.2`. Reject `pest` + `8.3` — ask the user which of the two to change.
 - `laravel` — default `^12.0||^13.0`. (Laravel 11 support dropped in repo-init 0.3.0 — pao 1.x conflicts with Laravel <12.)
 - `filament` — default `^3.0||^4.0`. User may pin to `^4.0` only if targeting Filament v4 features.
 - `test-framework` — default `pest`.
@@ -38,7 +38,7 @@ For each file under `$REPO_INIT_HOME/stubs/filament-plugin/`, copy to cwd. Subst
 
 Key files:
 
-- `composer.json` — has `filament/filament: ^3.0||^4.0` in `require`. Substitute `__LARAVEL_VERSIONS__`. Symplify dep is PHP-floor-conditional: the stub ships `symplify/phpstan-extensions: ^12.0` (installable on every accepted floor; matches the default `php=8.3`); if `php=8.4` or `8.5`, replace it with `symplify/phpstan-rules: ^14.11` AND align the `run-tests.yml` matrix with the chosen floor — drop cells below it and add cells the stub matrix lacks (it ships 8.3/8.4 cells only, so `php=8.5` needs an 8.5 cell) (see `references/shared-dev-deps.md` "Symplify formatter dep"). The type-dep pair is PHP-floor-conditional too: the stub ships the PHP 8.3-floor pair `rector/type-perfect: ^2.1` + `tomasvotruba/type-coverage: >=2.2.0 <2.2.2`; if `php=8.4` or `8.5`, REMOVE `rector/type-perfect` and change `tomasvotruba/type-coverage` to `^2.3` — keeping both double-registers `MethodNodeAnalyser` and PHPStan aborts at boot (see `references/shared-dev-deps.md` "Type-perfect dep").
+- `composer.json` — has `filament/filament: ^3.0||^4.0` in `require`. Substitute `__LARAVEL_VERSIONS__`. The stub is Pest-flavoured, so it ships the PHP >= 8.4 dep set: `pestphp/*: ^5.0`, `symplify/phpstan-rules: ^14.12`, `tomasvotruba/type-coverage: ^2.3`, and NO `rector/type-perfect` (keeping type-perfect alongside type-coverage >= 2.3 double-registers `MethodNodeAnalyser` and PHPStan aborts at boot). Pest 5 requires PHP `^8.4`, so `php=8.3` is valid only with `test-framework=phpunit` — that combination has to restore the PHP 8.3 set (`symplify/phpstan-extensions: ^12.0`, `rector/type-perfect: ^2.1`, `tomasvotruba/type-coverage: >=2.2.0 <2.2.2`) and the 8.3 matrix cells. If `php=8.5`, add an `8.5` cell to `run-tests.yml`. For a Laravel package, `require-dev` takes `orchestra/testbench: ^11.0` and the CI matrix runs Laravel 13 cells only — Pest 5 needs `symfony/process: ^8.1` and testbench 10 pins `^7.2`. The runtime `illuminate/*` range stays `^12.0||^13.0` for consumers. See `references/shared-dev-deps.md` "Symplify formatter dep" and "Type-perfect dep".
 - `src/__PACKAGE_STUDLY__ServiceProvider.php` — extends `Illuminate\Support\ServiceProvider` AND implements `Filament\Contracts\Plugin`. Has dual-mode `register(?Panel $panel = null)` and `boot(?Panel $panel = null)` so the class works both as a Laravel ServiceProvider AND a Filament plugin registered via `$panel->plugin(YourPlugin::make())`.
 - `resources/views/.gitkeep` — placeholder for Filament-style Blade views (commented out in stub; user uncomments + uses).
 

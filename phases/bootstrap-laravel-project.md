@@ -94,7 +94,7 @@ Build the list from `$REPO_INIT_HOME/references/per-category-deps.md#laravel-pro
 **Test framework** (default `phpunit` for laravel-project — Laravel ships PHPUnit by default; switching to Pest is a user opt-in):
 
 - For PHPUnit: nothing extra (Laravel includes `phpunit/phpunit`).
-- For Pest: also add `pestphp/pest`, `pestphp/pest-plugin-arch`, `pestphp/pest-plugin-laravel`, `mrpunyapal/rector-pest`. Note: switching from PHPUnit to Pest changes how `php artisan test` resolves; the user must `vendor/bin/pest --init` separately to migrate.
+- For Pest: also add `pestphp/pest: ^5.0`, `pestphp/pest-plugin-arch: ^5.0`, `pestphp/pest-plugin-laravel: ^5.0`, `pestphp/pest-plugin-rector: ^5.0`, `pestphp/pest-plugin-phpstan: ^5.0`, `pestphp/pest-plugin-agent: ^5.0`. Pest 5 needs PHP `^8.4`, and the Laravel skeleton ships `"php": "^8.3"` — raise `require.php` to `^8.4` in the same pass, or keep PHPUnit. Note: switching from PHPUnit to Pest changes how `php artisan test` resolves; the user must `vendor/bin/pest --init` separately to migrate.
 
 **Allow-list the plugin dev deps FIRST** (mandatory — do not fold this into the require call):
 

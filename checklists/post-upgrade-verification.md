@@ -29,7 +29,7 @@ Run after every upgrade phase. If anything is red, stop and report to the user b
 - [ ] **Pint clean**: `vendor/bin/pint --test` returns 0 (or shows acceptable formatting drift the user agreed to address separately).
 - [ ] **PHPStan green**: `vendor/bin/phpstan analyse --no-progress --memory-limit=2G` returns 0. If new errors appeared post-upgrade, surface them — they may be due to bumped rules from a new shared dep version.
 - [ ] **Rector dry-run clean**: `vendor/bin/rector process --dry-run` reports 0 changes (or only changes the user explicitly opted in to). If new rector rules were added via the upgrade, this may report changes — surface and ask user whether to apply.
-- [ ] **Tests pass**: `vendor/bin/pest --ci` (or `vendor/bin/phpunit`) returns 0. If pre-existing test failures, mention but don't block — the upgrade isn't responsible for those.
+- [ ] **Tests pass**: `vendor/bin/pest --ci` (or `vendor/bin/phpunit`) returns 0. After a Pest 4 → 5 migration, read the output for PHPUnit 13 deprecation or removal errors — they need a hand pass, not a Pest downgrade. If pre-existing test failures, mention but don't block — the upgrade isn't responsible for those.
 
 ## Per-category extras
 

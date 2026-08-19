@@ -1,5 +1,6 @@
 <?php declare(strict_types=1);
 
+use Pest\Rector\Set\PestSetList;
 use Rector\Caching\ValueObject\Storage\FileCacheStorage;
 use Rector\CodeQuality\Rector\ClassMethod\InlineArrayReturnAssignRector;
 use Rector\CodeQuality\Rector\If_\ExplicitBoolCompareRector;
@@ -10,7 +11,6 @@ use Rector\DeadCode\Rector\ClassMethod\RemoveUselessReturnTagRector;
 use Rector\Php81\Rector\FuncCall\NullToStrictStringFuncCallArgRector;
 use Rector\Privatization\Rector\ClassMethod\PrivatizeFinalClassMethodRector;
 use Rector\TypeDeclaration\Rector\ArrowFunction\AddArrowFunctionReturnTypeRector;
-use RectorPest\Set\PestSetList;
 
 return RectorConfig::configure()
     ->withCache(
@@ -42,8 +42,7 @@ return RectorConfig::configure()
     ->withMemoryLimit('3G')
     ->withPhpSets(php__PHP_VERSION_NEON__: true)
     ->withSets(class_exists(PestSetList::class) ? [
-        PestSetList::PEST_CODE_QUALITY,
-        PestSetList::PEST_CHAIN,
+        PestSetList::CODING_STYLE,
     ] : [])
     ->withSkip([
         NullToStrictStringFuncCallArgRector::class,

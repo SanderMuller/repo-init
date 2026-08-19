@@ -37,11 +37,25 @@ return RectorConfig::configure()
 
 | Category | `withPaths` | Extra `withSets` |
 |---|---|---|
-| `laravel-project` | `app, routes, config, database, tests` | `LaravelSetList::LARAVEL_{XXX}`, `LARAVEL_CODE_QUALITY`, `LARAVEL_FACADE_ALIASES_TO_FULL_NAMES` + `Hihaho\RectorRules\Sets::ALL` when `--with-hihaho-rules` + `PestSetList::*` when test-framework=pest |
-| `laravel-package` | `src, tests, workbench` | `LaravelSetList::LARAVEL_{XXX}`, `LARAVEL_CODE_QUALITY`, `LARAVEL_FACADE_ALIASES_TO_FULL_NAMES` + `PestSetList::*` when test-framework=pest |
-| `php-package` | `src, tests` | `PestSetList::*` when test-framework=pest |
+| `laravel-project` | `app, routes, config, database, tests` | `LaravelSetList::LARAVEL_{XXX}`, `LARAVEL_CODE_QUALITY`, `LARAVEL_FACADE_ALIASES_TO_FULL_NAMES` + `Hihaho\RectorRules\Sets::ALL` when `--with-hihaho-rules` + `Pest\Rector\Set\PestSetList::CODING_STYLE` when test-framework=pest |
+| `laravel-package` | `src, tests, workbench` | `LaravelSetList::LARAVEL_{XXX}`, `LARAVEL_CODE_QUALITY`, `LARAVEL_FACADE_ALIASES_TO_FULL_NAMES` + `Pest\Rector\Set\PestSetList::CODING_STYLE` when test-framework=pest |
+| `php-package` | `src, tests` | `Pest\Rector\Set\PestSetList::CODING_STYLE` when test-framework=pest |
 | `phpstan-extension` | `src, tests` | (none) |
 | `rector-extension` | `src, tests, config` | (none) |
+
+## Pest set
+
+With `--test-framework=pest`, `pestphp/pest-plugin-rector` supplies one set:
+
+```php
+use Pest\Rector\Set\PestSetList;
+
+->withSets(class_exists(PestSetList::class) ? [
+    PestSetList::CODING_STYLE,
+] : [])
+```
+
+`CODING_STYLE` carries both rule groups the old `mrpunyapal/rector-pest` package split over `PEST_CODE_QUALITY` and `PEST_CHAIN`. A repo still importing `RectorPest\Set\PestSetList` is NON-CANONICAL — swap the import and the set names in the same pass that drops `mrpunyapal/rector-pest`.
 
 ## Common `withSkip` defaults
 

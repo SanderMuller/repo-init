@@ -87,7 +87,7 @@ OPTIONAL (only when opt-in confirmed):
 Test-framework:
 
 - For `phpunit` (default for laravel-project): `phpunit/phpunit` (Laravel ships).
-- For `pest`: `pestphp/pest`, `pestphp/pest-plugin-arch`, `pestphp/pest-plugin-laravel`, `mrpunyapal/rector-pest`.
+- For `pest`: `pestphp/pest: ^5.0`, `pestphp/pest-plugin-arch: ^5.0`, `pestphp/pest-plugin-laravel: ^5.0`, `pestphp/pest-plugin-rector: ^5.0`, `pestphp/pest-plugin-phpstan: ^5.0`, `pestphp/pest-plugin-agent: ^5.0`.
 
 ## MISSING composer.json scripts
 
@@ -128,6 +128,11 @@ Same logic as `audit-laravel-package.md` §OUTDATED — apply each file's mode f
 - `notify-only`: `phpstan.neon.dist`, `rector.php`, `phpstan-baseline.neon`, `pint.json`. Mention drift but don't push.
 
 ## NON-CANONICAL findings
+
+- [ ] **Pest below `^5.0`** (HIGH severity, applies only when the repo uses Pest): canonical Pest is `pestphp/pest: ^5.0` with every `pestphp/*` plugin on `^5.0`. Pest 5 requires PHP `^8.4` and PHPUnit 13, so the fix is ATOMIC — raise `require.php` to `^8.4`, raise `pestphp/*` to `^5.0`, and apply the PHP >= 8.4 dep set in the same pass (drop `rector/type-perfect`, `tomasvotruba/type-coverage: ^2.3`, `symplify/phpstan-rules: ^14.12`). Also drop the PHP 8.3 cells from `run-tests.yml`. See `$REPO_INIT_HOME/references/version-defaults.md` "Pest" and the matching `upgrade-<category>.md`.
+- [ ] **`mrpunyapal/rector-pest` in `require-dev`** (MEDIUM severity): replaced by the first-party `pestphp/pest-plugin-rector: ^5.0`. Companion finding: `rector.php` importing `RectorPest\Set\PestSetList` or using `PestSetList::PEST_CODE_QUALITY` / `PEST_CHAIN` / `PEST_LARAVEL`. Canonical is `use Pest\Rector\Set\PestSetList;` with the single set `PestSetList::CODING_STYLE`.
+- [ ] **`tests/Pest.php` without `pest()->tia()->locally()`** (LOW severity, applies only when the repo uses Pest): the Tia engine re-runs only the tests a change touched, on developer machines only. Fix = add the call to `tests/Pest.php`. Do NOT add `--tia` to any composer script or CI step. See `$REPO_INIT_HOME/references/pest-vs-phpunit.md` "Tia engine".
+- [ ] **`stolt/lean-package-validator: ^6.0`** (LOW severity, applies only when the repo carries the validator AND uses Pest): 6.0.0 caps `sebastian/diff` at `^7` and cannot install next to PHPUnit 13. Composer backtracks to 6.0.1 on its own, `--prefer-lowest` included, so nothing breaks — but `^6.0.1` states the real floor. Fix = tighten the constraint.
 
 - [ ] **`rector/type-perfect` present alongside a `tomasvotruba/type-coverage` constraint that can resolve to >= 2.3** (HIGH severity, PHPStan does not boot): `tomasvotruba/type-coverage` 2.3.0 absorbed type-perfect and now includes `packages/type-perfect/config/extension.neon` itself. With both installed, `phpstan/extension-installer` includes that file twice and PHPStan aborts at startup on the duplicate `MethodNodeAnalyser` service. Composer resolves against the **runtime** PHP, not `require.php` — so an uncapped `^2.2` (what every repo scaffolded before this rule landed carries) is green on the PHP 8.3 CI cell and dead on the 8.4 cell. Flag NON-CANONICAL: on a PHP 8.3 floor, cap the constraint to `>=2.2.0 <2.2.2`; on a PHP >= 8.4 floor, remove `rector/type-perfect` and move to `tomasvotruba/type-coverage: ^2.3`. The fix is ATOMIC — see the matching `upgrade-<category>.md`.
 

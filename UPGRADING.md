@@ -20,6 +20,27 @@ The `post-update-cmd` hook re-syncs the skill into `~/.claude/skills/sandermulle
 
 ---
 
+## 1.10.x → 1.11.0 (Pest 5 + Tia canonical)
+
+Additive for repo-init itself — `composer global update sandermuller/repo-init` (+ `composer global exec -- boost sync --scope=user --all`). The change lands in the scaffold: **Pest 5 is the canonical test runner**, and every Pest repo takes a PHP `^8.4` floor.
+
+What moved:
+
+- **`pestphp/pest: ^5.0`**, with `pest-plugin-arch`, `pest-plugin-rector`, `pest-plugin-phpstan`, and `pest-plugin-agent` all on `^5.0` (`pest-plugin-laravel: ^5.0` for the Laravel categories).
+- **`mrpunyapal/rector-pest` is out** — the first-party `pestphp/pest-plugin-rector` replaces it. `rector.php` imports `Pest\Rector\Set\PestSetList` and uses the single set `PestSetList::CODING_STYLE` (it carries what `PEST_CODE_QUALITY`, `PEST_CHAIN`, and `PEST_LARAVEL` used to split).
+- **PHP floor `^8.4` for Pest repos** — Pest 5 requires it. That also drops the two abandoned packages a `^8.3` floor carries: no more `rector/type-perfect` (`tomasvotruba/type-coverage: ^2.3` bundles its rules) and `symplify/phpstan-rules: ^14.12` instead of `symplify/phpstan-extensions`.
+- **Tia engine on by default** — `tests/Pest.php` calls `pest()->tia()->locally()`, so test impact analysis runs on developer machines and never in CI. It needs PCOV or Xdebug for the first recording run and stores its graph in `~/.pest/`, outside the repository. It also needs at least one commit in the repository — before the initial commit, run `vendor/bin/pest --no-tia`. `locally()` switches Tia off for any run carrying `--ci`, which is what the stub CI passes.
+- **`orchestra/testbench: ^11.0`** for Laravel packages on Pest. Pest 5 needs `symfony/process: ^8.1` and testbench 10 pins `^7.2`, so the pair cannot install. The runtime `illuminate/*` range stays `^12.0||^13.0`, but the suite and the CI matrix run Laravel 13 only.
+- **`stolt/lean-package-validator: ^6.0.1`** in the `php-package` and `composer-plugin` stubs. 6.0.1 widened `sebastian/diff` to `^8||^9`, which is what allows PHPUnit 13 — and so Pest 5 — in the validator-carrying categories.
+
+To upgrade a scaffolded repo, run the `upgrade` phase for its category; it carries a "Migrate Pest 4 → 5 (ATOMIC)" step that does the PHP floor bump, the plugin bumps, and the PHP >= 8.4 dep set in one resolution. Pest 5 builds on PHPUnit 13, so a suite that uses removed PHPUnit APIs needs a hand pass.
+
+Staying on Pest 4 is still possible — a package that must test against Laravel 12 has no other option — but the audit flags it and it is a deliberate exception.
+
+**Note**: PHPUnit 13 requires PHP `>= 8.4.1`. A `^8.4` constraint accepts 8.4.0, where the install fails; use 8.4.1 or later.
+
+---
+
 ## 1.5.1 → 1.6.0 (boost family `1.x` adoption)
 
 Additive — no breaking change to repo-init itself. `composer global update sandermuller/repo-init` (+ `composer global exec -- boost sync --scope=user --all`) and you are on 1.6.0.

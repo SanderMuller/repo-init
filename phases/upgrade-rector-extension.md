@@ -48,6 +48,41 @@ Single `composer require <list>` (NOT `--dev`):
 - `symplify/rule-doc-generator-contracts` (mandatory)
 - `driftingly/rector-laravel` (only if Laravel-aware opt-in confirmed)
 
+## Migrate Pest 4 → 5 (ATOMIC)
+
+Trigger: the target uses Pest and `pestphp/pest` can resolve below `5.0`. Skip the whole section for a PHPUnit target.
+
+**Pest 3 targets take the 3 → 4 step first.** Raise `pestphp/pest` to `^4.0`, run `composer update`, then `vendor/bin/pest --init` to migrate the 3 → 4 syntax, and only then run the steps below. A direct 3 → 5 jump leaves Pest 3 syntax in the suite and the final test run fails.
+
+**Runs BEFORE the `type-coverage` / `type-perfect` migration below** — Pest 5 raises the PHP floor to `^8.4`, and that floor decides which branch the type-dep step and the symplify step take. Doing it in the other order applies the PHP 8.3 branch and then invalidates it.
+
+Why it matters: Pest 5 requires PHP `^8.4` and PHPUnit 13. So the PHP floor bump, the plugin bumps, and the PHP >= 8.4 dep set are one change — a partial move leaves `composer update` unresolvable.
+
+1. Raise `require.php` to `^8.4` (or `^8.5`) in `composer.json`.
+2. Raise `pestphp/pest` and every `pestphp/*` plugin to `^5.0`.
+3. Replace `mrpunyapal/rector-pest` with `pestphp/pest-plugin-rector: ^5.0`, and add `pestphp/pest-plugin-phpstan: ^5.0` + `pestphp/pest-plugin-agent: ^5.0`.
+4. If the target carries `stolt/lean-package-validator`, raise it to `^6.0.1` — 6.0.0 caps `sebastian/diff` at `^7` and cannot install next to PHPUnit 13. Composer backtracks to 6.0.1 by itself, so this is a clarity fix, not a blocker.
+5. Apply the PHP >= 8.4 dep set in the same `composer.json` pass: remove `rector/type-perfect`, set `tomasvotruba/type-coverage: ^2.3`, and replace `symplify/phpstan-extensions: ^12.0` with `symplify/phpstan-rules: ^14.12`.
+6. If the target carries `orchestra/testbench`, change the constraint to `^11.0`; for a Laravel package category also drop every Laravel 12 / testbench 10 cell from `run-tests.yml` — Pest 5 needs `symfony/process: ^8.1` and testbench 10 pins `^7.2`. Leave the runtime `illuminate/*` range alone.
+7. Run one resolution: `composer update`.
+
+Then fix the files the bump touches:
+
+- `rector.php` — `use Pest\Rector\Set\PestSetList;` and the single set `PestSetList::CODING_STYLE` (replaces `PEST_CODE_QUALITY` / `PEST_CHAIN` / `PEST_LARAVEL`).
+- `tests/Pest.php` — add `pest()->tia()->locally();` for the Tia engine. Never add `--tia` to a composer script or a CI step.
+- `.github/workflows/run-tests.yml` — drop every PHP 8.3 matrix cell; the floor is `^8.4`.
+
+Verify before moving on:
+
+```bash
+composer show --direct | grep -E 'pestphp|type-coverage|type-perfect'
+vendor/bin/pest --ci
+```
+
+Pest 5 carries PHPUnit 13's breaking changes. A suite that uses removed or deprecated PHPUnit APIs needs a hand pass — report what failed instead of downgrading Pest.
+
+Steps 1 and 5 make the type-perfect section below take its PHP >= 8.4 branch. If the user refuses the PHP floor bump, stop the Pest migration here, keep Pest 4, and record it as a deliberate exception.
+
 ## Migrate the `type-coverage` / `type-perfect` pair (ATOMIC)
 
 **Runs BEFORE "Apply MISSING dev deps" below** — that step bumps `tomasvotruba/type-coverage` to its canonical constraint, which on a PHP >= 8.4 floor is `^2.3`; doing that while `rector/type-perfect` is still in `require-dev` *creates* the broken pair this section exists to prevent.
@@ -90,7 +125,7 @@ Expect exactly one line on a PHP >= 8.4 floor (`tomasvotruba/type-coverage` at `
 
 Single `composer require --dev <list>`. Shared list MINUS `rector/rector` (per §5.1.1 — it's in `require`). Plus `nikic/php-parser` and `sandermuller/package-boost-php` (the framework-agnostic boost umbrella; pulls `sandermuller/boost-core` transitively).
 
-Test-framework: `pestphp/pest` (+ arch + rector-pest) for pest, OR `phpunit/phpunit` for phpunit.
+Test-framework: `pestphp/pest: ^5.0`, `pestphp/pest-plugin-arch: ^5.0`, `pestphp/pest-plugin-rector: ^5.0`, `pestphp/pest-plugin-phpstan: ^5.0`, `pestphp/pest-plugin-agent: ^5.0` for pest, OR `phpunit/phpunit` for phpunit.
 
 On failure, consult `references/composer-failure-modes.md`.
 

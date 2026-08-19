@@ -13,7 +13,7 @@ Run `$REPO_INIT_HOME/checklists/preflight.md`. Verify category-fit per `$REPO_IN
 - `vendor` — required.
 - `name` (kebab-case) — optional per target-dir rule.
 - `description` — required.
-- `php` — default `8.3`. Accepted: `8.3`, `8.4`, `8.5`. Reject `8.2`.
+- `php` — default `8.4` with `test-framework=pest` (Pest 5 requires PHP `^8.4`), `8.3` with `test-framework=phpunit`. Accepted: `8.3`, `8.4`, `8.5`. Reject `8.2`. Reject `pest` + `8.3` — ask the user which of the two to change.
 - `test-framework` — default `pest` for `sandermuller`, `phpunit` for `hihaho`.
 - `author-name` / `author-email` — defaults from git config.
 
@@ -40,12 +40,12 @@ Also verify file content has no literal `__VENDOR__` / `__PACKAGE__` / etc. plac
 
 For each file under `$REPO_INIT_HOME/stubs/php-package/`:
 
-- `composer.json` — substitute placeholders. Note: `type: library`, no `illuminate/*` in require, `phpstan/phpstan` (NOT `larastan/larastan`) in require-dev. Symplify dep is PHP-floor-conditional: the stub ships `symplify/phpstan-extensions: ^12.0` (installable on every accepted floor; matches the default `php=8.3`); if `php=8.4` or `8.5`, replace it with `symplify/phpstan-rules: ^14.11` AND align the `run-tests.yml` matrix with the chosen floor — drop cells below it and add cells the stub matrix lacks (it ships 8.3/8.4 cells only, so `php=8.5` needs an 8.5 cell) (see `references/shared-dev-deps.md` "Symplify formatter dep"). The type-dep pair is PHP-floor-conditional too: the stub ships the PHP 8.3-floor pair `rector/type-perfect: ^2.1` + `tomasvotruba/type-coverage: >=2.2.0 <2.2.2`; if `php=8.4` or `8.5`, REMOVE `rector/type-perfect` and change `tomasvotruba/type-coverage` to `^2.3` — keeping both double-registers `MethodNodeAnalyser` and PHPStan aborts at boot (see `references/shared-dev-deps.md` "Type-perfect dep").
+- `composer.json` — substitute placeholders. Note: `type: library`, no `illuminate/*` in require, `phpstan/phpstan` (NOT `larastan/larastan`) in require-dev. The stub is Pest-flavoured, so it ships the PHP >= 8.4 dep set: `pestphp/*: ^5.0`, `symplify/phpstan-rules: ^14.12`, `tomasvotruba/type-coverage: ^2.3`, and NO `rector/type-perfect` (keeping type-perfect alongside type-coverage >= 2.3 double-registers `MethodNodeAnalyser` and PHPStan aborts at boot). Pest 5 requires PHP `^8.4`, so `php=8.3` is valid only with `test-framework=phpunit` — that combination has to restore the PHP 8.3 set (`symplify/phpstan-extensions: ^12.0`, `rector/type-perfect: ^2.1`, `tomasvotruba/type-coverage: >=2.2.0 <2.2.2`) and the 8.3 matrix cells. If `php=8.5`, add an `8.5` cell to `run-tests.yml`. See `references/shared-dev-deps.md` "Symplify formatter dep" and "Type-perfect dep".
 - `.lpv` — lean-package-validator config (no placeholders).
 - `PUBLIC_API.md` — substitute placeholders.
 - `src/__PACKAGE_STUDLY__.php` — copy + substitute file name.
 - `phpstan.neon.dist`, `rector.php` — copy + substitute `__PHP_VERSION_NEON__`.
-- `.github/workflows/run-tests.yml` — copy (3-cell PHP-only matrix, no Laravel axis).
+- `.github/workflows/run-tests.yml` — copy (2-cell PHP-only matrix on PHP 8.4, no Laravel axis; a PHPUnit-at-8.3 scaffold adds the 8.3 cells back).
 
 ### 4. Compose test-framework variant
 
@@ -53,13 +53,13 @@ For each file under `$REPO_INIT_HOME/stubs/php-package/`:
 
 The shipped stubs default to **Pest** for php-package. If the user picked PHPUnit:
 
-**(a) `composer.json`**: swap `pestphp/*` deps for `phpunit/phpunit`; change `"test"` from `vendor/bin/pest` to `vendor/bin/phpunit`; change `"test-coverage"` to `vendor/bin/phpunit --coverage-html=coverage`; remove `pestphp/pest-plugin: true` from `config.allow-plugins`.
+**(a) `composer.json`**: swap `pestphp/*` deps for `phpunit/phpunit`; change `"test"` from `vendor/bin/pest` to `vendor/bin/phpunit`; change `"test-coverage"` to `vendor/bin/phpunit --coverage-html=coverage`; remove `pestphp/pest-plugin: true` from `config.allow-plugins`. If the user also picked `php=8.3`, restore the PHP 8.3 dep set in the same pass: `symplify/phpstan-extensions: ^12.0` (instead of `symplify/phpstan-rules`), `rector/type-perfect: ^2.1`, `tomasvotruba/type-coverage: >=2.2.0 <2.2.2`, and `stolt/lean-package-validator` may stay `^6.0.1` (the pin is harmless on PHPUnit 11/12).
 
-**(b) `.github/workflows/run-tests.yml`**: change the last step's `run:` from `vendor/bin/pest --ci` to `vendor/bin/phpunit`. **Without this edit, CI fails immediately.**
+**(b) `.github/workflows/run-tests.yml`**: change the last step's `run:` from `vendor/bin/pest --ci` to `vendor/bin/phpunit`. **Without this edit, CI fails immediately.** On `php=8.3`, also add the `8.3` matrix cells back (`prefer-lowest` + `prefer-stable`); the stub ships `8.4` cells only.
 
 **(c) Test file**: delete `tests/Pest.php` (copied in step 2); use `phpunit.xml` (also from shared).
 
-If keeping Pest (the default): no edits needed.
+If keeping Pest (the default): no edits needed. `tests/Pest.php` already carries `pest()->tia()->locally()` — the Tia engine runs locally and stays out of CI.
 
 ### 5. Run `composer install`
 

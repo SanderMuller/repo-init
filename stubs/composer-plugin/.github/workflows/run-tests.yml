@@ -31,8 +31,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { php: '8.3', stability: prefer-lowest }
-          - { php: '8.3', stability: prefer-stable }
+          # PHP floor is 8.4 — Pest 5 requires PHP ^8.4. Add an '8.5' cell when
+          # the package raises its floor or widens its supported range.
+          - { php: '8.4', stability: prefer-lowest }
           - { php: '8.4', stability: prefer-stable }
 
     name: P${{ matrix.php }} - ${{ matrix.stability }}

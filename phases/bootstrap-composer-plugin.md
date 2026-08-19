@@ -13,7 +13,7 @@ Run `$REPO_INIT_HOME/checklists/preflight.md`. Verify category-fit per `$REPO_IN
 - `vendor` — required.
 - `name` (kebab-case) — optional per target-dir rule.
 - `description` — required.
-- `php` — default `8.3`. Accepted: `8.3`, `8.4`, `8.5`. Reject `8.2`.
+- `php` — default `8.4` with `test-framework=pest` (Pest 5 requires PHP `^8.4`), `8.3` with `test-framework=phpunit`. Accepted: `8.3`, `8.4`, `8.5`. Reject `8.2`. Reject `pest` + `8.3` — ask the user which of the two to change.
 - `test-framework` — default `pest` for `sandermuller`, `phpunit` for `hihaho`.
 - `author-name` / `author-email` — defaults from git config.
 - `plugin-shape` — `command-provider` | `event-subscriber` | `both` | `none`. Default: ask. Drives the `src/Plugin.php` skeleton.
@@ -39,8 +39,8 @@ For each file under `$REPO_INIT_HOME/stubs/shared/`, copy to cwd. Substitute pla
 
 For each file under `$REPO_INIT_HOME/stubs/composer-plugin/` (excluding `src/Plugin.*.php` variants — those are resolved in step 4):
 
-- `composer.json` — substitute placeholders. Note: `type: composer-plugin`, `require: composer-plugin-api: ^2.6`, `require-dev: composer/composer: ^2.6`, `extra.class: __NAMESPACE_ESCAPED__\\Plugin`, `config.allow-plugins` includes self-allow entry. Symplify dep is PHP-floor-conditional: the stub ships `symplify/phpstan-extensions: ^12.0` (installable on every accepted floor; matches the default `php=8.3`); if `php=8.4` or `8.5`, replace it with `symplify/phpstan-rules: ^14.11` AND align the `run-tests.yml` matrix with the chosen floor — drop cells below it and add cells the stub matrix lacks (it ships 8.3/8.4 cells only, so `php=8.5` needs an 8.5 cell) (see `references/shared-dev-deps.md` "Symplify formatter dep"). The type-dep pair is PHP-floor-conditional too: the stub ships the PHP 8.3-floor pair `rector/type-perfect: ^2.1` + `tomasvotruba/type-coverage: >=2.2.0 <2.2.2`; if `php=8.4` or `8.5`, REMOVE `rector/type-perfect` and change `tomasvotruba/type-coverage` to `^2.3` — keeping both double-registers `MethodNodeAnalyser` and PHPStan aborts at boot (see `references/shared-dev-deps.md` "Type-perfect dep").
-- `.github/workflows/run-tests.yml` — copy (framework-agnostic, 3-cell PHP-only matrix, no Laravel axis; defaults to Pest — the test-framework swap in step 5 retargets it to `vendor/bin/phpunit` if PHPUnit was chosen).
+- `composer.json` — substitute placeholders. Note: `type: composer-plugin`, `require: composer-plugin-api: ^2.6`, `require-dev: composer/composer: ^2.6`, `extra.class: __NAMESPACE_ESCAPED__\\Plugin`, `config.allow-plugins` includes self-allow entry. The stub is Pest-flavoured, so it ships the PHP >= 8.4 dep set: `pestphp/*: ^5.0`, `symplify/phpstan-rules: ^14.12`, `tomasvotruba/type-coverage: ^2.3`, and NO `rector/type-perfect` (keeping type-perfect alongside type-coverage >= 2.3 double-registers `MethodNodeAnalyser` and PHPStan aborts at boot). Pest 5 requires PHP `^8.4`, so `php=8.3` is valid only with `test-framework=phpunit` — that combination has to restore the PHP 8.3 set (`symplify/phpstan-extensions: ^12.0`, `rector/type-perfect: ^2.1`, `tomasvotruba/type-coverage: >=2.2.0 <2.2.2`) and the 8.3 matrix cells. If `php=8.5`, add an `8.5` cell to `run-tests.yml`. See `references/shared-dev-deps.md` "Symplify formatter dep" and "Type-perfect dep".
+- `.github/workflows/run-tests.yml` — copy (framework-agnostic, 2-cell PHP-only matrix on PHP 8.4, no Laravel axis; defaults to Pest — the test-framework swap in step 5 retargets it to `vendor/bin/phpunit` if PHPUnit was chosen).
 - `.lpv` — copy (lean-package-validator glob-pattern file; bare globs, no `export-ignore` suffix — see `references/gitattributes-managed-block.md`).
 
 ### 4. Copy `src/Plugin.php` variant per `plugin-shape`

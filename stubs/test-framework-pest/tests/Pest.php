@@ -38,3 +38,20 @@
 */
 
 // function something(): void { /* ... */ }
+
+/*
+|--------------------------------------------------------------------------
+| Tia Engine
+|--------------------------------------------------------------------------
+|
+| Tia (test impact analysis) re-runs only the tests that your last change
+| touched. `locally()` switches Tia off for any run with `--ci`, so CI keeps
+| the full suite. The first recording run needs a coverage driver (PCOV or
+| Xdebug); the graph lives in `~/.pest/tia/`, outside the repository.
+|
+| Tia needs at least one commit in the repository. Before the initial commit,
+| run `vendor/bin/pest --no-tia`.
+|
+*/
+
+pest()->tia()->locally();

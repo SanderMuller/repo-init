@@ -10,7 +10,7 @@ What each category adds on top of the shared list (`shared-dev-deps.md`). Split 
 |---|---|---|
 | `laravel-project` | `larastan/larastan`, `laravel/boost`, `laravel/pail`, `laravel/tinker`, `driftingly/rector-laravel` | (the `laravel new` baseline) |
 | `laravel-package` | `larastan/larastan`, `laravel/boost`, `driftingly/rector-laravel`, `sandermuller/package-boost-laravel` | `illuminate/contracts`, `illuminate/support` at `__LARAVEL_VERSIONS__` |
-| `php-package` | `phpstan/phpstan`, `stolt/lean-package-validator`, `sandermuller/package-boost-php` | (no `illuminate/*`) |
+| `php-package` | `phpstan/phpstan`, `stolt/lean-package-validator: ^6.0.1`, `sandermuller/package-boost-php` | (no `illuminate/*`) |
 | `phpstan-extension` | `sandermuller/package-boost-php` (minus `phpstan/phpstan` per shared exclusion) | `phpstan/phpstan: ^2` |
 | `rector-extension` | `sandermuller/package-boost-php` (minus `rector/rector` per §5.1.1) | `rector/rector: ^2`, `symplify/rule-doc-generator-contracts: ^11.2` |
 | `composer-plugin` | `composer/composer: ^2.6`, `sandermuller/package-boost-php` | `composer-plugin-api: ^2.6` (and optionally `composer-runtime-api: ^2.2`) |
