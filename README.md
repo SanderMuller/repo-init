@@ -19,6 +19,7 @@ Walks an AI agent (Claude Code, Cursor, GitHub Copilot, …) through **bootstrap
 - `sandermuller/boost-skills` (floor `^2.27.0`) — the shared dev-workflow skill library, added to `require-dev` + `.config/boost.php`; bootstrap interactively picks which skill tags (`php` / `frontend` / `github` / `jira`) to activate. The `voice` tag is always on and is not part of that pick — it ships the writing-voice guideline every repo in this setup uses
 - Shared `.github/workflows/{phpstan,pint-check,rector-check,zizmor,update-changelog}.yml` + `.github/zizmor.yml` (rule config) + per-category `run-tests.yml` + `dependabot.yml`
 - `tests/Pest.php` (Pest 5, Tia engine on for local runs) or `phpunit.xml` — vendor-driven default. Pest 5 needs a PHP `^8.4` floor
+- `laravel-project` also gets the security canon — session-cookie flags as literals (`encrypt` / `secure` / `http_only` / `partitioned`), HSTS via `zae/strict-transport-security`, a `SecurityHeaders` middleware, and an `ApplicationIntegrityTest` that asserts the header contract. See [`references/laravel-security-canon.md`](references/laravel-security-canon.md)
 - Per-category extras (testbench.yaml, workbench/, ServiceProvider, extension.neon, src/Plugin.{shape}.php for composer-plugin, etc.)
 
 ## Install (one-time per machine)
@@ -105,7 +106,7 @@ Highlights:
 
 - Single entry point — [`resources/boost/skills/repo-init/SKILL.md`](resources/boost/skills/repo-init/SKILL.md).
 - 23 self-contained phase playbooks under [`phases/`](phases/).
-- 18 reference docs under [`references/`](references/) (incl. machine-readable [`per-category-deps.yml`](references/per-category-deps.yml)).
+- 19 reference docs under [`references/`](references/) (incl. machine-readable [`per-category-deps.yml`](references/per-category-deps.yml) and the [Laravel security canon](references/laravel-security-canon.md)).
 - 5 checklists under [`checklists/`](checklists/).
 - 13 stub trees under [`stubs/`](stubs/) — `shared/` + 2 test-framework variants + 10 categories (composer-plugin, filament-plugin, laravel-package, laravel-package-spatie, laravel-project, nova-tool, php-package, phpstan-extension, rector-extension, skill-bundle).
 
