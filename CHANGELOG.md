@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Pre-`1.0.0` releases (0.x.x — historical) introduced breaking changes in MINOR bumps; from 1.0.0 onward repo-init follows standard SemVer (breaking changes ship as MAJOR only). The pre-1.0 entries below remain for reference.
 
+## [1.12.0](https://github.com/sandermuller/repo-init/compare/1.11.0...1.12.0) - 2026-09-07
+
+<!-- verified-sha: 8e11ad67686f6e59f23be25ec0d4496a2dc66d1b -->
+`references/rector-config.md` described a Rector setup that did not match the stubs, and in three places described one that did not exist. An audit against the two production Laravel apps this playbook is drawn from found the documented `withSkip` list attributed to those apps contains no rule either of them skips, a `--with-hihaho-rules` class path that resolves to nothing, and a self-registration claim for `hihaho/rector-rules` that is not how the package works. Correcting the doc surfaced two gaps in the stubs behind it.
+
+### Fixed
+
+- **`containerCacheDirectory` on every `rector.php` stub.** Rector's default writes the container cache to the system temp directory, while the shipped `rector-check.yml` caches `.cache/rectorContainer/` — the workflow's cache step could never hit. Every stub now sets `containerCacheDirectory: './.cache/rectorContainer'`.
+- **The `laravel-project` stub registers the Pest set.** Its bootstrap, audit and upgrade phases all required `pestphp/pest-plugin-rector`, but the stub used no Pest set — a Pest laravel-project installed the plugin and never ran it.
+- **`stubs/composer-plugin/rector.php` now exists.** The composer-plugin audit and upgrade phases listed `rector.php` as an expected file and no stub tree shipped one, so a bootstrapped composer plugin was audited for a file it could not have had. The stub takes the framework-agnostic shape: `withPaths([src, tests])`, the Pest set, no Laravel sets.
+- **The `--with-hihaho-rules` class path.** The documented `Hihaho\RectorRules\Sets` does not exist; the set list is `Hihaho\RectorRules\Set\HihahoSetList`. `references/composer-scripts.md` also claimed the rule pack auto-registers — Rector has no set discovery, the package's `extra.rector.includes` target is an empty closure, and the consuming `rector.php` has to wire the sets itself.
+- **The documented `withSkip` list.** The former "Common `withSkip` defaults" section presented nine rules as what the reference apps skip by default. None of the nine appears in either app.
+
+### Changed
+
+- `references/rector-config.md` now separates repo-init's own stub defaults from a verified list of the 30 blanket skips both reference apps share, offered to a `laravel-project` target rather than shipped in every stub.
+- The per-category table covers all nine categories that ship a `rector.php` (it listed five) and the four Laravel sets the stubs actually use (it named a version-pinned set no stub ships).
+- The "Always" block matches the stubs again: `carbon`, `rectorPreset`, `phpunitCodeQuality`, and `withAttributesSets()`.
+- `HihahoSetList::ALL` is documented as incomplete: `MiddlewareStringToClassRector`, `NamedArgumentFromManifestRector` and `TestFieldStringToConstantRector` belong to no set and need `withConfiguredRule()`.
+
+### Added
+
+- **`check-rector-sync` CI check.** A new job in `integrity.yml` asserts that `stubs/*/rector.php`, `references/rector-config.md` and the `phases/*-<category>.md` files agree — required builder calls and prepared-set flags, `withPaths` against the doc table, the stub skip list against the doc, every skipped class imported, Laravel sets only in Laravel categories, no superseded `mrpunyapal/rector-pest` set names, the Pest set wherever the phases require the plugin, and a `rector.php` for every category the model expects. Both defects fixed in this release fail it.
+
+### Upgrading
+
+Additive for repo-init itself. Re-running `audit` on an already-scaffolded repo surfaces the missing `containerCacheDirectory`, and — for a Pest laravel-project or a composer plugin — the missing Rector wiring. See [UPGRADING.md](https://github.com/SanderMuller/repo-init/blob/main/UPGRADING.md#111x--1120-rector-canon-corrected).
+
+```bash
+composer global update sandermuller/repo-init
+composer global exec -- boost sync --scope=user --all
+
+```
+
+**Full Changelog**: <https://github.com/SanderMuller/repo-init/compare/1.11.0...1.12.0>
+
 ## [1.11.0](https://github.com/sandermuller/repo-init/compare/1.10.0...1.11.0) - 2026-08-19
 
 <!-- verified-sha: d6586aab777809f9f0e66b4dfaf0545604c8e00b -->
@@ -35,9 +71,10 @@ Run the `upgrade` phase for the repo's category — it carries the atomic Pest 4
 composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
 
+
 ```
 
-**Full Changelog**: <https://github.com/SanderMuller/repo-init/compare/1.10.0...1.11.0>
+**Full Changelog**: [https://github.com/SanderMuller/repo-init/compare/1.10.0...1.11.0](https://github.com/SanderMuller/repo-init/compare/1.10.0...1.11.0)
 
 ## [1.10.0](https://github.com/sandermuller/repo-init/compare/1.9.0...1.10.0) - 2026-08-15
 
@@ -52,6 +89,7 @@ The tag left the interactive skill-tag picker. The stub hard-codes it:
 
 ```php
 ->withTags(['voice'__SKILL_TAGS__])
+
 
 
 ```
@@ -120,6 +158,7 @@ Audit phases gained a HIGH-severity rule for the duplicate registration. Upgrade
 ```bash
 composer remove --dev rector/type-perfect --no-update
 composer require --dev tomasvotruba/type-coverage:^2.3
+
 
 
 
@@ -524,6 +563,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 For existing scaffolded packages, the next audit walk will surface the `sandermuller/package-boost-php: true` entry as MEDIUM-stale. The upgrade phase handles removal correctly — bump first, then drop the entry.
@@ -624,6 +664,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 No further steps. Scaffold output, the `repo-init` skill, audit/upgrade phases, stubs — all identical to 0.8.1.
@@ -661,6 +702,7 @@ If you installed 0.8.0:
 ```bash
 composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
+
 
 
 
@@ -719,6 +761,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 The `composer global exec --` form runs `boost` from Composer's global `vendor/bin/` regardless of the user's current directory; the literal `--` stops Composer from interpreting boost's flags as its own. `--scope=user --all` publishes every globally-installed package's `resources/boost/skills/` into `~/.{agent}/skills/<vendor>__<package>/`. See `references/boost-core-user-scope.md` for the full contract.
@@ -735,6 +778,7 @@ repo-init now uses the shared `sandermuller/boost-skills` library (code-review, 
 
 ```bash
 gh release create X.Y.Z --notes-file internal/release-notes-X.Y.Z.md
+
 
 
 
@@ -819,6 +863,7 @@ composer global exec -- boost sync --scope=user --all   # new: global skill refr
 
 
 
+
 ```
 
 `stubs/shared/boost.php` + repo-init's own `boost.php` docblocks updated accordingly.
@@ -848,6 +893,7 @@ Upgrade repo-init itself:
 ```bash
 composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
+
 
 
 
