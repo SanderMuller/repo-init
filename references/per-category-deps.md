@@ -8,7 +8,7 @@ What each category adds on top of the shared list (`shared-dev-deps.md`). Split 
 
 | Category | Adds to `require-dev` | Adds to `require` |
 |---|---|---|
-| `laravel-project` | `larastan/larastan`, `laravel/boost`, `laravel/pail`, `laravel/tinker`, `driftingly/rector-laravel` | (the `laravel new` baseline) |
+| `laravel-project` | `larastan/larastan`, `laravel/boost`, `laravel/pail`, `laravel/tinker`, `driftingly/rector-laravel` | `zae/strict-transport-security` (security canon), plus the `laravel new` baseline |
 | `laravel-package` | `larastan/larastan`, `laravel/boost`, `driftingly/rector-laravel`, `sandermuller/package-boost-laravel` | `illuminate/contracts`, `illuminate/support` at `__LARAVEL_VERSIONS__` |
 | `php-package` | `phpstan/phpstan`, `stolt/lean-package-validator: ^6.0.1`, `sandermuller/package-boost-php` | (no `illuminate/*`) |
 | `phpstan-extension` | `sandermuller/package-boost-php` (minus `phpstan/phpstan` per shared exclusion) | `phpstan/phpstan: ^2` |
@@ -24,6 +24,7 @@ What each category adds on top of the shared list (`shared-dev-deps.md`). Split 
 |---|---|---|---|
 | `laravel-project` | `--with-hihaho-rules` (default `y` for vendor=hihaho) | `hihaho/phpstan-rules`, `hihaho/rector-rules`, `symplify/phpstan-rules` | — |
 | `laravel-project` | `--with-security-advisories` (default `N`) | `roave/security-advisories: dev-latest` | — |
+| `laravel-project` | app carries `spatie/laravel-health` | — | `spatie/security-advisories-health-check` |
 | `laravel-package` | suggest (not mandatory) | `livewire/livewire` (suggested only — not auto-installed, not audited) | — |
 | `laravel-package` | sub-flag `hihaho-package-tools-flavoured` (or `--variant=spatie`) | — | `spatie/laravel-package-tools` |
 | `phpstan-extension` | Laravel-aware (has `illuminate/*` in `require`) | `larastan/larastan` (replaces shared `phpstan/phpstan`) | `illuminate/support` |

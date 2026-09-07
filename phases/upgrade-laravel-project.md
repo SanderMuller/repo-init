@@ -42,7 +42,10 @@ For each MISSING file:
 
 ## Apply MISSING runtime deps
 
-Skipped — laravel-project doesn't have repo-init-mandated runtime deps (the user owns their application's `require` block).
+The user owns their application's `require` block. The security canon is the one exception:
+
+- `zae/strict-transport-security` — `composer require zae/strict-transport-security`. Skip when a reverse proxy already sets `Strict-Transport-Security`; say so rather than installing a second source for the same header.
+- `spatie/security-advisories-health-check` — only when the app carries `spatie/laravel-health`. Register `SecurityAdvisoriesCheck::new()` in the health-check list in the same pass; the package is a no-op unregistered.
 
 ## Migrate Pest 4 → 5 (ATOMIC)
 
@@ -178,6 +181,28 @@ Don't touch `extra.laravel.providers` for laravel-project — Laravel uses `extr
 - **`composer.lock` NOT committed** (rare — Laravel convention is to commit it for apps): prompt to add to git.
 - **Two managed blocks in `.gitattributes`**: same as upgrade-laravel-package.md.
 - **`minimum-stability` / `prefer-stable`**: add `"minimum-stability": "stable"` + `"prefer-stable": true` to `composer.json` if absent or if `prefer-stable` isn't `true` (the Laravel skeleton ships both; see `references/version-defaults.md`). If `minimum-stability` is looser than `stable`, **default to tightening it to `stable`** — a deployed app rarely has a standing reason for a looser floor. Never loosen a passing `stable` baseline.
+
+### Security canon fixes
+
+Each is prompted. See `$REPO_INIT_HOME/references/laravel-security-canon.md`.
+
+- **`config/session.php` flags on `env()`**: rewrite `encrypt`, `secure`, `http_only`, `partitioned` to the literal `true`. Keep the framework comment blocks. Warn the user that `secure => true` drops the session cookie on plain `http://` — local sites must serve HTTPS. Do not offer an `env()` escape hatch.
+- **`same_site`**: `'strict'` → prompt for `'lax'`. `'none'` → leave it, but verify `secure => true` in the same pass and fix that first.
+- **Session cookie name**: prompt only when the flags change in the same pass, and say plainly that the rename logs every session out. Never rename silently.
+- **Dead `.env.example` keys**: remove `SESSION_ENCRYPT` and `SESSION_SECURE_COOKIE`. Both are real framework knobs, which is why a line left behind against a hard-coded config value is misleading rather than harmless.
+- **`config/hsts.php`**: copy the stub. When the app does not already send a preload directive, ask before setting `preload => true` — confirm every subdomain serves HTTPS first, because preload-list removal takes months.
+- **Middleware registered on `web` only**: move `SecurityHeaders` and `StrictTransportSecurity` from `->web(append: [...])` into `$middleware->append([...])`.
+- **`mazedlx/feature-policy`**: prompt to remove the package, drop `config/feature-policy.php` and the `AddFeaturePolicyHeaders` registration, and set `Permissions-Policy` in `SecurityHeaders` instead.
+- **CORS wildcard with credentials**: do NOT auto-fix. Report it and ask the user for the origin list — guessing it breaks the app's clients.
+- **`config/app.php` `debug`**: rewrite to `(bool) env('APP_DEBUG', false)`. Leave hihaho's assign-then-override shape alone; it is equivalent.
+- **bcrypt rounds**: only when a published `config/hashing.php` sets fewer than 12. Offer to delete the published file instead — the framework default is already 12.
+
+After any of these, run the integrity test — it is the check that the stack still
+sends what the canon says it sends:
+
+```bash
+php artisan test --filter=ApplicationIntegrity
+```
 
 ## Apply `.gitignore` append-only
 

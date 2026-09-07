@@ -20,6 +20,24 @@ The `post-update-cmd` hook re-syncs the skill into `~/.claude/skills/sandermulle
 
 ---
 
+## 1.12.x → 1.13.0 (Laravel security canon)
+
+Additive for repo-init itself — `composer global update sandermuller/repo-init` (+ `composer global exec -- boost sync --scope=user --all`). The change lands in the `laravel-project` scaffold: **the security configuration is now canon**, taken from `hihaho/hihaho`, `mijntp` and `collectiq`.
+
+What is new:
+
+- **`references/laravel-security-canon.md`** — the full canon: session-cookie flags, HSTS, the security-header set, the integrity test, and the supporting `app` / `hashing` / `auth` / `cors` values. It records the deviations found in the three reference apps rather than presenting them as agreement.
+- **Session-cookie flags are literals.** `encrypt`, `secure`, `http_only` and `partitioned` are the literal `true` in `config/session.php`, never an `env()` call. An `env()`-driven security flag fails open: a missing key or an un-updated `.env` downgrades the app with nothing to see. `secure => true` means the session cookie is dropped on plain `http://`, so local sites must serve HTTPS — that is the accepted cost, not a bug to work around with an env knob.
+- **`same_site` defaults to `'lax'`.** `'none'` is for an app framed cross-origin (hihaho's player, mijntp's portal) and only works together with `secure => true`. Never `'strict'` — it breaks return-from-redirect login flows.
+- **Three new `laravel-project` stubs**: `config/hsts.php`, `app/Http/Middleware/SecurityHeaders.php`, and `tests/Feature/ApplicationIntegrityTest.php`. The middleware sends `X-Frame-Options`, `X-XSS-Protection`, `Referrer-Policy` and `X-Content-Type-Options` — the four all three apps agree on — plus `Permissions-Policy`, which only collectiq sends today; the test asserts that contract, and the CORS headers that must be absent, on a real request.
+- **`zae/strict-transport-security` is a mandatory `require` dep** for `laravel-project` — the first runtime dep repo-init mandates for the category. `spatie/security-advisories-health-check` follows conditionally, when the app carries `spatie/laravel-health`.
+- **The middleware registers with `$middleware->append([...])`, not `->web()`** — API and webhook responses need the headers too.
+- **New audit findings** for each of the above, plus the wildcard-CORS-with-credentials pair, `mazedlx/feature-policy` (the deprecated predecessor of `Permissions-Policy`), and the dead `SESSION_ENCRYPT` key the Laravel skeleton writes into `.env.example`.
+
+Nothing here is breaking. Re-running `audit` on an already-scaffolded `laravel-project` will surface the findings; the upgrade phase prompts on each. Two prompts carry a warning the agent must pass on before acting: a session-cookie rename logs every session out, and `preload => true` on the HSTS header is a commitment that takes months to undo.
+
+---
+
 ## 1.11.x → 1.12.0 (Rector canon corrected)
 
 Additive for repo-init itself — `composer global update sandermuller/repo-init` (+ `composer global exec -- boost sync --scope=user --all`). The change lands in the scaffold: **`references/rector-config.md` stated things that were not true**, and the stubs had two gaps behind it.

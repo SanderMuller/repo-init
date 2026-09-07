@@ -114,6 +114,18 @@ composer require --dev <pkg1> <pkg2> <pkg3> ...
 
 Skip packages already in `composer.json`. On failure, consult `$REPO_INIT_HOME/references/composer-failure-modes.md`.
 
+**Runtime dep for the security canon** (`require`, not `require-dev`):
+
+```bash
+composer require zae/strict-transport-security
+```
+
+It carries the HSTS middleware the canon appends in step 7. When the app also
+carries `spatie/laravel-health`, add
+`spatie/security-advisories-health-check` and register
+`SecurityAdvisoriesCheck::new()` in the health-check list. See
+`$REPO_INIT_HOME/references/laravel-security-canon.md`.
+
 ### 6. Overlay our shared stubs (with prompts for conflicts)
 
 **Skip per-file if:** the equivalent file already exists at the target path AND its contents match `$REPO_INIT_HOME/stubs/shared/<file>` after placeholder substitution (no literal `__VENDOR__` etc. remaining).
@@ -143,6 +155,27 @@ For each file in `$REPO_INIT_HOME/stubs/laravel-project/`:
 - `phpstan.neon.dist` — copy. Project uses paths `[app, routes, config, database, tests]` (NOT `src tests` — see RQ7).
 - `rector.php` — copy. Project uses `withPaths([app, routes, config, database, tests])`. When `with-hihaho-rules`, also adds `Hihaho\RectorRules\Set\HihahoSetList::ALL`.
 - `README.append.md` — append its content to the existing `README.md` (Laravel ships a README); never overwrite.
+- `config/hsts.php` — copy. Byte-identical in all three reference apps; no substitution.
+- `app/Http/Middleware/SecurityHeaders.php` — copy. The baseline header set.
+- `tests/Feature/ApplicationIntegrityTest.php` — copy. Skip if the repo uses Pest; write the Pest equivalent of the same two assertions instead.
+
+Then apply the security canon that is NOT a whole-file copy — see
+`$REPO_INIT_HOME/references/laravel-security-canon.md`:
+
+- The session config `laravel new` already wrote — set `encrypt`, `secure`,
+  `http_only`, `partitioned` to the literal `true`; set the `cookie` name to
+  `session_<slug>_partitioned` plus the non-production environment suffix. Ask
+  the user whether the app is framed cross-origin: `same_site => 'lax'` (default)
+  or `'none'` (embedded). Keep the framework comment blocks.
+- `bootstrap/app.php` — append `SecurityHeaders::class` and
+  `Zae\StrictTransportSecurity\Middleware\L5\StrictTransportSecurity::class`
+  via `$middleware->append([...])`, not `->web()`.
+- `.env.example` — REMOVE any `SESSION_ENCRYPT` line, and never add
+  `SESSION_SECURE_COOKIE`. Both are real framework knobs
+  (`vendor/laravel/framework/config/session.php` reads
+  `env('SESSION_ENCRYPT', false)`), which is exactly why they must not survive
+  in a project whose published config hard-codes the value — the line reads as a
+  knob that no longer does anything.
 
 Substitute placeholders.
 

@@ -43,10 +43,16 @@ Ask the user (with auto-inferred defaults):
 - [ ] `boost.json` (`laravel/boost` writes this on install; ours overlays if absent)
 - [ ] `CLAUDE.md` and `AGENTS.md` (package-boost generated)
 - [ ] `composer.json` with `type: project`
+- [ ] `config/hsts.php`
+- [ ] `app/Http/Middleware/SecurityHeaders.php` (any path is fine — mijntp uses `app/Http/Middleware`, collectiq `app/Middleware`; only flag MISSING when no such class exists)
+- [ ] `tests/Feature/ApplicationIntegrityTest.php` (or the Pest equivalent)
 
 ## MISSING runtime deps (must be in `require`)
 
-For laravel-project, runtime deps are the user's Laravel app deps (Filament, Horizon, Pennant, etc.). We don't enforce any specific runtime dep — the `laravel new` baseline + the user's additions is what it is. **Skip this section** for laravel-project (no expected runtime deps from repo-init's side).
+For laravel-project, runtime deps are the user's Laravel app deps (Filament, Horizon, Pennant, etc.). We don't enforce those — the `laravel new` baseline + the user's additions is what it is. The security canon is the one exception:
+
+- [ ] `zae/strict-transport-security` in `require` (all three reference apps carry it). MISSING when the app has no other HSTS mechanism — check for a `Strict-Transport-Security` header set by a reverse proxy first, and report it as informational when the proxy already sets it.
+- [ ] `spatie/security-advisories-health-check` in `require` — only when the app carries `spatie/laravel-health`. Also confirm `SecurityAdvisoriesCheck::new()` is registered in the health-check list; an installed-but-unregistered check is a silent no-op.
 
 ## MISSING dev deps (must be in `require-dev`)
 
@@ -146,6 +152,20 @@ Same logic as `audit-laravel-package.md` §OUTDATED — apply each file's mode f
 - [ ] PHP floor `^8.2` (or below) in `require.php`. NON-CANONICAL.
 - [ ] `composer.lock` NOT committed: for laravel-project the lockfile IS committed (Laravel convention — apps pin deps). If missing, suggest committing.
 - [ ] Two managed blocks in `.gitattributes`.
+
+### Security canon (see `$REPO_INIT_HOME/references/laravel-security-canon.md`)
+
+- [ ] **`config/session.php` security flag read from `env()`** (HIGH severity): `encrypt`, `secure`, `http_only`, and `partitioned` MUST each be the literal `true`. An `env()` call fails open — a missing key or an un-updated `.env` silently downgrades the app. Flag each key that is not a literal `true`, including a safe-defaulting one such as mijntp's `env('SESSION_SECURE_COOKIE', true)`.
+- [ ] **`same_site => 'strict'`** (MEDIUM severity): breaks return-from-redirect login flows (OAuth, SAML, payment providers). Canonical is `'lax'`, or `'none'` for an app framed cross-origin. `'none'` additionally requires `secure => true`; flag the pair when `'none'` is set without it.
+- [ ] **Session cookie name without the environment suffix** (LOW severity): environments that share a parent domain overwrite each other's session cookie. Canonical is `session_<slug>_partitioned` plus `_<env>` for every non-production environment. Do NOT push a rename on a live app unless the cookie flags change in the same pass — a rename logs every session out.
+- [ ] **`SESSION_ENCRYPT` / `SESSION_SECURE_COOKIE` in `.env.example`** (LOW severity): both are real framework knobs, so a line left in `.env.example` against a config that hard-codes the value reads as a knob that still works. Only a finding once the published config hard-codes the flag. collectiq ships `SESSION_ENCRYPT=false` against a hard-coded `true`. Fix = remove the key.
+- [ ] **`config/hsts.php` values** (MEDIUM severity): `max-age` 31536000, `includeSubdomains` `true`, `preload` `true`. Before recommending `preload => true` on an app that does not have it, confirm every subdomain serves HTTPS — preload-list removal takes months.
+- [ ] **Security middleware registered on the `web` group only** (MEDIUM severity): `SecurityHeaders` and `StrictTransportSecurity` go in `$middleware->append([...])` (or the global `$middleware` array on the Laravel 10 `Kernel` layout), so API and webhook responses carry the headers too. Flag a `->web(append: [...])` registration.
+- [ ] **`mazedlx/feature-policy` / `AddFeaturePolicyHeaders`** (LOW severity): `Feature-Policy` is the deprecated predecessor of `Permissions-Policy` and no current browser reads it. hihaho still carries it. Fix = drop the package and set `Permissions-Policy` as a header string in `SecurityHeaders`.
+- [ ] **`config/cors.php` with `allowed_origins => ['*']` AND `supports_credentials => true`** (HIGH severity): a session-theft primitive, and browsers reject the combination anyway. An app that needs credentials must list its origins.
+- [ ] **`ApplicationIntegrityTest` that asserts no absent header** (LOW severity): `assertHeaderMissing('Access-Control-Allow-Origin')` on a non-CORS request is what catches a wildcard CORS config. A test that only asserts present headers misses it.
+- [ ] **`config/app.php` `debug`** (HIGH severity): the value must be cast to `bool` and default to `false`. Both the inline `(bool) env('APP_DEBUG', false)` shape and hihaho's assign-`false`-then-override shape are canonical. Flag a default of `true` or a missing cast.
+- [ ] **`config/hashing.php` lowering the bcrypt rounds** (LOW severity): only applies when the app publishes the file. The framework default is already `env('BCRYPT_ROUNDS', 12)`, so an unpublished `config/hashing.php` is canonical and is NOT a finding. Flag only a published file that sets fewer than 12 rounds or turns `verify` off.
 
 ## EXTRA findings
 

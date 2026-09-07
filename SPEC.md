@@ -526,6 +526,28 @@ Rationale: a hard floor avoids the matrix-of-matrices problem (each PHP × Larav
 
 ---
 
+### 5.8 Laravel security canon (`references/laravel-security-canon.md`)
+
+`laravel-project` only. Packages have no session and no HTTP surface.
+
+The floor, verified in `hihaho/hihaho`, `mijntp` and `collectiq`:
+
+- `config/session.php` — `encrypt`, `secure`, `http_only`, `partitioned` are the literal `true`, never an `env()` call. `same_site` is `'lax'`, or `'none'` for an app framed cross-origin. Cookie name `session_<slug>_partitioned` plus a `_<env>` suffix outside production.
+- `zae/strict-transport-security` in `require` + `config/hsts.php` — `max-age=31536000;includeSubDomains;preload`.
+- `app/Http/Middleware/SecurityHeaders.php` — `X-Frame-Options`, `X-XSS-Protection`, `Referrer-Policy`, `X-Content-Type-Options` (all three apps) plus `Permissions-Policy` (collectiq only; hihaho sends the deprecated `Feature-Policy` instead and mijntp sends neither). Registered with `$middleware->append([...])`, not `->web()`, so API responses carry the headers too.
+- `tests/Feature/ApplicationIntegrityTest.php` — asserts the header contract, and the CORS headers that must be absent, on a real request.
+
+Stubs: `stubs/laravel-project/config/hsts.php`,
+`stubs/laravel-project/app/Http/Middleware/SecurityHeaders.php`,
+`stubs/laravel-project/tests/Feature/ApplicationIntegrityTest.php`. `config/session.php`
+comes from `laravel new`, so the canon is a set of edits to that file, not a
+replacement.
+
+Rationale for the literals: an `env()`-driven security flag fails open. A missing
+key or an un-updated `.env` downgrades the app silently.
+
+---
+
 ## 6. Never-Touch List (`checklists/per-category-never-touch.md`)
 
 Files the agent must never write, regardless of phase. **Per-mode scope:**
@@ -791,6 +813,7 @@ Brief summary of each reference file's purpose. Each is a flat markdown doc the 
 - `references/upgrade-merge-modes.md` — per-file merge mode declaration: `replace` / `managed-block` / `append-only` / `merge-keys` / `notify-only`. Audit + upgrade phases consult this so OUTDATED detection isn't a blunt whole-file diff (codex v3 #7).
 - `references/composer-failure-modes.md` — common composer-install / require failures (version conflict, package not found, conflicting deps, PHP-version-not-satisfied, transitive lock conflict) with the resolution playbook (re-prompt user for narrower constraints, fall back to per-package require, escalate to user). Cited from bootstrap step 8 and upgrade dep-application steps.
 - `references/placeholder-rules.md` — exact StudlyCase derivation rule, edge cases (digits, mixed case, hyphenated multi-word), examples for every placeholder in §2.
+- `references/laravel-security-canon.md` — §5.8. The security configuration canon for `laravel-project`: the four session-cookie flags as literals, `same_site`, the cookie name, HSTS, the `SecurityHeaders` middleware, `ApplicationIntegrityTest`, and the supporting `app` / `hashing` / `auth` / `cors` values. Records the deviations found in the reference apps.
 
 ---
 

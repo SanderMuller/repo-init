@@ -81,7 +81,8 @@ categories:
 
   laravel-project:
     mandatory:
-      require: []  # laravel new baseline; not enumerated here
+      require:
+        - zae/strict-transport-security  # HSTS middleware for the security canon — see references/laravel-security-canon.md. The rest of `require` is the laravel new baseline + the user's app deps; not enumerated here.
       # IMPORTANT: CLI implementations MUST filter the require-dev list by
       # what `laravel new` already installed. Laravel 13+ ships some of these
       # in `require` (laravel/tinker moved from require-dev → require). The
@@ -107,6 +108,11 @@ categories:
         require: []
         require-dev:
           - "roave/security-advisories: dev-latest"
+      with-health-checks:
+        default-inference: spatie/laravel-health in require
+        require:
+          - spatie/security-advisories-health-check  # no-op unless SecurityAdvisoriesCheck::new() is registered in the health-check list
+        require-dev: []
     shared-exclusions:
       - sandermuller/boost-skills  # boost-skills' skills sync via boost-core; laravel-project uses laravel/boost, not boost-core — so boost-skills would be inert here
     # shared-stub-skip: stubs/shared/ files this category does NOT plain-copy
