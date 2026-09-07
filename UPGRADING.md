@@ -20,6 +20,24 @@ The `post-update-cmd` hook re-syncs the skill into `~/.claude/skills/sandermulle
 
 ---
 
+## 1.11.x → 1.12.0 (Rector canon corrected)
+
+Additive for repo-init itself — `composer global update sandermuller/repo-init` (+ `composer global exec -- boost sync --scope=user --all`). The change lands in the scaffold: **`references/rector-config.md` stated things that were not true**, and the stubs had two gaps behind it.
+
+What moved:
+
+- **Every `rector.php` stub now sets `containerCacheDirectory: './.cache/rectorContainer'`.** Rector's default writes the container cache to the system temp directory, while the shipped `rector-check.yml` caches `.cache/rectorContainer/` — so the workflow's cache step could never hit. Add the argument to an existing scaffolded `rector.php` to make that cache live.
+- **The `laravel-project` stub registers the Pest set.** Its bootstrap, audit and upgrade phases all required `pestphp/pest-plugin-rector`, but the stub used no Pest set, so a Pest laravel-project installed the plugin and never ran it. The stub now takes `PestSetList::CODING_STYLE` through the same `class_exists()` guard as the other Laravel categories.
+- **`stubs/composer-plugin/rector.php` exists.** The composer-plugin audit and upgrade phases listed `rector.php` as an expected file, and no stub tree shipped one — so a bootstrapped composer plugin was audited for a file it could not have. The stub takes the framework-agnostic shape: `withPaths([src, tests])`, the Pest set, no Laravel sets.
+- **`--with-hihaho-rules` wiring is documented correctly.** The class is `Hihaho\RectorRules\Set\HihahoSetList` (the doc named a `Hihaho\RectorRules\Sets` that does not exist), and `hihaho/rector-rules` does not self-register — `references/composer-scripts.md` claimed it did. `HihahoSetList::ALL` also does not reach `MiddlewareStringToClassRector`, `NamedArgumentFromManifestRector` or `TestFieldStringToConstantRector`; those belong to no set and need `withConfiguredRule()`.
+- **The documented `withSkip` list is now honest.** The previous "Common `withSkip` defaults" section attributed nine rules to the canonical reference repos; none of the nine appears in either. The doc now separates repo-init's own stub defaults from a verified list of the 30 blanket skips both reference apps actually share, offered to a `laravel-project` target.
+
+A new CI check, `.github/scripts/check-rector-sync.py`, asserts that the stubs, `references/rector-config.md` and the phase files agree, so this class of drift fails the build rather than shipping.
+
+Nothing here is breaking. Re-running `audit` on an already-scaffolded repo will surface the missing `containerCacheDirectory`, and — for a Pest laravel-project or a composer plugin — the missing Rector wiring.
+
+---
+
 ## 1.10.x → 1.11.0 (Pest 5 + Tia canonical)
 
 Additive for repo-init itself — `composer global update sandermuller/repo-init` (+ `composer global exec -- boost sync --scope=user --all`). The change lands in the scaffold: **Pest 5 is the canonical test runner**, and every Pest repo takes a PHP `^8.4` floor.
