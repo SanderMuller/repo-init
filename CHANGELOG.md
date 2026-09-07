@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Pre-`1.0.0` releases (0.x.x — historical) introduced breaking changes in MINOR bumps; from 1.0.0 onward repo-init follows standard SemVer (breaking changes ship as MAJOR only). The pre-1.0 entries below remain for reference.
 
+## [1.13.0](https://github.com/sandermuller/repo-init/compare/1.12.0...1.13.0) - 2026-09-07
+
+<!-- verified-sha: 9f06d05776f00642b3e2b0ffaf13b7235d3e2f19 -->
+A `laravel-project` scaffolded by repo-init had no opinion about security configuration, so every bootstrapped app inherited the framework defaults. On Laravel 13 those are `encrypt` off, `partitioned` off, and `secure` with no default at all — an app that never sets `SESSION_SECURE_COOKIE` sends its session cookie over plain HTTP. This release makes the security configuration canon, drawn from the three production Laravel apps this playbook is derived from.
+
+### Added
+
+- **`references/laravel-security-canon.md`.** The canon: session-cookie flags, `same_site`, the cookie name, HSTS, the security-header set, `ApplicationIntegrityTest`, and the supporting `app` / `hashing` / `auth` / `cors` values. Where the three reference apps disagree, the doc records the disagreement and says which side is canon — it does not present them as unanimous.
+- **Three `laravel-project` stubs**: `config/hsts.php`, `app/Http/Middleware/SecurityHeaders.php`, and `tests/Feature/ApplicationIntegrityTest.php`. The middleware sends `X-Frame-Options`, `X-XSS-Protection`, `Referrer-Policy` and `X-Content-Type-Options`; the test asserts that contract — and the CORS headers that must be **absent** — on a real request, so a reordered middleware stack or a package that strips a header fails the suite.
+- **Eleven new audit findings** for `laravel-project`, each with a severity and a fix: an `env()`-driven session flag, `same_site => 'strict'`, a cookie name without an environment suffix, a dead `SESSION_ENCRYPT` key, HSTS drift, security middleware registered on the `web` group only, `mazedlx/feature-policy`, a CORS wildcard combined with credentials, an integrity test that asserts no absent header, an uncast `app.debug`, and a published `config/hashing.php` that lowers the bcrypt rounds.
+
+### Changed
+
+- **The session-cookie flags are literals, never `env()` calls.** `encrypt`, `secure`, `http_only` and `partitioned` are each the literal `true`. An `env()`-driven security flag fails open: a missing key or an un-updated `.env` downgrades the app with nothing to see. The cost is that `secure => true` drops the session cookie on plain `http://`, which makes local HTTPS a requirement rather than a bug to work around with a knob — the doc says so plainly instead of leaving it to be discovered during a broken local login.
+- **`same_site` is `'lax'` by default.** `'none'` is the embedded case — an app framed on a third-party origin — and works only together with `secure => true`. Never `'strict'`, which breaks return-from-redirect login flows such as OAuth, SAML and payment providers.
+- **The session cookie is named `session_<slug>_partitioned` with a non-production environment suffix.** The `_partitioned` marker retires the old un-partitioned cookie, since a browser keys a cookie by name and changing the flags on an existing name leaves the old one in place. The environment suffix stops environments on a shared parent domain overwriting each other's session cookie.
+- **`zae/strict-transport-security` is a mandatory `require` dep** for `laravel-project` — the first runtime dependency repo-init mandates for the category. The package registers no service provider and publishes no config, so `config/hsts.php` is hand-written and nothing goes in `bootstrap/providers.php`. `spatie/security-advisories-health-check` follows conditionally, when the app carries `spatie/laravel-health`.
+- **The security middleware registers with `$middleware->append([...])`, not `->web()`**, so API and webhook responses carry the headers too.
+
+### Not in the canon, on purpose
+
+- **`mazedlx/feature-policy`.** `Feature-Policy` is the deprecated predecessor of `Permissions-Policy` and no current browser reads it. New projects set `Permissions-Policy` as a header string instead.
+- **A Content-Security-Policy, and no-cache on authenticated responses.** Both need a per-app source list or route carve-out, so they are documented as an optional tier rather than shipped in the floor.
+- **Relaxing `X-Frame-Options` per allowed origin.** The stub sends `SAMEORIGIN` unconditionally. An app framed on purpose needs its own origin list, and the naive check — a bare suffix comparison — also matches a look-alike domain, so the canon documents the trap rather than shipping a stub that falls into it.
+
+### Upgrading
+
+Additive. Re-running `audit` on an already-scaffolded `laravel-project` surfaces the new findings; the upgrade phase prompts on each. Two of those prompts carry a warning the agent passes on before acting: renaming a session cookie logs every session out, and `preload => true` on the HSTS header is a commitment that takes months to undo. See [UPGRADING.md](https://github.com/SanderMuller/repo-init/blob/main/UPGRADING.md#112x--1130-laravel-security-canon).
+
+```bash
+composer global update sandermuller/repo-init
+composer global exec -- boost sync --scope=user --all
+
+```
+
+**Full Changelog**: <https://github.com/SanderMuller/repo-init/compare/1.12.0...1.13.0>
+
 ## [1.12.0](https://github.com/sandermuller/repo-init/compare/1.11.0...1.12.0) - 2026-09-07
 
 <!-- verified-sha: 8e11ad67686f6e59f23be25ec0d4496a2dc66d1b -->
@@ -39,9 +76,10 @@ Additive for repo-init itself. Re-running `audit` on an already-scaffolded repo 
 composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
 
+
 ```
 
-**Full Changelog**: <https://github.com/SanderMuller/repo-init/compare/1.11.0...1.12.0>
+**Full Changelog**: [https://github.com/SanderMuller/repo-init/compare/1.11.0...1.12.0](https://github.com/SanderMuller/repo-init/compare/1.11.0...1.12.0)
 
 ## [1.11.0](https://github.com/sandermuller/repo-init/compare/1.10.0...1.11.0) - 2026-08-19
 
@@ -72,6 +110,7 @@ composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
 
 
+
 ```
 
 **Full Changelog**: [https://github.com/SanderMuller/repo-init/compare/1.10.0...1.11.0](https://github.com/SanderMuller/repo-init/compare/1.10.0...1.11.0)
@@ -89,6 +128,7 @@ The tag left the interactive skill-tag picker. The stub hard-codes it:
 
 ```php
 ->withTags(['voice'__SKILL_TAGS__])
+
 
 
 
@@ -158,6 +198,7 @@ Audit phases gained a HIGH-severity rule for the duplicate registration. Upgrade
 ```bash
 composer remove --dev rector/type-perfect --no-update
 composer require --dev tomasvotruba/type-coverage:^2.3
+
 
 
 
@@ -564,6 +605,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 For existing scaffolded packages, the next audit walk will surface the `sandermuller/package-boost-php: true` entry as MEDIUM-stale. The upgrade phase handles removal correctly — bump first, then drop the entry.
@@ -665,6 +707,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 No further steps. Scaffold output, the `repo-init` skill, audit/upgrade phases, stubs — all identical to 0.8.1.
@@ -702,6 +745,7 @@ If you installed 0.8.0:
 ```bash
 composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
+
 
 
 
@@ -762,6 +806,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 The `composer global exec --` form runs `boost` from Composer's global `vendor/bin/` regardless of the user's current directory; the literal `--` stops Composer from interpreting boost's flags as its own. `--scope=user --all` publishes every globally-installed package's `resources/boost/skills/` into `~/.{agent}/skills/<vendor>__<package>/`. See `references/boost-core-user-scope.md` for the full contract.
@@ -778,6 +823,7 @@ repo-init now uses the shared `sandermuller/boost-skills` library (code-review, 
 
 ```bash
 gh release create X.Y.Z --notes-file internal/release-notes-X.Y.Z.md
+
 
 
 
@@ -864,6 +910,7 @@ composer global exec -- boost sync --scope=user --all   # new: global skill refr
 
 
 
+
 ```
 
 `stubs/shared/boost.php` + repo-init's own `boost.php` docblocks updated accordingly.
@@ -893,6 +940,7 @@ Upgrade repo-init itself:
 ```bash
 composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
+
 
 
 
