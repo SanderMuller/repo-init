@@ -16,6 +16,7 @@ return RectorConfig::configure()
     ->withCache(
         cacheDirectory: './.cache/rector',
         cacheClass: FileCacheStorage::class,
+        containerCacheDirectory: './.cache/rectorContainer',
     )
     ->withPaths([
         __DIR__ . '/src',

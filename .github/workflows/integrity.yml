@@ -145,6 +145,22 @@ jobs:
 
       - run: bash .github/scripts/check-stub-composer-validity.sh
 
+  rector-sync:
+    name: Rector config sync (stubs + doc + phases)
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - run: python3 .github/scripts/check-rector-sync.py
+
   bootstrap-idempotency:
     name: Bootstrap phase idempotency (RQ41)
     runs-on: ubuntu-latest

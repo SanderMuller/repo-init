@@ -141,7 +141,7 @@ For each file in `$REPO_INIT_HOME/stubs/laravel-project/`:
 
 - `boost.json` — `laravel/boost` writes this on install. If absent (user opted out of Boost), copy ours.
 - `phpstan.neon.dist` — copy. Project uses paths `[app, routes, config, database, tests]` (NOT `src tests` — see RQ7).
-- `rector.php` — copy. Project uses `withPaths([app, routes, config, database, tests])`. When `with-hihaho-rules`, also adds `Hihaho\RectorRules\Sets::ALL`.
+- `rector.php` — copy. Project uses `withPaths([app, routes, config, database, tests])`. When `with-hihaho-rules`, also adds `Hihaho\RectorRules\Set\HihahoSetList::ALL`.
 - `README.append.md` — append its content to the existing `README.md` (Laravel ships a README); never overwrite.
 
 Substitute placeholders.

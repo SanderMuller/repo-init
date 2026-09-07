@@ -1,5 +1,6 @@
 <?php declare(strict_types=1);
 
+use Pest\Rector\Set\PestSetList;
 use Rector\Caching\ValueObject\Storage\FileCacheStorage;
 use Rector\CodeQuality\Rector\ClassMethod\InlineArrayReturnAssignRector;
 use Rector\CodeQuality\Rector\If_\ExplicitBoolCompareRector;
@@ -16,6 +17,7 @@ return RectorConfig::configure()
     ->withCache(
         cacheDirectory: './.cache/rector',
         cacheClass: FileCacheStorage::class,
+        containerCacheDirectory: './.cache/rectorContainer',
     )
     ->withPaths([
         __DIR__ . '/app',
@@ -43,14 +45,19 @@ return RectorConfig::configure()
     ->withParallel(300, 15, 15)
     ->withMemoryLimit('3G')
     ->withPhpSets(php__PHP_VERSION_NEON__: true)
-    ->withSets([
-        LaravelSetList::LARAVEL_CODE_QUALITY,
-        LaravelSetList::LARAVEL_ARRAYACCESS_TO_METHOD_CALL,
-        LaravelSetList::LARAVEL_CONTAINER_STRING_TO_FULLY_QUALIFIED_NAME,
-        LaravelSetList::LARAVEL_FACADE_ALIASES_TO_FULL_NAMES,
-        // When --with-hihaho-rules is opted in, also include:
-        // ...\Hihaho\RectorRules\Sets::ALL
-    ])
+    ->withSets(array_merge(
+        [
+            LaravelSetList::LARAVEL_CODE_QUALITY,
+            LaravelSetList::LARAVEL_ARRAYACCESS_TO_METHOD_CALL,
+            LaravelSetList::LARAVEL_CONTAINER_STRING_TO_FULLY_QUALIFIED_NAME,
+            LaravelSetList::LARAVEL_FACADE_ALIASES_TO_FULL_NAMES,
+            // With --with-hihaho-rules, add HihahoSetList::ALL here. ALL does not
+            // cover every rule in the package — see references/rector-config.md.
+        ],
+        class_exists(PestSetList::class) ? [
+            PestSetList::CODING_STYLE,
+        ] : [],
+    ))
     ->withSkip([
         NullToStrictStringFuncCallArgRector::class,
         AddArrowFunctionReturnTypeRector::class,

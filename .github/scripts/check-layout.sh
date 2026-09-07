@@ -80,6 +80,7 @@ REQUIRED_PATHS=(
     "stubs/rector-extension/composer.json"
     "stubs/laravel-project/boost.json"
     "stubs/composer-plugin/composer.json"
+    "stubs/composer-plugin/rector.php"
     "stubs/composer-plugin/src/Plugin.none.php"
     "stubs/composer-plugin/src/Plugin.command-provider.php"
     "stubs/composer-plugin/src/Plugin.event-subscriber.php"

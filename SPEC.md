@@ -512,7 +512,7 @@ Per-category `withPaths` and `withSets`:
 
 | Category | `withPaths` | Extra `withSets` |
 |---|---|---|
-| `laravel-project` | `app, routes, config, database, tests` | `LaravelSetList::LARAVEL_*`, `Hihaho\RectorRules\Sets::ALL` when `--with-hihaho-rules` |
+| `laravel-project` | `app, routes, config, database, tests` | `LaravelSetList::LARAVEL_*`, `Hihaho\RectorRules\Set\HihahoSetList::ALL` when `--with-hihaho-rules` |
 | `laravel-package` | `src, tests, workbench` | `LaravelSetList::LARAVEL_*`, `Pest\Rector\Set\PestSetList::CODING_STYLE` when pest |
 | `php-package` | `src, tests` | `Pest\Rector\Set\PestSetList::CODING_STYLE` when pest |
 | `phpstan-extension` | `src, tests` | (none) |
@@ -878,6 +878,7 @@ The "dogfood" property therefore reduces to: every stub in `stubs/` was generate
 - [ ] **Merge-keys covers extras check** — assert each upgrade phase covers every documented composer.json key in §9 (`scripts`, `extra.laravel.providers`, `extra.phpstan.includes`, `extra.rector.includes`, `config.allow-plugins`, `config.sort-packages`, `autoload-dev.classmap`), not just `scripts` (codex v4 #4).
 - [ ] **Layout-matches-resolved-Qs check** — assert `stubs/laravel-package-spatie/`, `references/upgrade-merge-modes.md`, `references/composer-failure-modes.md`, `references/placeholder-rules.md` exist (codex v4 #5 protection).
 - [ ] **Placeholder-coverage check** — assert every placeholder defined in §2 transform table is used in at least one stub; assert every placeholder used in a stub is defined in §2.
+- [ ] **Rector-config sync check** — `.github/scripts/check-rector-sync.py` asserts that every `stubs/<category>/rector.php`, `references/rector-config.md` and the matching `phases/*-<category>.md` agree: required builder calls and `withPreparedSets` flags present; `withPaths` matches the doc's per-category table; the stub skip list matches the doc's "stub defaults" block; every skipped class is imported and every import used; Laravel sets present for Laravel categories only; no superseded `mrpunyapal/rector-pest` set names; a category whose phases require `pestphp/pest-plugin-rector` registers `PestSetList::CODING_STYLE`; and every phase-promised `rector.php` has a stub to create it from (or a stated per-category exclusion, as `audit-skill-bundle.md` does). Uses the same category model as `check-phase-coverage.sh` — full / bootstrap-only / variant / excluded.
 - [ ] **Self-removal verification doc** — `tests/self-removal-contract.md` documents the survives-vs-clean tradeoff and links to package-boost's authoritative behaviour (skill copies, doesn't symlink).
 - [ ] **Stub drift detection** — GitHub Actions workflow that fetches each canonical repo (`SanderMuller/laravel-queue-insights`, `SanderMuller/solana-pubkey`, etc.) via `gh api`, diffs the relevant files against `stubs/`, and warns when drift exceeds a per-file threshold.
 - [ ] Schedule weekly; open an issue if drift detected; include suggested patch.

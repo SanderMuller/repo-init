@@ -172,7 +172,15 @@ Add `@validate-gitattributes` to the `qa` chain.
 
 ### When opt-in `--with-hihaho-rules` (laravel-project)
 
-No script additions — the rule packs auto-register via `phpstan/extension-installer` and Rector's set discovery.
+No script additions.
+
+`hihaho/phpstan-rules` does auto-register, via `phpstan/extension-installer`.
+
+`hihaho/rector-rules` does NOT. Rector has no set discovery, and the package's
+`extra.rector.includes` entry points at an empty `config/config.php` and needs
+`rector/extension-installer`, which neither reference app installs. Its sets and
+rules must be written into `rector.php` by hand — see
+`references/rector-config.md`, "`--with-hihaho-rules` wiring".
 
 ### When opt-in `--with-security-advisories` (laravel-project)
 

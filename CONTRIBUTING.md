@@ -22,6 +22,7 @@ composer install   # only needed for orchestra/testbench + package-boost (used b
 | Add a new repo category (e.g. `filament-plugin`) | `references/detection-rules.md` + `references/per-category-deps.md` + `references/per-category-deps.yml` + new `stubs/<cat>/` tree + 3 new phase files (`bootstrap-<cat>.md`, `audit-<cat>.md`, `upgrade-<cat>.md`) + update `SKILL.md` routing table. See SPEC.md §2 and §10 (Phase 8). |
 | Adjust the canonical baseline (add a shared dev dep, change a script) | `references/shared-dev-deps.md` + `references/per-category-deps.yml` + `references/composer-scripts.md` + corresponding edits across all affected `stubs/<cat>/composer.json` files. |
 | Add a placeholder | `references/placeholder-rules.md` + use it in at least one stub. The Phase 7 `check-placeholders` CI enforces both directions. |
+| Change the Rector baseline (a set, a skipped rule, a path) | `references/rector-config.md` + every affected `stubs/<cat>/rector.php` + the matching phase files. The Phase 7 `check-rector-sync` CI enforces that all three agree. |
 | Add an opt-in to an existing category | `references/per-category-deps.md` MANDATORY vs OPTIONAL split + `references/per-category-deps.yml` + corresponding audit + upgrade phase changes. |
 | Update SPEC | `SPEC.md`. Add a new Resolved Question explaining the decision + rationale. Open a PR with rationale in the description. |
 
@@ -43,6 +44,7 @@ python3 .github/scripts/check-dep-sync.py
 bash .github/scripts/check-placeholders.sh
 bash .github/scripts/check-merge-keys-coverage.sh
 bash .github/scripts/check-layout.sh
+python3 .github/scripts/check-rector-sync.py
 ```
 
 CI runs all of the above on every push + PR.

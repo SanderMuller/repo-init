@@ -4,7 +4,7 @@
 This project uses the hihaho rule packs for PHPStan and Rector:
 
 - `hihaho/phpstan-rules` — Hihaho-flavoured PHPStan rules. Auto-loaded via `phpstan/extension-installer`.
-- `hihaho/rector-rules` — Hihaho-flavoured Rector rules. Applied via `withSets([...Hihaho\RectorRules\Sets::ALL])` in `rector.php`.
+- `hihaho/rector-rules` — Hihaho-flavoured Rector rules. Applied via `withSets([HihahoSetList::ALL])` in `rector.php`. Three of its rules belong to no set and need `withConfiguredRule()` — see `references/rector-config.md`.
 
 Plus the universal sander baseline:
 
