@@ -19,7 +19,6 @@ EXIT_CODE=0
 # Format: "category|opt-in-keyword|dep-to-check"
 CHECKS=(
     "laravel-project|with-hihaho-rules|hihaho/phpstan-rules"
-    "laravel-project|with-security-advisories|roave/security-advisories"
     "laravel-package|hihaho-package-tools-flavoured|spatie/laravel-package-tools"
     "phpstan-extension|Laravel-aware|larastan/larastan"
     "rector-extension|Laravel-aware|driftingly/rector-laravel"

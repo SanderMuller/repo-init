@@ -26,7 +26,6 @@ If not installed, ask the user:
 - `php` — default `8.3`. Accepted: `8.3`, `8.4`, `8.5`. Reject `8.2`.
 - `author-name` / `author-email` — defaults from git config.
 - `with-hihaho-rules` — default `y` for vendor=hihaho, `N` otherwise.
-- `with-security-advisories` — default `N`.
 - `--boost` flag — `laravel new --boost` installs `laravel/boost` (MCP wiring, AGENTS.md / CLAUDE.md scaffolding, `boost.json`). Default ON. Use `--no-boost` only if the user explicitly opts out (then `composer require laravel/boost` runs as a separate step). The installer also auto-detects agent context via env for JSON output — no flag needed for that.
 
 ## Steps
@@ -89,7 +88,6 @@ Build the list from `$REPO_INIT_HOME/references/per-category-deps.md#laravel-pro
 **OPTIONAL (only when opted in):**
 
 - `with-hihaho-rules` (default `y` for vendor=hihaho): `hihaho/phpstan-rules`, `hihaho/rector-rules`, `symplify/phpstan-rules` (intentionally unpinned here — Composer resolves a PHP-compatible version; on a PHP 8.3 floor that's <= 14.10, which has NO error formatter, so the shared-list formatter conditional above still governs the formatter dep separately).
-- `with-security-advisories` (default `N`): `roave/security-advisories: dev-latest`.
 
 **Test framework** (default `phpunit` for laravel-project — Laravel ships PHPUnit by default; switching to Pest is a user opt-in):
 

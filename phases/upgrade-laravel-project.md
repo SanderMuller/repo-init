@@ -135,7 +135,6 @@ Plus shared dev deps from `$REPO_INIT_HOME/references/shared-dev-deps.md` minus 
 Plus confirmed opt-ins:
 
 - `--with-hihaho-rules`: `hihaho/phpstan-rules`, `hihaho/rector-rules`, `symplify/phpstan-rules`
-- `--with-security-advisories`: `roave/security-advisories: dev-latest`
 
 Then the single batched `composer require --dev <list>` call.
 
@@ -163,7 +162,7 @@ Per `references/composer-scripts.md`:
 
   laravel-project does NOT get a `sync-ai` script — `laravel/boost` owns AI-asset sync for applications (`php artisan boost:update`); there is no `vendor/bin/boost` here.
 
-  **`post-install-cmd` / `post-update-cmd` are scaffold-conditional**: the canonical `["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"]` value requires `sandermuller/boost-core` to be in the dependency tree. A vanilla laravel-project does NOT pull boost-core — it uses `laravel/boost`. Check first; if boost-core absent, skip these two keys entirely. If a POSIX-shell `post-install-cmd` is present in a laravel-project without boost-core, the value should be REMOVED (Windows-broken AND the binary doesn't exist) — prompt the user. HIGH severity drift either way.
+  **`post-install-cmd` / `post-update-cmd` are scaffold-conditional**: the canonical value — the dev-mode-guarded `@php -r` one-liner, copied verbatim from `references/composer-scripts.md` — applies when `sandermuller/project-boost-laravel` is in `require-dev`. Detect on the wrapper, NOT on `sandermuller/boost-core` — the wrapper pulls boost-core transitively, so boost-core's presence proves nothing. If the wrapper is absent, skip these two keys entirely. Three MISMATCH shapes, all HIGH severity, all prompted before patching: a POSIX-shell value (Windows-broken, and there is no `vendor/bin/boost` here); `["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"]` (autoloads and reports success, but bypasses the wrapper's injection pipeline and syncs a smaller skill set); and an UNGUARDED `["@php artisan project-boost:sync"]` (fires under `composer install --no-dev`, where the dev-only command does not exist, and aborts the install). With the wrapper present, replace any of the three with the guarded one-liner; without it, REMOVE the boost ENTRY — never the key. The Laravel skeleton ships its own `post-update-cmd` (`@php artisan vendor:publish --tag=laravel-assets --ansi --force`); deleting the key drops Laravel's asset publishing. Append the boost entry after the handlers already there.
 - **`scripts.dev`**: if absent, suggest adding the multi-process dev script (concurrent server + queue + pail + vite). This is laravel-project canonical. Show example, ask before inserting.
 - **`config.allow-plugins`**: insert `phpstan/extension-installer: true`, `pestphp/pest-plugin: true` (if pest), `php-http/discovery: true` (Laravel default).
 - **`config.sort-packages`**: set to `true`.

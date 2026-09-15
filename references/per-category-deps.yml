@@ -103,11 +103,6 @@ categories:
           - hihaho/phpstan-rules
           - hihaho/rector-rules
           - symplify/phpstan-rules
-      with-security-advisories:
-        default-inference: roave/security-advisories in require-dev
-        require: []
-        require-dev:
-          - "roave/security-advisories: dev-latest"
       with-health-checks:
         default-inference: spatie/laravel-health in require
         require:

@@ -244,7 +244,6 @@ The skill also lists the seven user-facing knobs the agent must collect or infer
 - `laravel` (only for laravel-package — `^11||^12||^13`, `^12||^13`, `^13`)
 - `test-framework` (pest / phpunit — vendor-driven default per `references/pest-vs-phpunit.md`)
 - `with-hihaho-rules` (y/N — default y for vendor=hihaho)
-- `with-security-advisories` (y/N — default N)
 
 ### 3.2 Skill flow ends each phase with "what next"
 
@@ -401,7 +400,6 @@ Split into **MANDATORY** (audit flags MISSING if absent) and **OPTIONAL/CONDITIO
 | Category | Opt-in flag / sub-flag | Adds to `require-dev` | Adds to `require` |
 |---|---|---|---|
 | `laravel-project` | `--with-hihaho-rules` (default `y` for vendor=hihaho) | `hihaho/phpstan-rules`, `hihaho/rector-rules`, `symplify/phpstan-rules` | — |
-| `laravel-project` | `--with-security-advisories` (default `N`) | `roave/security-advisories: dev-latest` | — |
 | `laravel-package` | suggest (not mandatory) | `livewire/livewire` (suggested only — not auto-installed, not audited) | — |
 | `laravel-package` | sub-flag `hihaho-package-tools-flavoured` (or `--variant=spatie`) | — | `spatie/laravel-package-tools` |
 | `phpstan-extension` | Laravel-aware (has `illuminate/*` in `require`) | `larastan/larastan` (replaces shared `phpstan/phpstan` — see §5.3) | `illuminate/support` |
@@ -446,6 +444,7 @@ Substitutions:
 
 - `test`/`test-coverage` → `vendor/bin/phpunit` when `test-framework=phpunit`
 - `sync-ai` is dropped for `laravel-project` (it uses `laravel/boost`, not `boost-core`; AI assets sync via `php artisan boost:install` / `boost:update`)
+- `post-install-cmd` / `post-update-cmd` fork for `laravel-project`. `BoostAutoSync::run` is NEVER the value there — it runs the bare `vendor/bin/boost sync`, which bypasses the wrapper's injection pipeline. With `sandermuller/project-boost-laravel` in `require-dev`, both arrays take the dev-mode-guarded `@php -r` one-liner as an ENTRY; without the wrapper, neither array carries a boost entry. Never write or delete the whole key — the Laravel skeleton ships its own `post-update-cmd` (`vendor:publish --tag=laravel-assets`), and a wholesale write drops it. The guard is mandatory — an unguarded `@php artisan project-boost:sync` aborts `composer install --no-dev`. Copy the value verbatim from `references/composer-scripts.md`, `laravel-project` section, which is authoritative for all four boost families.
 
 Always added for `laravel-package` (per RQ13 — the `--with-workbench-scripts` flag from earlier drafts is dropped; observed across all canonical sander L-packages):
 
@@ -660,7 +659,6 @@ Check each path; if absent, mark MISSING and add to the audit report.
 ## Opt-in confirmation (audit-scoping)
 Before walking deps, ask the user once per OPTIONAL/CONDITIONAL dep block in §5.2:
 - Did this repo opt into hihaho rules? (auto-infer `y` if vendor is hihaho or `hihaho/phpstan-rules` is already in require-dev)
-- Did this repo opt into security advisories? (auto-infer `y` if `roave/security-advisories` is already in require-dev)
 - Is this package Laravel-aware? (only for phpstan-extension/rector-extension; auto-infer `y` if `illuminate/*` in require)
 - Is this a spatie-flavoured L-package? (only for laravel-package; auto-infer `y` if `spatie/laravel-package-tools` is in require)
 Record each answer; only flag the deps in opt-in-confirmed rows as MISSING below.
@@ -871,7 +869,7 @@ The "dogfood" property therefore reduces to: every stub in `stubs/` was generate
 - [ ] `phases/audit-php-package.md` (no Laravel opt-in path; spatie variant N/A)
 - [ ] `phases/audit-phpstan-extension.md` (Laravel-aware opt-in detected from `illuminate/*` presence)
 - [ ] `phases/audit-rector-extension.md` (Laravel-aware opt-in detected from `driftingly/rector-laravel` presence)
-- [ ] `phases/audit-laravel-project.md` (hihaho-rules + security-advisories opt-ins)
+- [ ] `phases/audit-laravel-project.md` (hihaho-rules opt-in)
 - [ ] Tests — markdown lint; verify every audit file's MISSING-files list matches §2 stub layout for that category; verify every audit file walks both MANDATORY columns AND walks OPTIONAL only on confirmed opt-in (audit-scoping test); verify per-category exclusions (§5.1.1) are honoured (no dep in both require and require-dev)
 
 ### Phase 5: Upgrade Phases (Priority: HIGH)

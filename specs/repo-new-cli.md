@@ -127,7 +127,6 @@ Total Qs: 2 (Q1+Q2) required; 3–5 follow-up depending on branch.
 
 - `test-framework`: sander → pest; hihaho → phpunit; phpstan-extension → always phpunit (ignored vendor). User overrides with `--test-framework=`.
 - `with-hihaho-rules` (laravel-project only): `y` for vendor=hihaho; `N` otherwise. Override `--with-hihaho-rules` / `--without-hihaho-rules`.
-- `with-security-advisories` (laravel-project only): `N` default. Override `--with-security-advisories`.
 
 ### Non-interactive mode
 

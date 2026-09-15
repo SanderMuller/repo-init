@@ -46,10 +46,35 @@ Baseline 11 minus `sync-ai` (the stub omits it deliberately; `post-install-cmd` 
 
 ### `laravel-project` (8 unconditional + 2 scaffold-conditional)
 
-Baseline 11 minus `sync-ai`, minus the two BoostAutoSync hooks unless scaffold pulls `sandermuller/boost-core`.
+Baseline 11 minus `sync-ai`, minus the two auto-sync hooks unless the scaffold carries `sandermuller/project-boost-laravel`.
 
 - **Unconditional (8)**: `phpstan`, `phpstan-simplified`, `phpstan-clear-cache`, `format`, `rector`, `test`, `test-coverage`, `qa`.
-- **Scaffold-conditional (2)**: `post-install-cmd`, `post-update-cmd` → `BoostAutoSync::run`. The callback lives in `sandermuller/boost-core`. A vanilla laravel-project carries `laravel/boost`, NOT boost-core — these two scripts are then NOT applicable (the callback won't autoload). Include only when boost-core is in the dependency tree.
+- **Scaffold-conditional (2)**: `post-install-cmd`, `post-update-cmd` → the dev-mode-guarded artisan call below. Detection is `sandermuller/project-boost-laravel` in `require-dev` — nothing else. A vanilla laravel-project carries `laravel/boost` alone and gets no boost entry in either array.
+
+```json
+"post-install-cmd": [
+  "@php -r \"if (getenv('COMPOSER_DEV_MODE') !== '0') { passthru(escapeshellarg(PHP_BINARY) . ' artisan project-boost:sync'); }\""
+],
+"post-update-cmd": [
+  "@php artisan vendor:publish --tag=laravel-assets --ansi --force",
+  "@php -r \"if (getenv('COMPOSER_DEV_MODE') !== '0') { passthru(escapeshellarg(PHP_BINARY) . ' artisan project-boost:sync'); }\""
+]
+```
+
+**This is an ENTRY in each array, never the whole key.** The Laravel skeleton ships its own `post-update-cmd` — `@php artisan vendor:publish --tag=laravel-assets --ansi --force` — shown above so the merged shape is unambiguous. Append the boost entry after whatever the target already has; when the wrapper is absent, remove the boost ENTRY and leave every other handler in place. Writing the key wholesale, or deleting it, drops Laravel's asset publishing. `post-install-cmd` is usually a new key (the skeleton ships none), but check before writing it — an app may have added one.
+
+**The guard is mandatory — a bare `["@php artisan project-boost:sync"]` is MISMATCH.** The wrapper is a `require-dev` package, so `composer install --no-dev` — the normal production deploy — installs neither the package nor its command. The hook still fires (Composer runs lifecycle scripts under `--no-dev`), artisan exits 1 on the undefined command, and Composer aborts the install with `Script @php artisan project-boost:sync handling the post-install-cmd event returned with error code 1`. Verified against Composer 2.10.2. The upstream configuration guide shows the bare form; it does not cover `--no-dev`.
+
+Why this shape:
+
+- **Pure PHP, no shell conditional.** The branch is PHP, not `if [ "$COMPOSER_DEV_MODE" = "1" ]; then …`, which cannot run on Windows `cmd.exe` at all. NEEDS-CONFIRMATION: the one-liner itself is verified on macOS against Composer 2.10.2 only. Windows nests quotes differently — `cmd.exe` strips the outer double quotes and `escapeshellarg()` emits double quotes there rather than single — so confirm on Windows before treating this value as proven cross-platform. A class callback (see below) would remove the question entirely.
+- **No `$` and no backtick in the one-liner.** Composer passes the script through a shell on POSIX; a `$var` would be interpolated before PHP ever saw it.
+- **`escapeshellarg(PHP_BINARY)`** — the PHP binary path contains spaces on common setups (Herd, XAMPP), and an unquoted `PHP_BINARY` splits on them.
+- **The sync's exit code is not propagated.** `passthru()` runs the command but the one-liner still exits 0, so a failing sync warns in the install output without failing the install. That matches `BoostAutoSync::run`, which writes a warning through Composer's IO rather than failing the event.
+
+The better long-term fix belongs upstream: `sandermuller/project-boost-laravel` shipping a `Scripts\AutoSync::run` class callback with an `Event::isDevMode()` guard, the shape its three sibling wrappers already use. Revisit this row if that lands.
+
+**Never `BoostAutoSync::run` in a laravel-project.** The wrapper pulls `sandermuller/boost-core` transitively, so the callback DOES autoload — and that is the trap. `BoostAutoSync::run` invokes the bare `vendor/bin/boost sync`, which bypasses the wrapper's injection pipeline: the `laravel/boost` bundled skill set never reaches the agent directories, and the sync still reports success against the smaller set. Flag it MISMATCH, not PRESENT. `BoostAutoSync::run` stays correct for a non-Laravel project consuming the engine directly — this rule is Laravel-application-specific. Source: the `project-boost-laravel` configuration guide, "Why not BoostAutoSync::run here?".
 
 No `sync-ai` script — `laravel/boost` owns AI-asset sync for applications (`php artisan boost:update`); there is no `vendor/bin/boost` here.
 
@@ -66,7 +91,10 @@ No `sync-ai` script — `laravel/boost` owns AI-asset sync for applications (`ph
   | `php-package`, `phpstan-extension`, `rector-extension`, `composer-plugin` | `sandermuller/package-boost-php` | `SanderMuller\PackageBoostPhp\Scripts\AutoSync::run` | `^1.0` |
   | `laravel-package` (+ `laravel-package-spatie`, `filament-plugin`, `nova-tool`) | `sandermuller/package-boost-laravel` | `SanderMuller\PackageBoostLaravel\Scripts\AutoSync::run` | `^1.0` |
   | `skill-bundle` | `sandermuller/boost-core` (direct `require`) | `SanderMuller\BoostCore\Scripts\BoostAutoSync::run` | `^1.6` (boost-core; canonical floor — `.config/boost.php` needs ≥ 0.18, scaffold pins the current `^1.6`) |
-  | `laravel-project` | n/a (artisan command) | scaffold-conditional — see the `laravel-project` section above | n/a |
+  | `laravel-project` (with `sandermuller/project-boost-laravel`) | `sandermuller/project-boost-laravel` (`require-dev`) | the dev-mode-guarded `@php -r` one-liner — see the `laravel-project` section | `^1.4` (scaffold pin — see note) |
+  | `laravel-project` (vanilla `laravel/boost` only) | n/a | no boost entry in either array (other handlers untouched) | n/a |
+
+  **The laravel-project floor is a scaffold pin, not a façade floor.** `project-boost:sync` ships in every release of the wrapper (`SyncCommand` is present from `0.1.0`), so no version gates the hook. Pin the current `^1.4`, the way `skill-bundle` pins the current boost-core. The failure mode also differs from the class callbacks: a missing artisan command exits non-zero and Composer reports it, where a non-autoloadable class callback is skipped with a warning. Loud, not silent.
 
   **Why the fork:** the wrapper categories pull `boost-core` only *transitively* through their wrapper. Naming `BoostCore\Scripts\BoostAutoSync::run` there is a transitive-class reference — declaring a symbol the `composer.json` doesn't directly depend on. Each wrapper ships a namespace façade (`PackageBoostPhp\Scripts\AutoSync` / `PackageBoostLaravel\Scripts\AutoSync`) that delegates to `BoostAutoSync`, so the scaffold names only a class from its own direct dependency. `skill-bundle` requires `boost-core` *directly*, so `BoostAutoSync::run` is already a direct-dep class there — it keeps the boost-core callback, and the façade rule does not apply.
 
@@ -181,10 +209,6 @@ No script additions.
 `rector/extension-installer`, which neither reference app installs. Its sets and
 rules must be written into `rector.php` by hand — see
 `references/rector-config.md`, "`--with-hihaho-rules` wiring".
-
-### When opt-in `--with-security-advisories` (laravel-project)
-
-No script additions — the `roave/security-advisories` package blocks installation of vulnerable deps automatically.
 
 ## Merge semantics
 

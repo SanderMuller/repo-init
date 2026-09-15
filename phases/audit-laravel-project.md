@@ -13,7 +13,6 @@ Verify detection per `$REPO_INIT_HOME/references/detection-rules.md`: target has
 Ask the user (with auto-inferred defaults):
 
 - **`--with-hihaho-rules`?** Default `y` if vendor is `hihaho` OR `hihaho/phpstan-rules` already in `require-dev`. Otherwise default `N`. If `y`: audit also flags `hihaho/phpstan-rules`, `hihaho/rector-rules`, `symplify/phpstan-rules` as MISSING when absent.
-- **`--with-security-advisories`?** Default `y` if `roave/security-advisories` already in `require-dev`. Otherwise default `N`. If `y`: flag `roave/security-advisories: dev-latest` as MISSING when absent.
 - **`test-framework`** — detect from existing deps (presence of `pestphp/pest` vs `phpunit/phpunit`). Don't push to migrate; record the current state.
 
 ## MISSING files
@@ -88,7 +87,6 @@ Plus shared (`$REPO_INIT_HOME/references/shared-dev-deps.md`) minus what Laravel
 OPTIONAL (only when opt-in confirmed):
 
 - [ ] `--with-hihaho-rules`: `hihaho/phpstan-rules`, `hihaho/rector-rules`, `symplify/phpstan-rules`.
-- [ ] `--with-security-advisories`: `roave/security-advisories: dev-latest`.
 
 Test-framework:
 
@@ -101,7 +99,7 @@ Test-framework:
 
 Baseline minus `sync-ai` (laravel-project uses `laravel/boost`, not `sandermuller/boost-core`; no `vendor/bin/boost` — AI sync is `php artisan boost:install` / `boost:update`).
 
-**Pre-step**: detect whether the scaffold carries `sandermuller/boost-core` (grep `composer.json` `require` / `require-dev`). This gates the two BoostAutoSync rows below.
+**Pre-step**: detect whether the scaffold carries `sandermuller/project-boost-laravel` (grep `composer.json` `require-dev`). This gates the two auto-sync rows below. Do NOT key this on `sandermuller/boost-core` — the wrapper pulls boost-core transitively, so boost-core's presence proves nothing.
 
 Unconditional keys (8):
 
@@ -114,14 +112,18 @@ Unconditional keys (8):
 - [ ] `test-coverage` → `vendor/bin/pest --coverage` (or `vendor/bin/phpunit --coverage-html=coverage`)
 - [ ] `qa` → `["@rector", "@format", "@phpstan-simplified"]`
 
-Scaffold-conditional keys (2) — **include in the checklist ONLY when boost-core is in the dependency tree**:
+Scaffold-conditional keys (2) — **include in the checklist ONLY when `sandermuller/project-boost-laravel` is in `require-dev`**:
 
-- [ ] `post-install-cmd` → `["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"]`
-- [ ] `post-update-cmd` → `["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"]`
+- [ ] `post-install-cmd` contains the dev-mode-guarded `@php -r` one-liner in `$REPO_INIT_HOME/references/composer-scripts.md`, `laravel-project` section
+- [ ] `post-update-cmd` contains the same guarded one-liner
 
-If the target does NOT carry boost-core, the BoostAutoSync callback won't autoload — skip these two keys entirely. Don't issue a MISSING verdict for them. The only exception: if either script is PRESENT with a stale shell-conditional value referencing `vendor/bin/boost sync`, flag MISMATCH (Windows-broken AND the binary won't exist) — the canonical fix is REMOVAL of the script, not replacement.
+**Verdict on the ENTRY, not the key.** The Laravel skeleton ships its own `post-update-cmd` (`@php artisan vendor:publish --tag=laravel-assets --ansi --force`), so the key being PRESENT proves nothing — check whether the boost entry is in the array. Never report the whole key MISSING when the array exists without the boost entry, and never prescribe deleting a key that holds other handlers.
 
-MISMATCH cases worth HIGH severity (boost-core in scaffold): POSIX-shell `post-install-cmd` (Windows-broken); `post-update-cmd` absent entirely.
+**Copy the value from that section verbatim — do not retype it.** The guard is load-bearing and its escaping is exact.
+
+If the target does NOT carry the wrapper, skip these two rows entirely. Don't issue a MISSING verdict for them. The only exception: if either array holds a stale shell-conditional entry referencing `vendor/bin/boost sync`, flag MISMATCH (Windows-broken AND the binary won't exist) — the canonical fix is REMOVAL of that entry, not replacement, leaving the array's other handlers in place.
+
+MISMATCH cases worth HIGH severity (wrapper in scaffold): an UNGUARDED `["@php artisan project-boost:sync"]` (see the NON-CANONICAL finding below); either script set to `["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"]`; POSIX-shell `post-install-cmd` (Windows-broken); `post-update-cmd` absent entirely.
 
 ## OUTDATED files (per merge mode)
 
@@ -148,7 +150,9 @@ Same logic as `audit-laravel-package.md` §OUTDATED — apply each file's mode f
 - [ ] **CI path filter drift — `phpstan.yml`** (MEDIUM severity): grep `.github/workflows/phpstan.yml` `paths:` blocks under `push` and `pull_request`; both MUST include `composer.json` AND `composer.lock`. Flag NON-CANONICAL if either missing.
 - [ ] **`.gitattributes` managed block missing `.ai/ export-ignore`** (MEDIUM severity): per `$REPO_INIT_HOME/references/gitattributes-managed-block.md`, `.ai/` is the boost SOURCE/authoring dir and MUST be in the managed block. Without it, `boost sync`-populated dev skills leak into the published Composer archive. Flag NON-CANONICAL.
 - [ ] `phpstan/phpstan` in `require-dev` alongside `larastan/larastan`: §5.3 exclusivity violation. NON-CANONICAL.
-- [ ] **POSIX-shell `post-install-cmd` / `post-update-cmd`** (HIGH severity, only flag if boost-core is in the scaffold): if either script's value is a shell conditional like `if [ "$COMPOSER_DEV_MODE" = "1" ]; then vendor/bin/boost sync; fi`, it is Windows-broken AND in a laravel-project without boost-core the binary won't exist at all. Canonical (when boost-core is present) is the array `["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"]`. Without boost-core: remove the script entirely. Flag NON-CANONICAL; confirm scaffold composition with the user before patching.
+- [ ] **POSIX-shell `post-install-cmd` / `post-update-cmd`** (HIGH severity): if either script's value is a shell conditional like `if [ "$COMPOSER_DEV_MODE" = "1" ]; then vendor/bin/boost sync; fi`, it is Windows-broken AND there is no `vendor/bin/boost` in a laravel-project. Canonical with `sandermuller/project-boost-laravel` present is the dev-mode-guarded `@php -r` one-liner in `$REPO_INIT_HOME/references/composer-scripts.md`, `laravel-project` section; without the wrapper, remove that entry (not the key — other handlers stay). Flag NON-CANONICAL; confirm scaffold composition with the user before patching.
+- [ ] **Unguarded `@php artisan project-boost:sync` hook** (HIGH severity, breaks production deploys): `["@php artisan project-boost:sync"]` with no dev-mode guard. The wrapper is a `require-dev` package, so `composer install --no-dev` has neither the package nor the command — but the hook still fires, artisan exits 1, and Composer aborts the install (`Script @php artisan project-boost:sync handling the post-install-cmd event returned with error code 1`). The fix forks on wrapper presence, like every other row here: with `sandermuller/project-boost-laravel` in `require-dev`, replace the entry with the guarded one-liner, copied verbatim from `$REPO_INIT_HOME/references/composer-scripts.md`; without the wrapper, REMOVE the entry — the guard only skips `--no-dev`, so an unguarded-or-guarded call to a command that was never installed still fails every development install. Leave the array's other handlers untouched either way.
+- [ ] **`BoostAutoSync::run` as the laravel-project auto-sync hook** (HIGH severity): `["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"]` in `post-install-cmd` / `post-update-cmd`. The callback autoloads — the wrapper pulls boost-core transitively — so the hook runs and reports success, but it invokes the bare `vendor/bin/boost sync`, which bypasses the wrapper's injection pipeline and syncs a smaller skill set without the `laravel/boost` bundled skills. Silent under-sync, not a crash. The fix forks on wrapper presence, the same way the two rows above do: with `sandermuller/project-boost-laravel` in `require-dev`, replace both entries with the guarded one-liner; without the wrapper, REMOVE both entries (the artisan command would not exist), leaving the arrays' other handlers in place. See `$REPO_INIT_HOME/references/composer-scripts.md`, `laravel-project` section.
 - [ ] PHP floor `^8.2` (or below) in `require.php`. NON-CANONICAL.
 - [ ] `composer.lock` NOT committed: for laravel-project the lockfile IS committed (Laravel convention — apps pin deps). If missing, suggest committing.
 - [ ] Two managed blocks in `.gitattributes`.

@@ -23,7 +23,6 @@ What each category adds on top of the shared list (`shared-dev-deps.md`). Split 
 | Category | Opt-in flag / sub-flag | Adds to `require-dev` | Adds to `require` |
 |---|---|---|---|
 | `laravel-project` | `--with-hihaho-rules` (default `y` for vendor=hihaho) | `hihaho/phpstan-rules`, `hihaho/rector-rules`, `symplify/phpstan-rules` | — |
-| `laravel-project` | `--with-security-advisories` (default `N`) | `roave/security-advisories: dev-latest` | — |
 | `laravel-project` | app carries `spatie/laravel-health` | — | `spatie/security-advisories-health-check` |
 | `laravel-package` | suggest (not mandatory) | `livewire/livewire` (suggested only — not auto-installed, not audited) | — |
 | `laravel-package` | sub-flag `hihaho-package-tools-flavoured` (or `--variant=spatie`) | — | `spatie/laravel-package-tools` |
@@ -35,7 +34,6 @@ What each category adds on top of the shared list (`shared-dev-deps.md`). Split 
 Before walking deps, the audit phase confirms opt-ins. Where possible, infer the default from existing `composer.json` content:
 
 - `--with-hihaho-rules` → `y` if vendor is `hihaho` OR `hihaho/phpstan-rules` already in `require-dev`.
-- `--with-security-advisories` → `y` if `roave/security-advisories` already in `require-dev`.
 - Laravel-aware phpstan-extension → `y` if `illuminate/*` already in `require`.
 - Laravel-aware rector-extension → `y` if `driftingly/rector-laravel` already in `require` OR `require-dev`.
 - Spatie-flavoured laravel-package → `y` if `spatie/laravel-package-tools` already in `require`.

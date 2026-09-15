@@ -20,6 +20,17 @@ The `post-update-cmd` hook re-syncs the skill into `~/.claude/skills/sandermulle
 
 ---
 
+## 1.13.x → 1.14.0 (security-advisories dropped, laravel-project sync hook corrected)
+
+Additive for repo-init itself — `composer global update sandermuller/repo-init` (+ `composer global exec -- boost sync --scope=user --all`). Both changes land in the `laravel-project` canon.
+
+- **`roave/security-advisories` is dropped.** The `--with-security-advisories` opt-in is gone from every prompt, phase and reference. Composer ships `composer audit`. `composer update` runs the audit by default (`--no-audit` skips it); `composer install` runs it with `--audit`. An existing app can keep the package or run `composer remove --dev roave/security-advisories`. The audit phase no longer asks and no longer flags it.
+- **`laravel-project` auto-sync hook corrected.** The 1.13.0 canon gated `post-install-cmd` / `post-update-cmd` on `sandermuller/boost-core` and set them to `SanderMuller\BoostCore\Scripts\BoostAutoSync::run`. That rule was wrong twice over: `sandermuller/project-boost-laravel` pulls boost-core transitively, so the detection fired on a wrapper scaffold, and the callback it named runs the bare `vendor/bin/boost sync`, which bypasses the wrapper's injection pipeline and syncs a smaller skill set while reporting success. Detection is now the wrapper in `require-dev`. The value is a dev-mode-guarded `@php -r` one-liner, verified against Composer 2.10.2 — the wrapper is a dev dependency, so a bare `@php artisan project-boost:sync` aborts every `composer install --no-dev`. The rule applies to the boost ENTRY in each array, never the whole key: the Laravel skeleton ships its own `post-update-cmd`. The audit gains two HIGH-severity findings, for the unguarded shape and for `BoostAutoSync::run`. A vanilla `laravel/boost`-only app still gets no boost entry.
+
+Nothing here is breaking. Re-running `audit` on an already-scaffolded `laravel-project` surfaces the hook findings; the upgrade phase prompts on each.
+
+---
+
 ## 1.12.x → 1.13.0 (Laravel security canon)
 
 Additive for repo-init itself — `composer global update sandermuller/repo-init` (+ `composer global exec -- boost sync --scope=user --all`). The change lands in the `laravel-project` scaffold: **the security configuration is now canon**, taken from `hihaho/hihaho`, `mijntp` and `collectiq`.
@@ -157,7 +168,7 @@ Running `audit` on an older scaffold now flags its `post-install-cmd` / `post-up
 
 **Atomic rule:** the upgrade swaps the callback AND bumps the wrapper floor in the same change. A façade callback paired with a pre-façade floor references a class that isn't autoloadable, and Composer silently skips the hook (autosync stops) rather than failing loudly. The `upgrade-<category>` phases handle this automatically.
 
-Unchanged: `skill-bundle` keeps `BoostAutoSync::run` (it depends on `boost-core` directly); `laravel-project` keeps its `@php artisan project-boost:sync` hook. Requires the wrapper packages at their façade-introducing releases (`package-boost-php` 0.16.0+, `package-boost-laravel` 0.10.0+).
+Unchanged: `skill-bundle` keeps `BoostAutoSync::run` (it depends on `boost-core` directly); `laravel-project` keeps its `@php artisan project-boost:sync` hook. **Superseded in 1.14.0** — that bare hook aborts `composer install --no-dev`; the current value is the dev-mode-guarded one-liner in the 1.14.0 entry above. This paragraph records the 1.4.0 state. Requires the wrapper packages at their façade-introducing releases (`package-boost-php` 0.16.0+, `package-boost-laravel` 0.10.0+).
 
 ---
 
