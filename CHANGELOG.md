@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Pre-`1.0.0` releases (0.x.x — historical) introduced breaking changes in MINOR bumps; from 1.0.0 onward repo-init follows standard SemVer (breaking changes ship as MAJOR only). The pre-1.0 entries below remain for reference.
 
+## [1.14.0](https://github.com/sandermuller/repo-init/compare/1.13.0...1.14.0) - 2026-09-15
+
+<!-- verified-sha: 33e3fa5a5f773c9f439c7895281e42229adc7b6e -->
+
+Two corrections to the `laravel-project` canon that 1.13.0 shipped.
+
+## Fixed
+
+### `roave/security-advisories` is dropped
+
+The `--with-security-advisories` opt-in is gone from every prompt, phase, reference and CI gate. Composer ships the audit itself: `composer update` runs it by default (`--no-audit` skips it) and `composer install` runs it with `--audit`.
+
+An existing app can keep the package or run `composer remove --dev roave/security-advisories`. The audit phase no longer asks for the opt-in and no longer flags the package as missing.
+
+### The `laravel-project` auto-sync hook pointed at the wrong callback
+
+1.13.0 gated `post-install-cmd` / `post-update-cmd` on `sandermuller/boost-core` and set them to `SanderMuller\BoostCore\Scripts\BoostAutoSync::run`. Both halves were wrong.
+
+`sandermuller/project-boost-laravel` pulls boost-core transitively, so the detection fired on a wrapper scaffold. And the callback it named runs the bare `vendor/bin/boost sync`, which bypasses the wrapper's injection pipeline: the `laravel/boost` bundled skill set never reaches the agent directories, and the sync reports success against the smaller set.
+
+Detection is now `sandermuller/project-boost-laravel` in `require-dev`, nothing else. The value is a dev-mode-guarded `@php -r` one-liner: it returns early when `COMPOSER_DEV_MODE` is `0`, and otherwise calls `passthru()` on `escapeshellarg(PHP_BINARY)` plus `artisan project-boost:sync`. Copy it verbatim from the `laravel-project` section of `references/composer-scripts.md` — the escaping is exact.
+
+The guard is not optional. The wrapper is a dev dependency, so a bare `@php artisan project-boost:sync` aborts every `composer install --no-dev`: the hook fires, the command does not exist, and Composer fails the install. Verified against Composer 2.10.2.
+
+The rule applies to the boost entry in each array, never the whole key. The Laravel skeleton ships its own `post-update-cmd` (`vendor:publish --tag=laravel-assets`), and writing the key wholesale drops it.
+
+A vanilla `laravel/boost`-only app gets no boost entry in either array.
+
+## Added
+
+The audit gains two HIGH-severity `laravel-project` findings: the unguarded artisan shape, and `BoostAutoSync::run` as the auto-sync hook. Both fork on wrapper presence — replace with the guarded one-liner when the wrapper is present, remove the entry when it is not.
+
+## Known limitation
+
+Windows quoting for the one-liner is marked NEEDS-CONFIRMATION in the canon; it is verified on macOS only. `cmd.exe` nests quotes differently and `escapeshellarg()` emits double quotes there. A `Scripts\AutoSync::run` class callback in `sandermuller/project-boost-laravel`, the shape its three sibling wrappers already ship, would remove the workaround.
+
+**Full Changelog**: <https://github.com/SanderMuller/repo-init/compare/1.13.0...1.14.0>
+
 ## [1.13.0](https://github.com/sandermuller/repo-init/compare/1.12.0...1.13.0) - 2026-09-07
 
 <!-- verified-sha: 9f06d05776f00642b3e2b0ffaf13b7235d3e2f19 -->
