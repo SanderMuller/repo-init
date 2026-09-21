@@ -15,7 +15,7 @@ Composer lists the conflict. Common causes:
 **Resolution playbook**:
 
 - Read the conflict block carefully — Composer says which package wants which version.
-- If the constraint is on PHP: ask the user to bump `require.php` (see `version-defaults.md` — we floor at `^8.3`).
+- If the constraint is on PHP: ask the user to bump `require.php` (see `version-defaults.md` — packages floor at `^8.4`, `laravel-project` at `^8.5`).
 - If the constraint is on a known dep: ask the user to bump it. Run `composer require <pkg>:^X` separately.
 - If two new deps mutually conflict (rare): one of them is wrong for this category. Re-check `per-category-deps.md` — likely a Laravel-aware opt-in fired incorrectly.
 - Never use `--ignore-platform-reqs` to mask. Surfaces real problems later.
@@ -43,7 +43,7 @@ Causes:
 **Resolution playbook**:
 
 - Confirm the user's runtime PHP version: `php -v`.
-- repo-init floors at `^8.3` — repos on `^8.2` should bump.
+- repo-init floors packages at `^8.4` and `laravel-project` at `^8.5` — anything lower should bump.
 - If the user can't bump (legacy constraint), stop and escalate. Don't `--ignore-platform-reqs`.
 
 ## Lockfile conflict

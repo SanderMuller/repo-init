@@ -45,6 +45,16 @@ VARIANTS = {"laravel-package-spatie": "laravel-package"}
 # phase states the exclusion explicitly.
 EXCLUDED_CATEGORIES = ["skill-bundle"]
 
+# Stubs whose shipped test framework is PHPUnit. Every other stub is
+# Pest-flavoured. The bootstrap "compose test-framework variant" step flips the
+# withComposerBased(phpunit:) flag when the user picks the other framework.
+PHPUNIT_CATEGORIES = [
+    "laravel-project",
+    "laravel-package-spatie",
+    "phpstan-extension",
+    "rector-extension",
+]
+
 LARAVEL_CATEGORIES = [
     "laravel-project",
     "laravel-package",
@@ -74,16 +84,20 @@ PREPARED_SET_FLAGS = [
     "typeDeclarations",
     "typeDeclarationDocblocks",
     "privatization",
-    "instanceOf",
-    "earlyReturn",
     "carbon",
     "rectorPreset",
     "phpunitCodeQuality",
 ]
 
+# Parameters Rector 2.6 marks @deprecated on withPreparedSets(): the instanceof
+# and early-return rules moved into codeQuality, the if rules into codeQuality /
+# codingStyle or were dropped. No stub may pass them.
+DEPRECATED_PREPARED_SET_FLAGS = ["instanceOf", "if", "earlyReturn"]
+
 LARAVEL_SETS = [
     "LARAVEL_CODE_QUALITY",
     "LARAVEL_ARRAYACCESS_TO_METHOD_CALL",
+    "LARAVEL_COLLECTION",
     "LARAVEL_CONTAINER_STRING_TO_FULLY_QUALIFIED_NAME",
     "LARAVEL_FACADE_ALIASES_TO_FULL_NAMES",
 ]
@@ -138,6 +152,51 @@ def check_prepared_sets(category: str, text: str) -> None:
     off = [f for f in PREPARED_SET_FLAGS if flags.get(f) == "false"]
     if off:
         fail(f"stubs/{category}/rector.php withPreparedSets has flag(s) set false: {off}")
+    deprecated = [f for f in DEPRECATED_PREPARED_SET_FLAGS if f in flags]
+    if deprecated:
+        fail(
+            f"stubs/{category}/rector.php withPreparedSets passes deprecated flag(s): "
+            f"{deprecated} — codeQuality covers them"
+        )
+
+
+def check_composer_based(category: str, text: str) -> None:
+    """withComposerBased() is conditional — every flag has its own trigger.
+
+    laravel: true derives upgrade rules from the installed Laravel version. An
+    app pins one version, so that is safe. A package supports a range, so the
+    flag belongs to laravel-project alone.
+
+    phpunit: true registers the PHPUnit upgrade set, whose rules rewrite
+    TestCase subclasses. A Pest suite has none, so the flag belongs to the
+    PHPUnit-flavoured stubs alone.
+    """
+    wants_laravel = category == "laravel-project"
+    wants_phpunit = category in PHPUNIT_CATEGORIES
+    match = re.search(r"withComposerBased\((.*?)\)", text, re.S)
+
+    if not (wants_laravel or wants_phpunit):
+        if match:
+            fail(
+                f"stubs/{category}/rector.php calls withComposerBased() — no flag applies "
+                "to a Pest, non-laravel-project stub, and an empty call registers nothing"
+            )
+        return
+
+    if not match:
+        fail(f"stubs/{category}/rector.php has no parseable withComposerBased()")
+        return
+
+    flags = dict(re.findall(r"(\w+):\s*(true|false)", match.group(1)))
+    for flag, wanted in (("laravel", wants_laravel), ("phpunit", wants_phpunit)):
+        present = flags.get(flag) == "true"
+        if wanted and not present:
+            fail(f"stubs/{category}/rector.php withComposerBased is missing {flag}: true")
+        if present and not wanted:
+            fail(
+                f"stubs/{category}/rector.php withComposerBased passes {flag}: true — "
+                f"the category does not qualify for it"
+            )
 
 
 def check_pest_coupling(category: str, text: str) -> None:
@@ -315,6 +374,7 @@ def main() -> int:
 
         check_required_calls(category, text)
         check_prepared_sets(category, text)
+        check_composer_based(category, text)
         check_pest_coupling(category, text)
         check_non_canonical_pest(category, text)
         check_laravel_sets(category, text)

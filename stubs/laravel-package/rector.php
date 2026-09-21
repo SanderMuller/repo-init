@@ -31,8 +31,6 @@ return RectorConfig::configure()
         typeDeclarations: true,
         typeDeclarationDocblocks: true,
         privatization: true,
-        instanceOf: true,
-        earlyReturn: true,
         carbon: true,
         rectorPreset: true,
         phpunitCodeQuality: true,
@@ -47,6 +45,7 @@ return RectorConfig::configure()
         [
             LaravelSetList::LARAVEL_CODE_QUALITY,
             LaravelSetList::LARAVEL_ARRAYACCESS_TO_METHOD_CALL,
+            LaravelSetList::LARAVEL_COLLECTION,
             LaravelSetList::LARAVEL_CONTAINER_STRING_TO_FULLY_QUALIFIED_NAME,
             LaravelSetList::LARAVEL_FACADE_ALIASES_TO_FULL_NAMES,
         ],

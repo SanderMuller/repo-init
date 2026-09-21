@@ -23,7 +23,7 @@ If not installed, ask the user:
 - `vendor` (e.g. `hihaho`, custom) — required.
 - `name` (kebab-case) — optional per target-dir rule.
 - `description` — required.
-- `php` — default `8.3`. Accepted: `8.3`, `8.4`, `8.5`. Reject `8.2`.
+- `php` — `8.5` only for this category. Reject `8.4` and below. `laravel-project` is an application, so it floors at the newest stable PHP, one minor above the package floor. The Laravel skeleton ships `"php": "^8.3"` — raise `require.php` in the same pass. See `$REPO_INIT_HOME/references/version-defaults.md` "PHP".
 - `author-name` / `author-email` — defaults from git config.
 - `with-hihaho-rules` — default `y` for vendor=hihaho, `N` otherwise.
 - `--boost` flag — `laravel new --boost` installs `laravel/boost` (MCP wiring, AGENTS.md / CLAUDE.md scaffolding, `boost.json`). Default ON. Use `--no-boost` only if the user explicitly opts out (then `composer require laravel/boost` runs as a separate step). The installer also auto-detects agent context via env for JSON output — no flag needed for that.
@@ -83,18 +83,22 @@ Build the list from `$REPO_INIT_HOME/references/per-category-deps.md#laravel-pro
 - `laravel/pail`
 - `laravel/tinker` (Laravel may already include this — check)
 - `driftingly/rector-laravel`
-- All shared deps from `$REPO_INIT_HOME/references/shared-dev-deps.md` minus anything Laravel installer already pulled. Read the freshly-generated `composer.json` to determine what's already there. Common already-installed by `laravel new`: `laravel/pint`, `nunomaduro/collision`, `phpunit/phpunit` (when test-framework=phpunit). Anything else from the shared list needs explicit `composer require --dev`: `laravel/pao`, `phpstan/extension-installer`, `phpstan/phpstan-strict-rules`, `phpstan/phpstan-deprecation-rules`, `phpstan/phpstan-phpunit`, `rector/rector`, `rector/type-perfect` (`^2.1` — PHP 8.3 floor ONLY; DROP on a PHP >= 8.4 floor), `spaze/phpstan-disallowed-calls`, `symplify/phpstan-rules` (`^14.11`, PHP >= 8.4 floor; PHP 8.3 floor keeps `symplify/phpstan-extensions: ^12.0` — see shared-dev-deps.md "Symplify formatter dep"), `tomasvotruba/cognitive-complexity`, `tomasvotruba/type-coverage` (`>=2.2.0 <2.2.2` on a PHP 8.3 floor — the `<2.2.2` cap is mandatory; `^2.3` on a PHP >= 8.4 floor, where it replaces `rector/type-perfect` — see shared-dev-deps.md "Type-perfect dep"). (`laravel-project` does NOT take `sandermuller/package-boost-php` — `laravel/boost`, above, is its boost-family tool.)
+- All shared deps from `$REPO_INIT_HOME/references/shared-dev-deps.md` minus anything Laravel installer already pulled. Read the freshly-generated `composer.json` to determine what's already there. Common already-installed by `laravel new`: `laravel/pint`, `nunomaduro/collision`, `phpunit/phpunit` (when test-framework=phpunit). Anything else from the shared list needs explicit `composer require --dev`: `laravel/pao`, `phpstan/extension-installer`, `phpstan/phpstan-strict-rules`, `phpstan/phpstan-deprecation-rules`, `phpstan/phpstan-phpunit`, `rector/rector`, `spaze/phpstan-disallowed-calls`, `symplify/phpstan-rules` (`^14.12`), `tomasvotruba/cognitive-complexity`, `tomasvotruba/type-coverage` (`^2.3` — it bundles the abandoned `rector/type-perfect`, which must NOT be installed alongside it; see shared-dev-deps.md "Type-perfect dep"). (`laravel-project` does NOT take `sandermuller/package-boost-php` — `laravel/boost`, above, is its boost-family tool.)
 
 **OPTIONAL (only when opted in):**
 
-- `with-hihaho-rules` (default `y` for vendor=hihaho): `hihaho/phpstan-rules`, `hihaho/rector-rules`, `symplify/phpstan-rules` (intentionally unpinned here — Composer resolves a PHP-compatible version; on a PHP 8.3 floor that's <= 14.10, which has NO error formatter, so the shared-list formatter conditional above still governs the formatter dep separately).
+- `with-hihaho-rules` (default `y` for vendor=hihaho): `hihaho/phpstan-rules`, `hihaho/rector-rules`, `symplify/phpstan-rules` (pin `^14.12` — below 14.11 there is no error formatter and `phpstan-simplified` breaks; the shared list requires the same constraint, so one entry satisfies both).
 
 **Test framework** (default `phpunit` for laravel-project — Laravel ships PHPUnit by default; switching to Pest is a user opt-in):
 
 - For PHPUnit: nothing extra (Laravel includes `phpunit/phpunit`).
-- For Pest: also add `pestphp/pest: ^5.0`, `pestphp/pest-plugin-arch: ^5.0`, `pestphp/pest-plugin-laravel: ^5.0`, `pestphp/pest-plugin-rector: ^5.0`, `pestphp/pest-plugin-phpstan: ^5.0`, `pestphp/pest-plugin-agent: ^5.0`. Pest 5 needs PHP `^8.4`, and the Laravel skeleton ships `"php": "^8.3"` — raise `require.php` to `^8.4` in the same pass, or keep PHPUnit. Note: switching from PHPUnit to Pest changes how `php artisan test` resolves; the user must `vendor/bin/pest --init` separately to migrate.
+- For Pest: drop `phpunit: true` from `withComposerBased()` in `rector.php`, leaving `->withComposerBased(laravel: true)` — the PHPUnit composer-based set rewrites `TestCase` subclasses, which a Pest suite has none of. Also add `pestphp/pest: ^5.0`, `pestphp/pest-plugin-arch: ^5.0`, `pestphp/pest-plugin-laravel: ^5.0`, `pestphp/pest-plugin-rector: ^5.0`, `pestphp/pest-plugin-phpstan: ^5.0`, `pestphp/pest-plugin-agent: ^5.0`. Pest 5 needs PHP `^8.4`, which the `^8.5` floor already exceeds. Note: switching from PHPUnit to Pest changes how `php artisan test` resolves; the user must `vendor/bin/pest --init` separately to migrate.
 
-**Allow-list the plugin dev deps FIRST** (mandatory — do not fold this into the require call):
+**Step 1 — raise `require.php`** (mandatory, and before any composer command). Hand-edit `composer.json`: `"require": { "php": "^8.5" }`.
+
+`laravel new` writes `"php": "^8.3"`. `laravel-project` floors at the newest stable PHP (`^8.5`; see `$REPO_INIT_HOME/references/version-defaults.md` "PHP"), and the shared dev deps below need at least `^8.4` — `symplify/phpstan-rules: ^14.12` and `tomasvotruba/type-coverage: ^2.3` both require it. Edit the `require.php` line in `composer.json` by hand before the require call, so one resolution sees the final floor. Leaving it at `^8.3` scaffolds an app whose `run-tests.yml` runs PHP 8.5 against a `^8.3` constraint — it installs, but the floor is fiction and the next `composer update` on an 8.3 machine resolves a different dependency set.
+
+**Step 2 — allow-list the plugin dev deps** (mandatory — do not fold this into the require call):
 
 ```bash
 composer config --no-plugins allow-plugins.phpstan/extension-installer true

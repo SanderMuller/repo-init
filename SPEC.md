@@ -175,9 +175,9 @@ Stubs use literal placeholder strings the agent finds-and-replaces. Derivation r
 | `__DESCRIPTION__` | user input | (free text) |
 | `__AUTHOR_NAME__` | git config user.name fallback to user input | `Sander Muller` |
 | `__AUTHOR_EMAIL__` | git config user.email fallback to user input | `sander@hihaho.com` |
-| `__PHP_VERSION__` | `^{8.3\|8.4\|8.5}` per `--php=` | `^8.3` |
+| `__PHP_VERSION__` | `^{8.4\|8.5}` per `--php=` | `^8.4` (`^8.5` for `laravel-project`) |
 | `__LARAVEL_VERSIONS__` | per `--laravel=` (laravel-package only) | `^11.0\|\|^12.0\|\|^13.0` |
-| `__PHP_VERSION_NEON__` | bare `{8.3\|8.4\|8.5}` for rector PHP set name | `php83` |
+| `__PHP_VERSION_NEON__` | bare `{84\|85}` for rector PHP set name | `php84` |
 
 StudlyCase rule: split on `-` or `_`, uppercase first letter of each part, concatenate. `queue-insights` → `QueueInsights`. Edge cases (digits, mixed case) listed in `references/placeholder-rules.md`. Stub file paths use the same placeholders — e.g. `src/__PACKAGE_STUDLY__ServiceProvider.php` is renamed to `src/QueueInsightsServiceProvider.php` after substitution.
 
@@ -191,7 +191,7 @@ The package itself ships only:
     "type": "library",
     "description": "AI playbook + stub library for bootstrapping the canonical Sander/hihaho repo setup. Install globally: `composer global require sandermuller/repo-init`.",
     "require": {
-        "php": "^8.3",
+        "php": "^8.4",
         "sandermuller/boost-core": "^1.6"
     },
     "require-dev": {
@@ -240,7 +240,7 @@ The skill also lists the seven user-facing knobs the agent must collect or infer
 
 - `vendor` (sandermuller / hihaho / custom)
 - `name` (kebab-case, OPTIONAL — see §7.target-dir-rule: if provided, scaffolds into `./<name>/`; if absent, scaffolds into cwd which must be empty modulo `.git/`)
-- `php` (8.3 / 8.4 / 8.5 — default 8.3 with `test-framework=phpunit`, 8.4 with `test-framework=pest` (Pest 5 needs PHP `^8.4`); 8.2 rejected, see §5.7)
+- `php` (package category: default 8.4, may opt up to 8.5; `laravel-project`: 8.5 only; 8.3 and below rejected, see §5.7)
 - `laravel` (only for laravel-package — `^11||^12||^13`, `^12||^13`, `^13`)
 - `test-framework` (pest / phpunit — vendor-driven default per `references/pest-vs-phpunit.md`)
 - `with-hihaho-rules` (y/N — default y for vendor=hihaho)
@@ -356,9 +356,9 @@ orchestra/testbench
 
 `laravel/pao` ("Agent-optimized output for PHP testing tools") wraps phpunit/pest/pint/phpstan/rector/paratest with agent-friendly output formatting — load-bearing for an AI-driven dev setup. It's framework-agnostic (require: `php`, `laravel/agent-detector`) so it applies to every category. Its PHP floor `^8.3` matches our hard floor (§5.7), so no fallback path is needed.
 
-`symplify/phpstan-rules` is PHP-floor-conditional: `^14.11` (the release that absorbed the abandoned `symplify/phpstan-extensions`, including the `symplify` error formatter) requires PHP ^8.4, so PHP 8.3-floor targets keep `symplify/phpstan-extensions: ^12.0` instead. Normative table: `references/shared-dev-deps.md` → "Symplify formatter dep".
+`symplify/phpstan-rules: ^14.12` is unconditional. 14.11 absorbed the abandoned `symplify/phpstan-extensions`, including the `symplify` error formatter, and requires PHP ^8.4 — which every floor now meets. It also ships the opt-in rules the canonical `phpstan.neon.dist` registers by hand; `phpstan/extension-installer` reaches none of them. See `references/shared-dev-deps.md` and `references/phpstan-config.md`.
 
-The `tomasvotruba/type-coverage` / `rector/type-perfect` pair is PHP-floor-conditional for the same reason: `tomasvotruba/type-coverage` 2.3.0 (PHP ^8.4) absorbed the abandoned `rector/type-perfect`, and installing both double-registers `MethodNodeAnalyser` so PHPStan aborts at boot. PHP ≥ 8.4 floors take `tomasvotruba/type-coverage: ^2.3` alone; PHP 8.3 floors keep `rector/type-perfect: ^2.1` and cap `tomasvotruba/type-coverage: >=2.2.0 <2.2.2` (the cap matters — Composer resolves against the runtime PHP, so an uncapped `^2.2` pulls 2.3.0 on an 8.4 CI cell). Normative table: `references/shared-dev-deps.md` → "Type-perfect dep".
+`tomasvotruba/type-coverage: ^2.3` is unconditional, and `rector/type-perfect` is gone. type-coverage 2.3.0 (PHP ^8.4) absorbed the abandoned type-perfect, and installing both double-registers `MethodNodeAnalyser`, so PHPStan aborts at boot. See `references/shared-dev-deps.md` "Type-perfect dep".
 
 ### 5.1.1 Per-category exclusions from the shared list
 
@@ -475,10 +475,12 @@ parameters:
     strictRules:
         allRules: true
     editorUrl: 'phpstorm://open?file=%%file%%&line=%%line%%'
-    type_coverage: { return: 100, param: 100, property: 100, constant: 0, declare: 100 }
-    type_perfect: { null_over_false: true, narrow_return: true }
+    type_coverage: { return: 100, param: 100, property: 100, constant: 100, declare: 100 }
+    type_perfect: { null_over_false: true, narrow_return: true, narrow_param: true }
     cognitive_complexity: { class: 80, function: 20 }
 ```
+
+A `rules:` block registering `symplify/phpstan-rules`' opt-in rules sits above `parameters:` — that package auto-registers none of them. The list and its provenance are in `references/phpstan-config.md` → "Symplify rules". No stub sets `phpVersion:`; PHPStan derives the version range from `composer.json` `require.php`.
 
 Per-category `paths:` and extra `includes:`:
 
@@ -504,8 +506,16 @@ return RectorConfig::configure()
     ->withPhpSets(php{XX}: true)        // {XX} from --php
     ->withPreparedSets(deadCode: true, codeQuality: true, codingStyle: true,
         typeDeclarations: true, typeDeclarationDocblocks: true,
-        privatization: true, instanceOf: true, earlyReturn: true);
+        privatization: true, carbon: true, rectorPreset: true,
+        phpunitCodeQuality: true);
 ```
+
+`withPreparedSets()` never gets `instanceOf:`, `if:` or `earlyReturn:` — Rector
+2.6 deprecates all three, and `codeQuality: true` covers their rules.
+`withComposerBased()` is the only builder path that registers the composer-based
+sets, and each flag is conditional: `phpunit: true` on a PHPUnit repo only,
+`laravel: true` on `laravel-project` only. A repo that earns neither omits the
+call. Normative detail: `references/rector-config.md`.
 
 Per-category `withPaths` and `withSets`:
 
@@ -517,11 +527,18 @@ Per-category `withPaths` and `withSets`:
 | `phpstan-extension` | `src, tests` | (none) |
 | `rector-extension` | `src, tests, config` | (none) |
 
-### 5.7 PHP floor — `^8.3` minimum
+### 5.7 PHP floor — two floors, one minor apart
 
-All categories floor at PHP `^8.3`. The `--php=` flag accepts `8.3`, `8.4`, or `8.5` only; `8.2` is rejected at the prompt and in the flag parser.
+| Kind | Categories | Floor |
+|---|---|---|
+| Application | `laravel-project` | newest stable PHP — `^8.5` today |
+| Package / plugin | every other category | `^8.4` |
 
-Rationale: a hard floor avoids the matrix-of-matrices problem (each PHP × Laravel × test-framework cell that has to be tested) and unblocks every shared dep — `laravel/pao` (`^8.3`), the strictest. Existing `^8.2` repos audited by repo-init will be flagged as `NON-CANONICAL` on the `require.php` constraint; the upgrade phase offers to bump the floor as a single composer.json edit.
+`laravel-project` takes `8.5` only — an application has nothing to choose. A package category defaults to `8.4` and may opt up to `8.5`. `8.3` and below are rejected at the prompt and in the flag parser. Both floors move together when a new PHP goes stable.
+
+Rationale: an application runs on one interpreter the team controls, so it takes the newest language features immediately; a package runs on whatever its consumers have, so it floors one minor lower. A hard floor also avoids the matrix-of-matrices problem (each PHP × Laravel × test-framework cell that has to be tested).
+
+The `^8.4` floor is what lets the canon carry NO abandoned package. `symplify/phpstan-extensions` and `rector/type-perfect` were both kept only to serve a `^8.3` floor; their successors (`symplify/phpstan-rules ^14.12`, `tomasvotruba/type-coverage ^2.3`) each require PHP `^8.4`. Repos below the floor are flagged `NON-CANONICAL` on `require.php`; the upgrade phase offers the bump as a single composer.json edit, which drops the abandoned pair in the same pass.
 
 ---
 
@@ -584,7 +601,7 @@ Run checklists/preflight.md first. Stop if anything is red.
 ## Inputs to collect
 - vendor (required)
 - name (optional, kebab-case — see target-dir rule below)
-- php (default 8.3 with phpunit, 8.4 with pest)
+- php (default 8.4 for packages, 8.5 for laravel-project)
 - laravel (default ^11||^12||^13)
 - test-framework (default pest)
 - description (one line)
@@ -751,7 +768,7 @@ Per-key writes use the `merge-keys` mode from `references/upgrade-merge-modes.md
 For each NON-CANONICAL finding:
 - composer.lock → ask user whether to `git rm --cached composer.lock` and add to .gitignore.
 - phpunit.xml → ask whether to rename to phpunit.xml (only if phpunit.xml doesn't exist).
-- PHP floor `^8.2` → ask whether to bump to `^8.3` (one-line composer.json edit).
+- PHP floor below the category floor → ask whether to bump to `^8.4` (`^8.5` for `laravel-project`) — a one-line composer.json edit.
 
 ## Verification
 Open `checklists/post-upgrade-verification.md`.
@@ -805,7 +822,7 @@ Brief summary of each reference file's purpose. Each is a flat markdown doc the 
 - `references/phpstan-config.md` — §5.5
 - `references/rector-config.md` — §5.6
 - `references/canonical-repos.md` — links to the reference repos per category: `SanderMuller/laravel-queue-insights`, `SanderMuller/solana-pubkey`, `SanderMuller/laravel-fluent-validation-phpstan`, `SanderMuller/laravel-fluent-validation-rector`, `hihaho/pipedrive-migration-tool`. Includes "what to look at" notes per file.
-- `references/version-defaults.md` — default PHP (`8.3` with phpunit, `8.4` with pest), Laravel range (`^11||^12||^13`), Pest (`^5.0`), test-framework defaults per vendor.
+- `references/version-defaults.md` — PHP floors (`^8.4` packages, `^8.5` laravel-project), Laravel range (`^11||^12||^13`), Pest (`^5.0`), test-framework defaults per vendor.
 - `references/pest-vs-phpunit.md` — when to use which; vendor-driven default (sander=pest, hihaho=phpunit, phpstan-extension=always phpunit).
 - `references/gitattributes-managed-block.md` — explains the package-boost managed block, why repo-init's stub appends to it rather than creating a second block, and the fallback if package-boost's block is absent.
 - `references/upgrade-merge-modes.md` — per-file merge mode declaration: `replace` / `managed-block` / `append-only` / `merge-keys` / `notify-only`. Audit + upgrade phases consult this so OUTDATED detection isn't a blunt whole-file diff (codex v3 #7).
@@ -899,7 +916,7 @@ The "dogfood" property therefore reduces to: every stub in `stubs/` was generate
 - [ ] **Merge-keys covers extras check** — assert each upgrade phase covers every documented composer.json key in §9 (`scripts`, `extra.laravel.providers`, `extra.phpstan.includes`, `extra.rector.includes`, `config.allow-plugins`, `config.sort-packages`, `autoload-dev.classmap`), not just `scripts` (codex v4 #4).
 - [ ] **Layout-matches-resolved-Qs check** — assert `stubs/laravel-package-spatie/`, `references/upgrade-merge-modes.md`, `references/composer-failure-modes.md`, `references/placeholder-rules.md` exist (codex v4 #5 protection).
 - [ ] **Placeholder-coverage check** — assert every placeholder defined in §2 transform table is used in at least one stub; assert every placeholder used in a stub is defined in §2.
-- [ ] **Rector-config sync check** — `.github/scripts/check-rector-sync.py` asserts that every `stubs/<category>/rector.php`, `references/rector-config.md` and the matching `phases/*-<category>.md` agree: required builder calls and `withPreparedSets` flags present; `withPaths` matches the doc's per-category table; the stub skip list matches the doc's "stub defaults" block; every skipped class is imported and every import used; Laravel sets present for Laravel categories only; no superseded `mrpunyapal/rector-pest` set names; a category whose phases require `pestphp/pest-plugin-rector` registers `PestSetList::CODING_STYLE`; and every phase-promised `rector.php` has a stub to create it from (or a stated per-category exclusion, as `audit-skill-bundle.md` does). Uses the same category model as `check-phase-coverage.sh` — full / bootstrap-only / variant / excluded.
+- [ ] **Rector-config sync check** — `.github/scripts/check-rector-sync.py` asserts that every `stubs/<category>/rector.php`, `references/rector-config.md` and the matching `phases/*-<category>.md` agree: required builder calls and `withPreparedSets` flags present; no deprecated `withPreparedSets` flag passed; `withComposerBased` flags match the category (`laravel: true` on `laravel-project` alone, `phpunit: true` on the PHPUnit-flavoured stubs alone, no call at all otherwise); `withPaths` matches the doc's per-category table; the stub skip list matches the doc's "stub defaults" block; every skipped class is imported and every import used; Laravel sets present for Laravel categories only; no superseded `mrpunyapal/rector-pest` set names; a category whose phases require `pestphp/pest-plugin-rector` registers `PestSetList::CODING_STYLE`; and every phase-promised `rector.php` has a stub to create it from (or a stated per-category exclusion, as `audit-skill-bundle.md` does). Uses the same category model as `check-phase-coverage.sh` — full / bootstrap-only / variant / excluded.
 - [ ] **Self-removal verification doc** — `tests/self-removal-contract.md` documents the survives-vs-clean tradeoff and links to package-boost's authoritative behaviour (skill copies, doesn't symlink).
 - [ ] **Stub drift detection** — GitHub Actions workflow that fetches each canonical repo (`SanderMuller/laravel-queue-insights`, `SanderMuller/solana-pubkey`, etc.) via `gh api`, diffs the relevant files against `stubs/`, and warns when drift exceeds a per-file threshold.
 - [ ] Schedule weekly; open an issue if drift detected; include suggested patch.
@@ -955,7 +972,7 @@ The "dogfood" property therefore reduces to: every stub in `stubs/` was generate
 
 13. **Workbench scripts.** **Decision:** Always added for `laravel-package`. **Rationale:** All canonical sander L-packages have them.
 
-14. **PHP floor.** **Decision:** Hard minimum `^8.3` across all categories. `--php=` accepts `8.3` / `8.4` / `8.5` only. **Rationale:** Matches `laravel/pao`'s floor (our strictest shared dep); avoids per-PHP matrix sprawl; existing `^8.2` repos audited by repo-init get a `NON-CANONICAL` finding with a one-line composer.json bump as the upgrade path.
+14. **PHP floor.** **Decision (v15):** Two floors — `^8.5` for `laravel-project`, `^8.4` for every package category. `--php=` gives `laravel-project` no choice (`8.5`); a package defaults to `8.4` and may opt up to `8.5`. **Rationale:** An application controls its interpreter and takes the newest stable PHP; a package floors one minor lower for its consumers. `^8.4` is also the floor both surviving PHPStan deps require, so the canon carries no abandoned package. **Supersedes:** the flat `^8.3` minimum, which existed to match `laravel/pao`; existing `^8.2` repos audited by repo-init get a `NON-CANONICAL` finding with a one-line composer.json bump as the upgrade path.
 
 15. **Socialite-provider detection.** **Decision:** `socialiteproviders/manager` in require → `laravel-package` even without `extra.laravel.providers`. **Rationale:** Otherwise `sandermuller/socialite-solana` classifies as `unknown`.
 

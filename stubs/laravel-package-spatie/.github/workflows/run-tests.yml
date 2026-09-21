@@ -35,14 +35,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # PHP floor is 8.4 (see references/version-defaults.md). Add an '8.5' cell
+          # when the repo's require.php floor moves up.
           # Floor — lowest supported combo (prefer-lowest)
-          - { php: '8.3', laravel: '12.*', testbench: '10.*', stability: prefer-lowest }
+          - { php: '8.4', laravel: '12.*', testbench: '10.*', stability: prefer-lowest }
           # Ceiling — highest supported combo
           - { php: '8.4', laravel: '13.*', testbench: '11.*', stability: prefer-stable }
-          # Mid Laravel on PHP-ceiling
+          # Mid Laravel on the PHP floor
           - { php: '8.4', laravel: '12.*', testbench: '10.*', stability: prefer-stable }
-          # PHP-axis sanity: PHP 8.3 against highest Laravel + prefer-stable
-          - { php: '8.3', laravel: '13.*', testbench: '11.*', stability: prefer-stable }
           # Stability-axis sanity: prefer-lowest at the ceiling
           - { php: '8.4', laravel: '13.*', testbench: '11.*', stability: prefer-lowest }
 

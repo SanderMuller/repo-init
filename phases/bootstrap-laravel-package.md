@@ -15,7 +15,7 @@ Ask the user up-front for any value not already known. Skill (`SKILL.md` "Knobs 
 - `vendor` (e.g. `sandermuller`, `hihaho`, custom) — required.
 - `name` (kebab-case) — optional per target-dir rule.
 - `description` — required, one-line summary.
-- `php` — default `8.4` with `test-framework=pest` (Pest 5 requires PHP `^8.4`), `8.3` with `test-framework=phpunit`. Accepted: `8.3`, `8.4`, `8.5`. Reject `8.2`. Reject `pest` + `8.3` — ask the user which of the two to change.
+- `php` — default `8.4`. Accepted: `8.4`, `8.5`. Reject `8.3` and below. See `$REPO_INIT_HOME/references/version-defaults.md` "PHP" — packages floor one minor below the newest stable PHP.
 - `laravel` — default `^12.0||^13.0`. Other options: `^13.0`. (Laravel 11 support dropped in repo-init 0.3.0 because `laravel/pao` 1.x conflicts with Laravel <12.)
 - `test-framework` — default `pest` for `sandermuller`, `phpunit` for `hihaho`.
 - `author-name` / `author-email` — defaults from `git config user.name` / `git config user.email`.
@@ -41,7 +41,7 @@ Set `STUB_CATEGORY_DIR` based on the `variant`:
 - `sander` → `$REPO_INIT_HOME/stubs/laravel-package/`
 - `spatie` → `$REPO_INIT_HOME/stubs/laravel-package-spatie/`
 
-The two variants differ in `composer.json` (spatie has `spatie/laravel-package-tools` in `require`, uses PHPUnit by default) and `src/__PACKAGE_STUDLY__ServiceProvider.php` (spatie extends `PackageServiceProvider`). The `laravel-package` stub is Pest-flavoured, so it ships the PHP >= 8.4 dep set: `pestphp/*: ^5.0`, `symplify/phpstan-rules: ^14.12`, `tomasvotruba/type-coverage: ^2.3`, and NO `rector/type-perfect` (keeping type-perfect alongside type-coverage >= 2.3 double-registers `MethodNodeAnalyser` and PHPStan aborts at boot). Pest 5 requires PHP `^8.4`, so `php=8.3` is valid only with `test-framework=phpunit` — that combination has to restore the PHP 8.3 set (`symplify/phpstan-extensions: ^12.0`, `rector/type-perfect: ^2.1`, `tomasvotruba/type-coverage: >=2.2.0 <2.2.2`) and the 8.3 matrix cells. If `php=8.5`, add an `8.5` cell to `run-tests.yml`. For a Laravel package, `require-dev` takes `orchestra/testbench: ^11.0` and the CI matrix runs Laravel 13 cells only — Pest 5 needs `symfony/process: ^8.1` and testbench 10 pins `^7.2`. The runtime `illuminate/*` range stays `^12.0||^13.0` for consumers. The `laravel-package-spatie` stub is PHPUnit-flavoured and keeps the PHP 8.3 set — on `php=8.4` or `8.5` it takes the usual swap up. See `references/shared-dev-deps.md` "Symplify formatter dep" and "Type-perfect dep".
+The two variants differ in `composer.json` (spatie has `spatie/laravel-package-tools` in `require`, uses PHPUnit by default) and `src/__PACKAGE_STUDLY__ServiceProvider.php` (spatie extends `PackageServiceProvider`). The `laravel-package` stub is Pest-flavoured and ships the canonical dep set: `pestphp/*: ^5.0`, `symplify/phpstan-rules: ^14.12`, `tomasvotruba/type-coverage: ^2.3`, and NO `rector/type-perfect` (keeping type-perfect alongside type-coverage >= 2.3 double-registers `MethodNodeAnalyser` and PHPStan aborts at boot). The PHPStan set is the same on every accepted floor. If `php=8.5`, add an `8.5` cell to `run-tests.yml`. For a Laravel package, `require-dev` takes `orchestra/testbench: ^11.0` and the CI matrix runs Laravel 13 cells only — Pest 5 needs `symfony/process: ^8.1` and testbench 10 pins `^7.2`. The runtime `illuminate/*` range stays `^12.0||^13.0` for consumers. The `laravel-package-spatie` stub is PHPUnit-flavoured and ships the same PHPStan dep set — only the test-framework deps differ. See `references/shared-dev-deps.md` "Symplify formatter dep" and "Type-perfect dep".
 
 ### 3. Copy shared stubs
 
@@ -81,14 +81,21 @@ Special handling for `tests/`: copy `tests/Pest.php` only when `test-framework=p
 
 - Swap `"test"` script: `vendor/bin/pest` ↔ `vendor/bin/phpunit`
 - Swap `"test-coverage"` script: `vendor/bin/pest --coverage` ↔ `vendor/bin/phpunit --coverage-html=coverage`
-- Swap dev deps: ADD `pestphp/pest: ^5.0`, `pestphp/pest-plugin-arch: ^5.0`, `pestphp/pest-plugin-laravel: ^5.0`, `pestphp/pest-plugin-rector: ^5.0`, `pestphp/pest-plugin-phpstan: ^5.0`, `pestphp/pest-plugin-agent: ^5.0` OR ADD `phpunit/phpunit`; REMOVE the other set. Pest needs a PHP `^8.4` floor and the PHP >= 8.4 dep set; a swap to PHPUnit on a `^8.3` floor has to restore the PHP 8.3 set (`rector/type-perfect: ^2.1`, `tomasvotruba/type-coverage: >=2.2.0 <2.2.2`, `symplify/phpstan-extensions: ^12.0`) and the 8.3 matrix cells. A swap to PHPUnit MUST also widen `orchestra/testbench` back to `^10.0||^11.0` and add the Laravel 12 / testbench 10 matrix cells whenever the package keeps Laravel 12 in `require` — testbench 11 resolves against Laravel 13 only, so a `^12.0||^13.0` package tested with testbench 11 alone leaves Laravel 12 untested and `composer update --with illuminate/support:12.*` cannot resolve. Only Pest 5 blocks testbench 10; PHPUnit has no such limit.
+- Swap dev deps: ADD `pestphp/pest: ^5.0`, `pestphp/pest-plugin-arch: ^5.0`, `pestphp/pest-plugin-laravel: ^5.0`, `pestphp/pest-plugin-rector: ^5.0`, `pestphp/pest-plugin-phpstan: ^5.0`, `pestphp/pest-plugin-agent: ^5.0` OR ADD `phpunit/phpunit`; REMOVE the other set. The PHPStan dep set is the same either way — only the test-framework deps swap. A swap to PHPUnit MUST also widen `orchestra/testbench` back to `^10.0||^11.0` and add the Laravel 12 / testbench 10 matrix cells whenever the package keeps Laravel 12 in `require` — testbench 11 resolves against Laravel 13 only, so a `^12.0||^13.0` package tested with testbench 11 alone leaves Laravel 12 untested and `composer update --with illuminate/support:12.*` cannot resolve. Only Pest 5 blocks testbench 10; PHPUnit has no such limit.
 - Swap `config.allow-plugins`: ADD `pestphp/pest-plugin: true` for pest; REMOVE for phpunit.
 
 **(b) `.github/workflows/run-tests.yml`**:
 
 - Change the last step's `run:` from `vendor/bin/pest --ci` (pest default) to `vendor/bin/phpunit` (phpunit) — or vice versa. **Without this edit, CI fails immediately because the workflow runs the wrong test binary.**
 
-**(c) Test bootstrap file**:
+**(c) `rector.php`** — the `phpunit:` flag on `withComposerBased()` follows the chosen framework:
+
+- PHPUnit: the config carries `->withComposerBased(phpunit: true)`. The `laravel-package-spatie` stub already ships it; the `laravel-package` stub does not, so add it after the `withPreparedSets()` block.
+- Pest: the config carries no `withComposerBased()` call at all. On the `laravel-package-spatie` stub, delete the shipped one — an argument-less call registers nothing.
+
+The PHPUnit composer-based set rewrites `TestCase` subclasses, which only a PHPUnit suite has. See `references/rector-config.md`.
+
+**(d) Test bootstrap file**:
 
 - Pest: keep `tests/Pest.php` (copied from shared in step 3).
 - PHPUnit: delete `tests/Pest.php` (if present); rely on `phpunit.xml` (also from shared).

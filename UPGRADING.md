@@ -20,6 +20,37 @@ The `post-update-cmd` hook re-syncs the skill into `~/.claude/skills/sandermulle
 
 ---
 
+## 1.14.x → 1.15.0 (Rector 2.6 canon, PHPStan strictness, PHP floors)
+
+Additive for repo-init itself — `composer global update sandermuller/repo-init`. Every change lands in the `rector.php` canon, verified against `rector/rector` 2.6.7.
+
+- **Deprecated `withPreparedSets()` flags dropped.** Rector 2.6 marks `instanceOf:`, `if:` and `earlyReturn:` `@deprecated`: the instanceof and early-return rules moved into `codeQuality`, and the `if` rules moved into `codeQuality` / `codingStyle` or were dropped. All nine stubs now pass neither, and `codeQuality: true` covers them.
+- **`withComposerBased()` added, conditionally.** It is the only builder path that registers `PHPUnitSetList::COMPOSER_BASED` / `LaravelSetList::COMPOSER_BASED`; a config without it registers no composer-based set. Each flag has its own trigger. `phpunit: true` goes on a PHPUnit repo ONLY — its rules rewrite `PHPUnit\Framework\TestCase` subclasses, which a Pest suite does not have. `laravel: true` goes on `laravel-project` ALONE — it derives upgrade rules from the installed Laravel version, which is safe for an app that pins one version and unsafe for a package that supports a Laravel range. A Pest package earns neither flag and gets no call; an argument-less call registers nothing. The bootstrap test-framework variant step flips the `phpunit:` flag when the user picks the other framework.
+- **`LaravelSetList::LARAVEL_COLLECTION` added** to the Laravel categories. The canonical Laravel set list is five entries, not four.
+- **New audit findings** — four on every category, five on the Laravel categories (the `LARAVEL_COLLECTION` one). They cover a legacy closure-style `rector.php` (`return static function (RectorConfig $rectorConfig)`), a `withPhp5xSets()` / `withPhp7xSets()` call, the deprecated prepared-set flags, and a missing `withComposerBased()`. `rector.php` stays `notify-only`, so none of these is rewritten automatically — the upgrade phase prompts on each.
+
+### PHP floors — 8.3 is dropped
+
+Two floors now, one minor apart: **`^8.5` for `laravel-project`** (an application controls its interpreter, so it takes the newest stable PHP) and **`^8.4` for every package and plugin category** (a package floors one minor lower for its consumers). `--php=` accepts `8.4` and `8.5`. Both floors move together when a new PHP goes stable.
+
+This is what removes the last abandoned packages from the canon. `symplify/phpstan-extensions` and `rector/type-perfect` were carried only to serve a `^8.3` floor; their successors each require PHP `^8.4`. Gone with them: the whole PHP-floor conditional in `shared-dev-deps.md` and `per-category-deps.yml`, the mandatory `tomasvotruba/type-coverage: >=2.2.0 <2.2.2` cap, and every 8.3 CI cell.
+
+**This one is breaking for an existing repo on `^8.3`.** Re-running `audit` flags `require.php`. The upgrade is a single `composer.json` edit plus one `composer update`, and it drops both abandoned packages in the same pass — but a repo that must keep 8.3 support should not take this release's floor.
+
+### PHPStan — stricter, and the unregistered rules are now registered
+
+- **Symplify rules registered by hand.** `symplify/phpstan-rules` spreads its rules over opt-in config files; its `extra.phpstan.includes` auto-loads only `services.neon`, `ctor-rules.neon`, `mock-rules.neon` and `phpstan-extensions.neon` (the error formatter the dep was carried for). `phpstan/extension-installer` reaches NONE of the rules, so every repo scaffolded so far ran none of them. The canonical `phpstan.neon.dist` now carries a `rules:` block with 11 of them, taken from `hihaho/phpstan.neon`.
+- **`type_coverage.constant: 100`.** The canon ran `constant: 0`, which was looser than both reference apps.
+- **`type_perfect` gains `narrow_param: true`.** `no_mixed` stays off on purpose: it rejects `mixed` that a framework or PSR interface forces on an implementer.
+- **`laravel-project` gains four larastan parameters** (`noEnvCallsOutsideOfConfig`, `checkModelProperties`, `checkModelAppends`, `checkOctaneCompatibility: false`) and `excludePaths: [bootstrap/cache, .cache]`, all set the same way in both reference apps.
+- **No `phpVersion:` key.** PHPStan 2 derives the analysed version range from `composer.json` `require.php` whenever `phpVersion` is null, so declaring it only adds a second source that can drift. `require.php` is the single source of truth.
+
+Measured on a real Laravel app (`azzeria`, PHP 8.4, Pest, larastan): the canonical config boots and the 11 Symplify rules report **zero** findings, as does `constant: 100`. `narrow_param: true` accounts for 5 findings. The rules are strict but not noisy on code written to this toolchain. On an older codebase, baseline what it cannot reach yet rather than dropping the rules.
+
+Nothing in the Rector or PHPStan changes is breaking on its own; re-running `audit` surfaces each as a finding. The PHP floor is the breaking part.
+
+---
+
 ## 1.13.x → 1.14.0 (security-advisories dropped, laravel-project sync hook corrected)
 
 Additive for repo-init itself — `composer global update sandermuller/repo-init` (+ `composer global exec -- boost sync --scope=user --all`). Both changes land in the `laravel-project` canon.

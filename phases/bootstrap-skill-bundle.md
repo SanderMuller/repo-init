@@ -13,7 +13,7 @@ Run `$REPO_INIT_HOME/checklists/preflight.md`. Stop if anything is red. Verify c
 - `vendor` — required.
 - `name` (kebab-case) — optional per target-dir rule.
 - `description` — required.
-- `php` — default `8.3`. Accepted: `8.3`, `8.4`, `8.5`. Reject `8.2`.
+- `php` — default `8.4`. Accepted: `8.4`, `8.5`. Reject `8.3` and below. See `$REPO_INIT_HOME/references/version-defaults.md` "PHP".
 - `author-name` / `author-email` — defaults from git config.
 
 ## Steps

@@ -57,7 +57,7 @@ Trigger: the target uses Pest and `pestphp/pest` can resolve below `5.0`. Skip t
 
 **Pest 3 targets take the 3 → 4 step first.** Raise `pestphp/pest` to `^4.0`, run `composer update`, then `vendor/bin/pest --init` to migrate the 3 → 4 syntax, and only then run the steps below. A direct 3 → 5 jump leaves Pest 3 syntax in the suite and the final test run fails.
 
-**Runs BEFORE the `type-coverage` / `type-perfect` migration below** — Pest 5 raises the PHP floor to `^8.4`, and that floor decides which branch the type-dep step and the symplify step take. Doing it in the other order applies the PHP 8.3 branch and then invalidates it.
+**Runs BEFORE the `type-coverage` / `type-perfect` migration below** — Pest 5 needs a PHP `^8.4` floor, which that migration's successors need too. Doing it in the other order applies the PHP 8.3 branch and then invalidates it.
 
 Why it matters: Pest 5 requires PHP `^8.4` and PHPUnit 13. So the PHP floor bump, the plugin bumps, and the PHP >= 8.4 dep set are one change — a partial move leaves `composer update` unresolvable.
 
@@ -72,8 +72,9 @@ Why it matters: Pest 5 requires PHP `^8.4` and PHPUnit 13. So the PHP floor bump
 Then fix the files the bump touches:
 
 - `rector.php` — `use Pest\Rector\Set\PestSetList;` and the single set `PestSetList::CODING_STYLE` (replaces `PEST_CODE_QUALITY` / `PEST_CHAIN` / `PEST_LARAVEL`).
+- `rector.php` — drop `instanceOf:`, `if:` and `earlyReturn:` from `withPreparedSets()` (Rector 2.6 deprecates all three; `codeQuality: true` covers them). Add `->withComposerBased(...)` after that block ONLY with a flag the repo qualifies for: `phpunit: true` on a PHPUnit repo, `laravel: true` on `laravel-project`. A Pest package qualifies for neither and gets no call.
 - `tests/Pest.php` — add `pest()->tia()->locally();` for the Tia engine. Never add `--tia` to a composer script or a CI step.
-- `.github/workflows/run-tests.yml` — drop every PHP 8.3 matrix cell; the floor is `^8.4`.
+- `.github/workflows/run-tests.yml` — drop every matrix cell below the repo's floor.
 
 Verify before moving on:
 
@@ -105,15 +106,9 @@ composer require --dev tomasvotruba/type-coverage:^2.3
 
 `--no-update` makes the first command a pure `composer.json` edit — nothing is installed or removed until the `require` runs, so `vendor/` never holds both packages at once. Equivalently: hand-edit both `require-dev` lines, then one `composer update rector/type-perfect tomasvotruba/type-coverage`. **Never** run a plain `composer remove --dev rector/type-perfect` first: that resolves immediately, and with `tomasvotruba/type-coverage` still `< 2.3` it leaves `parameters.type_perfect:` in `phpstan.neon.dist` unregistered — PHPStan then fails boot the other way (`Unexpected item 'parameters › type_perfect'`).
 
-**PHP 8.3 floor** — keep both, cap the constraint (`>=2.2.0 <2.2.2` — 2.2.2 already requires PHP ^8.4):
+Leave `phpstan.neon.dist`'s `parameters.type_perfect:` block alone — `tomasvotruba/type-coverage: ^2.3` registers those params.
 
-```bash
-composer require --dev "tomasvotruba/type-coverage:>=2.2.0 <2.2.2"
-```
-
-`rector/type-perfect: ^2.1` stays. Raise the standing ADVISORY: bumping `require.php` to `^8.4` drops two abandoned packages (`rector/type-perfect` and `symplify/phpstan-extensions`) and lifts this cap.
-
-Either way, leave `phpstan.neon.dist`'s `parameters.type_perfect:` block alone — exactly one of the two packages registers those params on every accepted floor.
+A repo below the `^8.4` floor cannot take this migration: both successors require PHP `^8.4`. Bump `require.php` in the same pass — see `$REPO_INIT_HOME/references/version-defaults.md` "PHP".
 
 Verify before moving on:
 
@@ -122,7 +117,7 @@ composer show --direct | grep -E 'type-coverage|type-perfect'
 vendor/bin/phpstan analyse --memory-limit=2G
 ```
 
-Expect exactly one line on a PHP >= 8.4 floor (`tomasvotruba/type-coverage` at `2.3.x`) and two on a PHP 8.3 floor (`tomasvotruba/type-coverage` at `2.2.x` + `rector/type-perfect`). PHPStan must reach analysis — a boot-time duplicate-service error is the failure this step exists to remove.
+Expect exactly one line: `tomasvotruba/type-coverage` at `2.3.x`, and no `rector/type-perfect`. PHPStan must reach analysis — a boot-time duplicate-service error is the failure this step exists to remove.
 
 ## Apply MISSING dev deps
 
@@ -165,7 +160,7 @@ Same logic as upgrade-php-package.md — apply each file's mode from `$REPO_INIT
 - **PHPUnit cache findings** (if `test-framework=phpunit`): apply `$REPO_INIT_HOME/references/phpunit-config.md` Upgrade-actions section — set `cacheDirectory=".cache/phpunit"`, `rm -rf .phpunit.cache`, `git rm -r --cached .phpunit.cache` if previously committed.
 - **CI path filter drift — `phpstan.yml` missing `composer.json` / `composer.lock`**: insert both lines under the `push.paths` and `pull_request.paths` blocks in `.github/workflows/phpstan.yml`.
 - **`.gitattributes` missing `.ai/ export-ignore`**: insert `.ai/ export-ignore` line after `.agents/ export-ignore` inside the `# >>> package-boost (managed) >>>` block.
-- **PHP floor `^8.2`**: prompt bump.
+- **PHP floor below the category floor**: prompt "bump `require.php` to `^8.4` (`^8.5` for `laravel-project`)?" The bump is ATOMIC with the type-perfect / symplify migration above — both successors need PHP `^8.4`.
 - **Missing `validate-gitattributes` script**: insert it.
 - **`.lpv` warnings**: each missing export-ignore line listed in the audit. Add to `.lpv` AND to `.gitattributes` managed block.
 - **`minimum-stability` / `prefer-stable`**: add `"minimum-stability": "stable"` + `"prefer-stable": true` to `composer.json` if absent or if `prefer-stable` isn't `true`. If `minimum-stability` is looser than `stable`, **default to tightening it to `stable`** — keep `dev` only when the author confirms the package is actively co-developed against unreleased sibling packages (being on `0.x`, or having downstream / production dependents, is a reason to tighten, NOT to keep `dev`; see `references/version-defaults.md`). Never loosen a passing `stable` baseline.

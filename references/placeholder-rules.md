@@ -15,9 +15,9 @@ Exact derivation rules for the placeholders used in `stubs/`. No agent guessing.
 | `__DESCRIPTION__` | user input | (free text) |
 | `__AUTHOR_NAME__` | `git config user.name` fallback to user input | `Sander Muller` |
 | `__AUTHOR_EMAIL__` | `git config user.email` fallback to user input | `sander@hihaho.com` |
-| `__PHP_VERSION__` | `^{8.3\|8.4\|8.5}` per `--php=` | `^8.3` |
+| `__PHP_VERSION__` | `^{8.4\|8.5}` per `--php=` | `^8.4` (package default); `laravel-project` is always `^8.5` |
 | `__LARAVEL_VERSIONS__` | per `--laravel=` (laravel-package only) | `^11.0\|\|^12.0\|\|^13.0` |
-| `__PHP_VERSION_NEON__` | bare `{8.3\|8.4\|8.5}` for rector PHP set name | `83` (used as `php83` in `withPhpSets`) |
+| `__PHP_VERSION_NEON__` | bare `{84\|85}` for rector PHP set name | `84` (used as `php84` in `withPhpSets`) |
 | `__YEAR__` | current year, four digits | `2026` |
 | `__TEST_RUNNER__` | per `--test-framework=`, the binary basename | `pest` or `phpunit` |
 | `__TEST_COVERAGE_FLAG__` | per `--test-framework=`, the `test-coverage` script flag | `--coverage` (pest) or `--coverage-html=coverage` (phpunit) |

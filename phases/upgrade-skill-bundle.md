@@ -54,7 +54,7 @@ Per `$REPO_INIT_HOME/references/composer-scripts.md`:
 - **`src/` directory with PHP source**: prompt "is this actually a `php-package`?" If the user confirms it ships real PHP, re-route to `audit-php-package.md`.
 - **Flat skill source files (`resources/boost/skills/<name>.md`)**: convert each flagged flat skill to the canonical directory form — `mkdir -p resources/boost/skills/<name> && git mv resources/boost/skills/<name>.md resources/boost/skills/<name>/SKILL.md` (the `mkdir -p` is required — `git mv` does NOT create the destination directory and fails without it; frontmatter + body preserved; `boost where` still discovers it by name). Convert all flagged flat skills; leave `resources/boost/guidelines/*.md` flat (DIR is skills-only). Re-run `vendor/bin/boost sync` after.
 - **`composer.lock` committed**: prompt `git rm --cached composer.lock`.
-- **PHP floor `^8.2`**: prompt bump to `^8.3`.
+- **PHP floor below `^8.4`**: prompt bump to `^8.4` (`^8.5` for `laravel-project`).
 - **`.gitattributes` missing `.ai/ export-ignore`**: insert `.ai/ export-ignore` after `.agents/ export-ignore` inside the `# >>> package-boost (managed) >>>` block.
 - **Missing `validate-gitattributes` script**: insert it (via the composer.json scripts merge above).
 - **`.lpv` warnings on `vendor/bin/lean-package-validator validate`**: for each flagged artifact, add the **bare path** (no `export-ignore` suffix) to `.lpv` AND the `<path> export-ignore` line to the `.gitattributes` managed block. `.lpv` is a glob-pattern file, not `.gitattributes` syntax — see `references/gitattributes-managed-block.md` (`.lpv` file format).

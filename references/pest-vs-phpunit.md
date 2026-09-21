@@ -15,13 +15,13 @@ User can override at bootstrap time via `--test-framework=pest|phpunit`.
 
 ## Pest forces a PHP `^8.4` floor
 
-Pest 5 requires PHP `^8.4` and PHPUnit 13. So `--test-framework=pest` and `--php=8.3` are **incompatible**. The phase resolves the clash before it writes `composer.json`:
+Pest 5 requires PHP `^8.4` and PHPUnit 13. Every floor repo-init scaffolds is `^8.4` or higher, so there is no clash to resolve any more:
 
-- Bootstrap: if the user asks for `pest` with `php=8.3`, ask which one to change. Do not silently scaffold Pest 4.
-- Audit: a Pest repo with `require.php: ^8.3` is `NON-CANONICAL` — the fix is the PHP floor bump, not a Pest downgrade.
+- Bootstrap: every accepted `--php=` value satisfies Pest 5. Never scaffold Pest 4.
+- Audit: a Pest repo with `require.php` below `^8.4` is `NON-CANONICAL` — the fix is the PHP floor bump, not a Pest downgrade.
 - Upgrade: raise `require.php` to `^8.4` in the same composer.json pass that raises `pestphp/*` to `^5.0`.
 
-A `^8.4` floor also drops the two abandoned packages a `^8.3` floor carries (`symplify/phpstan-extensions`, `rector/type-perfect`) — see `shared-dev-deps.md`. So every Pest repo takes the PHP ≥ 8.4 dep set, and only PHPUnit repos can still be on the `^8.3` set.
+The `^8.4` floor is also what drops the two abandoned packages earlier canon carried (`symplify/phpstan-extensions`, `rector/type-perfect`) — see `shared-dev-deps.md`. That is now true for every repo, Pest or PHPUnit.
 
 ## What the choice affects
 

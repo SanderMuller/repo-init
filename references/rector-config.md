@@ -26,8 +26,6 @@ return RectorConfig::configure()
         typeDeclarations: true,
         typeDeclarationDocblocks: true,
         privatization: true,
-        instanceOf: true,
-        earlyReturn: true,
         carbon: true,
         rectorPreset: true,
         phpunitCodeQuality: true,
@@ -37,8 +35,55 @@ return RectorConfig::configure()
     ->withFluentCallNewLine()
     ->withParallel(300, 15, 15)
     ->withMemoryLimit('3G')
-    ->withPhpSets(php83: true) // or php84/php85 per --php=
+    ->withPhpSets(php84: true) // php85 for laravel-project, or per --php=
 ```
+
+`withPreparedSets()` must NOT pass `instanceOf`, `if` or `earlyReturn`. Rector
+2.6 marks all three `@deprecated`: the instanceof and early-return rules moved
+into `codeQuality`, and the `if` rules moved into `codeQuality` / `codingStyle`
+or were dropped. `codeQuality: true` already covers them. Verified against
+`rector/rector` 2.6.7, `src/Configuration/RectorConfigBuilder.php`.
+
+## `withComposerBased()` — conditional, never unconditional
+
+`withComposerBased()` is the only builder path that pushes
+`PHPUnitSetList::COMPOSER_BASED` and `LaravelSetList::COMPOSER_BASED` into the
+set list — traced in `RectorConfigBuilder::withComposerBased()`. The older
+`withSetProviders()` is `@deprecated` in favour of it. Nothing else registers a
+composer-based set.
+
+Each flag has its own condition. A config that meets no condition omits the call
+entirely — an argument-less `withComposerBased()` registers nothing.
+
+| Flag | Condition |
+|---|---|
+| `phpunit: true` | `--test-framework=phpunit` ONLY |
+| `laravel: true` | category `laravel-project` ONLY |
+
+`phpunit: true` registers the PHPUnit upgrade set, whose rules rewrite
+`PHPUnit\Framework\TestCase` subclasses. A Pest suite has no such classes, so
+the set is noise there. This matches the reference apps: `hihaho` is PHPUnit and
+passes the flag, `mijntp` is Pest and does not.
+
+`laravel: true` derives Laravel upgrade rules from the installed Laravel
+version. An app pins one version, so that is safe. A package supports a Laravel
+range, and rules derived from the dev-installed version can rewrite code that
+must still run on the package's lower bound.
+
+Each stub ships the flags its own default test framework earns. Four stubs are
+PHPUnit-flavoured — `laravel-project`, `laravel-package-spatie`,
+`phpstan-extension` (PHPStan's `RuleTestCase` is PHPUnit-based) and
+`rector-extension`; the rest ship Pest:
+
+| Stub | Call |
+|---|---|
+| `laravel-project` | `->withComposerBased(phpunit: true, laravel: true)` |
+| `laravel-package-spatie`, `phpstan-extension`, `rector-extension` | `->withComposerBased(phpunit: true)` |
+| every other stub | no call |
+
+The bootstrap "compose test-framework variant" step flips the `phpunit:` flag
+when the user picks the other framework: it adds the flag on a PHPUnit target
+and removes it on a Pest target. Removing the last flag removes the whole call.
 
 `containerCacheDirectory` must be set explicitly. Rector's default puts the
 container cache in the system temp directory, where
@@ -49,24 +94,28 @@ cannot see it.
 
 | Category | `withPaths` | Extra `withSets` |
 |---|---|---|
-| `laravel-project` | `app, routes, config, database, tests` | the four Laravel sets below + Pest |
-| `laravel-package` | `src, tests, workbench` | the four Laravel sets below + Pest |
-| `laravel-package-spatie` | `src, tests, workbench` | the four Laravel sets below + Pest |
-| `filament-plugin` | `src, tests, workbench` | the four Laravel sets below + Pest |
-| `nova-tool` | `src, tests, workbench` | the four Laravel sets below + Pest |
+| `laravel-project` | `app, routes, config, database, tests` | the five Laravel sets below + Pest |
+| `laravel-package` | `src, tests, workbench` | the five Laravel sets below + Pest |
+| `laravel-package-spatie` | `src, tests, workbench` | the five Laravel sets below + Pest |
+| `filament-plugin` | `src, tests, workbench` | the five Laravel sets below + Pest |
+| `nova-tool` | `src, tests, workbench` | the five Laravel sets below + Pest |
 | `php-package` | `src, tests` | Pest only |
 | `composer-plugin` | `src, tests` | Pest only |
 | `phpstan-extension` | `src, tests` | Pest only |
 | `rector-extension` | `src, tests, config` | Pest only |
 
-The four Laravel sets, in stub order:
+The five Laravel sets, in stub order:
 
 ```php
 LaravelSetList::LARAVEL_CODE_QUALITY,
 LaravelSetList::LARAVEL_ARRAYACCESS_TO_METHOD_CALL,
+LaravelSetList::LARAVEL_COLLECTION,
 LaravelSetList::LARAVEL_CONTAINER_STRING_TO_FULLY_QUALIFIED_NAME,
 LaravelSetList::LARAVEL_FACADE_ALIASES_TO_FULL_NAMES,
 ```
+
+`LARAVEL_COLLECTION` is present in both `hihaho/rector.php` and
+`mijntp/rector.php`.
 
 No stub ships a version-pinned `LaravelSetList::LARAVEL_{XXX}` set.
 
@@ -89,13 +138,11 @@ A repo still importing `RectorPest\Set\PestSetList` from `mrpunyapal/rector-pest
 is NON-CANONICAL — swap the import and the set names in the same pass that drops
 the package.
 
-NEEDS-CONFIRMATION (research item, not a blocker): the phase files treat
-`PestSetList::CODING_STYLE` as settled canon, so follow them. But no local
-reference repo runs `pestphp/pest-plugin-rector` — `hihaho` is PHPUnit, `mijntp`
-is Pest 4 on `mrpunyapal/rector-pest` — so the constant name and its coverage of
-the old `PEST_CODE_QUALITY` / `PEST_CHAIN` split are untraced here, and `mijntp`
-also runs `PEST_LARAVEL`, which has no mapping. Confirm against the plugin's
-source when convenient.
+Confirmed 2026-09-21 against the installed plugin source
+(`vendor/pestphp/pest-plugin-rector/src/Set/PestSetList.php`): `CODING_STYLE` is
+the class's only constant. The `PEST_CODE_QUALITY` / `PEST_CHAIN` / `PEST_LARAVEL`
+constants belong to `mrpunyapal/rector-pest` and have no first-party equivalent;
+`mijntp` still runs that package and is NOT canonical on this point.
 
 ## `withSkip` — stub defaults
 
@@ -206,5 +253,5 @@ extension. Do not scaffold it until that is settled.
 
 ## PHP set name derivation
 
-`__PHP_VERSION__` (e.g. `^8.3`) → `php83` (the rector set name). The agent reads
-`--php=` and writes `withPhpSets(php83: true)` accordingly.
+`__PHP_VERSION__` (e.g. `^8.4`) → `php84` (the rector set name). The agent reads
+`--php=` and writes `withPhpSets(php84: true)` accordingly.

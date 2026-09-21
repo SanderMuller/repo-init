@@ -5,6 +5,24 @@ includes:
     - vendor/spaze/phpstan-disallowed-calls/disallowed-execution-calls.neon
     - vendor/spaze/phpstan-disallowed-calls/disallowed-insecure-calls.neon
 
+rules:
+    # symplify/phpstan-rules spreads its rules over opt-in config files. Its composer
+    # `extra.phpstan.includes` auto-loads only config/services/services.neon,
+    # ctor-rules.neon, mock-rules.neon and phpstan-extensions.neon (the error formatter
+    # the dep is carried for), so none of the rules below registers on its own. The list
+    # is hihaho/phpstan.neon's, which a large app converged on.
+    - Symplify\PHPStanRules\Rules\StringFileAbsolutePathExistsRule
+    - Symplify\PHPStanRules\Rules\Complexity\NoArrayMapWithArrayCallableRule
+    - Symplify\PHPStanRules\Rules\Complexity\ForbiddenArrayMethodCallRule
+    - Symplify\PHPStanRules\Rules\ForbiddenMultipleClassLikeInOneFileRule
+    - Symplify\PHPStanRules\Rules\NoDynamicNameRule
+    - Symplify\PHPStanRules\Rules\NoGlobalConstRule
+    - Symplify\PHPStanRules\Rules\PreventParentMethodVisibilityOverrideRule
+    - Symplify\PHPStanRules\Rules\Enum\RequireUniqueEnumConstantRule
+    - Symplify\PHPStanRules\Rules\UppercaseConstantRule
+    - Symplify\PHPStanRules\Rules\PHPUnit\PublicStaticDataProviderRule
+    - Symplify\PHPStanRules\Rules\Explicit\NoMissingVariableDimFetchRule
+
 parameters:
     tmpDir: .cache/phpstan
 
@@ -23,12 +41,13 @@ parameters:
         return: 100
         param: 100
         property: 100
-        constant: 0
+        constant: 100
         declare: 100
 
     type_perfect:
         null_over_false: true
         narrow_return: true
+        narrow_param: true
 
     cognitive_complexity:
         class: 80
@@ -44,6 +63,13 @@ parameters:
         # surface for tests. Allow calling it from our tests/.
         -
             identifier: method.internalClass
+            paths:
+                - tests/*
+            reportUnmatched: false
+        # NoDynamicNameRule (registered above) fires on the dynamic dispatch test
+        # helpers use. hihaho/phpstan.neon scopes the same identifier out of tests/.
+        -
+            identifier: symplify.noDynamicName
             paths:
                 - tests/*
             reportUnmatched: false

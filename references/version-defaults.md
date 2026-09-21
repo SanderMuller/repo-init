@@ -4,19 +4,33 @@ Per-knob defaults for bootstrap mode, plus the hard floors that audit enforces.
 
 ## PHP
 
-- **Default**: `^8.3` with `--test-framework=phpunit`, `^8.4` with `--test-framework=pest`
-- **Accepted**: `8.3`, `8.4`, `8.5`
-- **Hard floor**: `^8.3` (rejected: `^8.2` and below)
-- **Pest floor**: `^8.4` — Pest 5 requires PHP `^8.4`. A repo on `--test-framework=pest` cannot have a `^8.3` floor. See "Pest" below.
+Two floors, by what the repo is:
 
-Rationale: `^8.3` matches `laravel/pao`'s `^8.3` floor (our strictest shared dep on the PHPUnit side). Existing `^8.2` repos audited by repo-init are flagged as `NON-CANONICAL` on the `require.php` constraint; the upgrade phase offers to bump the floor as a single composer.json edit.
+| Kind | Categories | Floor |
+|---|---|---|
+| Application | `laravel-project` | the newest stable PHP — **`^8.5`** today |
+| Package / plugin | every other category | **`^8.4`** |
 
-Note: a `^8.3` floor keeps the repo on **two** abandoned packages:
+- **Accepted `--php=`**: `8.5` only for `laravel-project` — an application takes the newest stable PHP, so there is nothing to choose. A package category defaults to `8.4` and may opt up to `8.5` when its consumers allow it. `8.3` and below are rejected everywhere.
+- **Hard floor**: `^8.4`.
 
-- `symplify/phpstan-extensions` — its successor `symplify/phpstan-rules: ^14.12` requires PHP ^8.4. See `shared-dev-deps.md` → "Symplify formatter dep".
-- `rector/type-perfect` — its successor `tomasvotruba/type-coverage: ^2.3` requires PHP ^8.4. The 8.3 floor also has to cap `tomasvotruba/type-coverage` at `>=2.2.0 <2.2.2`, because 2.3 and type-perfect can't coexist. See `shared-dev-deps.md` → "Type-perfect dep".
+An application runs on one interpreter the team controls, so it takes the newest
+stable PHP and gets its language features immediately. A package runs on whatever
+its consumers have, so it floors one minor lower and keeps a wider install base.
 
-Bumping the floor to `^8.4` is the way to drop both abandoned packages (and the type-coverage cap). A Pest repo is on `^8.4` already, so neither conditional applies to it.
+Both floors shift together, one minor apart. When PHP 8.6 goes stable,
+`laravel-project` moves to `^8.6`, the package floor moves to `^8.5`, and
+`--php=` accepts `8.5` and `8.6`.
+
+The `^8.4` floor is what lets the canon carry NO abandoned packages. Both
+`symplify/phpstan-extensions` and `rector/type-perfect` existed in earlier canon
+only to serve a `^8.3` floor; their successors (`symplify/phpstan-rules ^14.12`,
+`tomasvotruba/type-coverage ^2.3`) each require PHP `^8.4`. See
+`shared-dev-deps.md` → "Symplify formatter dep" and "Type-perfect dep".
+
+A repo below the floor is flagged NON-CANONICAL on its `require.php` constraint;
+the upgrade phase offers the bump as a single `composer.json` edit, which also
+drops the abandoned pair.
 
 ## Laravel (laravel-package only)
 

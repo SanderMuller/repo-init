@@ -31,8 +31,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { php: '8.3', stability: prefer-lowest }
-          - { php: '8.3', stability: prefer-stable }
+          # PHP floor is 8.4 (see references/version-defaults.md). Add an '8.5' cell
+          # when the repo's require.php floor moves up.
+          - { php: '8.4', stability: prefer-lowest }
           - { php: '8.4', stability: prefer-stable }
 
     name: P${{ matrix.php }} - ${{ matrix.stability }}
