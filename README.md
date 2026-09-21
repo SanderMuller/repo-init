@@ -12,7 +12,8 @@ AI playbook + stub library for bootstrapping the canonical Sander / hihaho dev s
 
 Walks an AI agent (Claude Code, Cursor, GitHub Copilot, …) through **bootstrap**, **audit**, or **upgrade** of a PHP repo against a canonical baseline:
 
-- `pint.json`, `phpstan.neon.dist`, `phpstan-baseline.neon`, `rector.php` — code-quality tooling
+- `pint.json`, `phpstan.neon.dist`, `phpstan-baseline.neon`, `rector.php` — code-quality tooling. PHPStan runs at `level: max` with `strictRules.allRules`, 100% type coverage and `symplify/phpstan-rules`' opt-in rules registered by hand (the package auto-registers none of them)
+- A PHP floor per repo kind — `^8.5` for `laravel-project` (an application takes the newest stable PHP), `^8.4` for every package and plugin category. PHP 8.3 is not supported
 - `.editorconfig`, `.gitattributes` (with the `# >>> package-boost (managed) >>>` block — sentinel name preserved for backward compat; owned by `package-boost-php`), `.gitignore`
 - `.mcp.json` (Laravel-aware categories only; the framework-agnostic categories — `php-package`, `composer-plugin`, `phpstan-extension`, `rector-extension`, `skill-bundle` — skip it)
 - `.config/boost.php` — boost-core agent config, pinning Claude Code / Copilot / Codex (every category except `laravel-project`, which uses `laravel/boost`). The `.config/` layout is canonical (boost-core ≥ 0.17); the sync manifest lives at `.config/boost/`
