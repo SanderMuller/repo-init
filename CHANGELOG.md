@@ -7,10 +7,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Pre-`1.0.0` releases (0.x.x — historical) introduced breaking changes in MINOR bumps; from 1.0.0 onward repo-init follows standard SemVer (breaking changes ship as MAJOR only). The pre-1.0 entries below remain for reference.
 
+## [1.15.0](https://github.com/sandermuller/repo-init/compare/1.14.0...1.15.0) - 2026-09-21
+
+<!-- verified-sha: 166541b747e733460a750bfba7effdf0a3ccc577 -->
+Three canon changes: Rector brought up to Rector 2.6, a stricter PHPStan baseline, and a PHP floor per repo kind.
+
+### Breaking
+
+- PHP 8.3 is no longer supported. `laravel-project` floors at `^8.5`, every package and plugin category at `^8.4`. `--php=` accepts `8.5` for an application and `8.4` (optionally `8.5`) for a package.
+- The floor is what removes the last two abandoned packages from the canon. `symplify/phpstan-extensions` and `rector/type-perfect` were carried only to serve `^8.3`; their successors, `symplify/phpstan-rules ^14.12` and `tomasvotruba/type-coverage ^2.3`, each require PHP `^8.4`. The PHP-floor conditional, the mandatory `tomasvotruba/type-coverage: >=2.2.0 <2.2.2` cap and every 8.3 CI cell are gone with it.
+
+Raise the floor and drop both packages in one pass:
+
+```bash
+composer remove --dev rector/type-perfect symplify/phpstan-extensions --no-update
+composer require --dev tomasvotruba/type-coverage:^2.3 symplify/phpstan-rules:^14.12
+
+```
+
+`UPGRADING.md` carries the full migration.
+
+### Added
+
+- The canonical `phpstan.neon.dist` registers `symplify/phpstan-rules`' opt-in rules. The package auto-loads only its services, ctor, mock and error-formatter configs, so `phpstan/extension-installer` reached none of its rules and every repo scaffolded so far ran zero of them.
+- `rector.php` gains `withComposerBased()`, the only builder path that registers the composer-based sets. `phpunit: true` on a PHPUnit repo, `laravel: true` on `laravel-project`. A Pest package earns neither and gets no call.
+- `LaravelSetList::LARAVEL_COLLECTION` — the canonical Laravel set list is five entries.
+- Six new audit findings: a legacy closure-style `rector.php`, a `withPhp5xSets()` call (which silently applies no PHP set), the deprecated prepared-set flags, a missing `withComposerBased()` flag, an unregistered Symplify rule list and a declared `phpVersion:`.
+
+### Changed
+
+- `withPreparedSets()` no longer passes `instanceOf` or `earlyReturn`. Rector 2.6 deprecates both; `codeQuality` covers their rules.
+- `type_coverage.constant` moves from `0` to `100`, and `type_perfect` gains `narrow_param`. `no_mixed` stays off: it rejects `mixed` that a framework or PSR interface forces on an implementer.
+- `laravel-project` gains `noEnvCallsOutsideOfConfig`, `checkModelProperties`, `checkModelAppends`, `checkOctaneCompatibility: false` and `excludePaths`.
+- No stub declares `phpVersion:`. PHPStan derives the analysed version range from `composer.json` `require.php`, so declaring it only adds a second source that can drift.
+
+### Fixed
+
+- `bootstrap-laravel-project` never raised `require.php`. `laravel new` writes `^8.3`, so the floor was prose only and every scaffolded application shipped below it. Raising the floor is now the first step, before any Composer command.
+- The `check-rector-sync` CI gate encoded the deprecated prepared-set flags as required, and classified only two of the four PHPUnit-flavoured stubs correctly.
+
+### Internal
+
+- Measured against a live Laravel application: the new PHPStan config boots, the registered Symplify rules report no findings, and `narrow_param` accounts for five.
+
+**Full Changelog**: <https://github.com/SanderMuller/repo-init/compare/1.14.0...1.15.0>
+
 ## [1.14.0](https://github.com/sandermuller/repo-init/compare/1.13.0...1.14.0) - 2026-09-15
 
 <!-- verified-sha: 33e3fa5a5f773c9f439c7895281e42229adc7b6e -->
-
 Two corrections to the `laravel-project` canon that 1.13.0 shipped.
 
 ## Fixed
@@ -43,7 +87,7 @@ The audit gains two HIGH-severity `laravel-project` findings: the unguarded arti
 
 Windows quoting for the one-liner is marked NEEDS-CONFIRMATION in the canon; it is verified on macOS only. `cmd.exe` nests quotes differently and `escapeshellarg()` emits double quotes there. A `Scripts\AutoSync::run` class callback in `sandermuller/project-boost-laravel`, the shape its three sibling wrappers already ship, would remove the workaround.
 
-**Full Changelog**: <https://github.com/SanderMuller/repo-init/compare/1.13.0...1.14.0>
+**Full Changelog**: [https://github.com/SanderMuller/repo-init/compare/1.13.0...1.14.0](https://github.com/SanderMuller/repo-init/compare/1.13.0...1.14.0)
 
 ## [1.13.0](https://github.com/sandermuller/repo-init/compare/1.12.0...1.13.0) - 2026-09-07
 
@@ -78,9 +122,10 @@ Additive. Re-running `audit` on an already-scaffolded `laravel-project` surfaces
 composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
 
+
 ```
 
-**Full Changelog**: <https://github.com/SanderMuller/repo-init/compare/1.12.0...1.13.0>
+**Full Changelog**: [https://github.com/SanderMuller/repo-init/compare/1.12.0...1.13.0](https://github.com/SanderMuller/repo-init/compare/1.12.0...1.13.0)
 
 ## [1.12.0](https://github.com/sandermuller/repo-init/compare/1.11.0...1.12.0) - 2026-09-07
 
@@ -113,6 +158,7 @@ Additive for repo-init itself. Re-running `audit` on an already-scaffolded repo 
 ```bash
 composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
+
 
 
 ```
@@ -149,6 +195,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 **Full Changelog**: [https://github.com/SanderMuller/repo-init/compare/1.10.0...1.11.0](https://github.com/SanderMuller/repo-init/compare/1.10.0...1.11.0)
@@ -166,6 +213,7 @@ The tag left the interactive skill-tag picker. The stub hard-codes it:
 
 ```php
 ->withTags(['voice'__SKILL_TAGS__])
+
 
 
 
@@ -236,6 +284,7 @@ Audit phases gained a HIGH-severity rule for the duplicate registration. Upgrade
 ```bash
 composer remove --dev rector/type-perfect --no-update
 composer require --dev tomasvotruba/type-coverage:^2.3
+
 
 
 
@@ -644,6 +693,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 For existing scaffolded packages, the next audit walk will surface the `sandermuller/package-boost-php: true` entry as MEDIUM-stale. The upgrade phase handles removal correctly — bump first, then drop the entry.
@@ -746,6 +796,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 No further steps. Scaffold output, the `repo-init` skill, audit/upgrade phases, stubs — all identical to 0.8.1.
@@ -783,6 +834,7 @@ If you installed 0.8.0:
 ```bash
 composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
+
 
 
 
@@ -845,6 +897,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 The `composer global exec --` form runs `boost` from Composer's global `vendor/bin/` regardless of the user's current directory; the literal `--` stops Composer from interpreting boost's flags as its own. `--scope=user --all` publishes every globally-installed package's `resources/boost/skills/` into `~/.{agent}/skills/<vendor>__<package>/`. See `references/boost-core-user-scope.md` for the full contract.
@@ -861,6 +914,7 @@ repo-init now uses the shared `sandermuller/boost-skills` library (code-review, 
 
 ```bash
 gh release create X.Y.Z --notes-file internal/release-notes-X.Y.Z.md
+
 
 
 
@@ -949,6 +1003,7 @@ composer global exec -- boost sync --scope=user --all   # new: global skill refr
 
 
 
+
 ```
 
 `stubs/shared/boost.php` + repo-init's own `boost.php` docblocks updated accordingly.
@@ -978,6 +1033,7 @@ Upgrade repo-init itself:
 ```bash
 composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
+
 
 
 
