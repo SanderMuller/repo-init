@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Pre-`1.0.0` releases (0.x.x — historical) introduced breaking changes in MINOR bumps; from 1.0.0 onward repo-init follows standard SemVer (breaking changes ship as MAJOR only). The pre-1.0 entries below remain for reference.
 
+## [1.16.0](https://github.com/sandermuller/repo-init/compare/1.15.0...1.16.0) - 2026-09-22
+
+<!-- verified-sha: d611ce9ae3137049bfb83ee0d0d4b727998193c8 -->
+### Added
+
+- `laravel-project` bans the inline `@php(...)` Blade directive. Blade PHP is a multi-line `@php ... @endphp` block. Pint does not format Blade, so a unit test enforces the rule.
+- Two new `laravel-project` stubs: `.ai/rules/views.md`, a `laravel/boost` path-scoped rule for `resources/views/**/*.blade.php`, and `tests/Unit/Blade/InlinePhpDirectiveTest.php`, which fails on any `@php(` or `@php (` and lists each hit as `file:line`. Bootstrap adds the rule's row to `.ai/rules/index.md`.
+- A new audit finding: an existing inline directive in `resources/views` is NON-CANONICAL (LOW). The upgrade phase rewrites each hit as a block, and prompts to update a `laravel/boost` below 2.5, which does not load `.ai/rules`.
+
+**Full Changelog**: <https://github.com/SanderMuller/repo-init/compare/1.15.0...1.16.0>
+
 ## [1.15.0](https://github.com/sandermuller/repo-init/compare/1.14.0...1.15.0) - 2026-09-21
 
 <!-- verified-sha: 166541b747e733460a750bfba7effdf0a3ccc577 -->
@@ -22,6 +33,7 @@ Raise the floor and drop both packages in one pass:
 ```bash
 composer remove --dev rector/type-perfect symplify/phpstan-extensions --no-update
 composer require --dev tomasvotruba/type-coverage:^2.3 symplify/phpstan-rules:^14.12
+
 
 ```
 
@@ -50,7 +62,7 @@ composer require --dev tomasvotruba/type-coverage:^2.3 symplify/phpstan-rules:^1
 
 - Measured against a live Laravel application: the new PHPStan config boots, the registered Symplify rules report no findings, and `narrow_param` accounts for five.
 
-**Full Changelog**: <https://github.com/SanderMuller/repo-init/compare/1.14.0...1.15.0>
+**Full Changelog**: [https://github.com/SanderMuller/repo-init/compare/1.14.0...1.15.0](https://github.com/SanderMuller/repo-init/compare/1.14.0...1.15.0)
 
 ## [1.14.0](https://github.com/sandermuller/repo-init/compare/1.13.0...1.14.0) - 2026-09-15
 
@@ -123,6 +135,7 @@ composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
 
 
+
 ```
 
 **Full Changelog**: [https://github.com/SanderMuller/repo-init/compare/1.12.0...1.13.0](https://github.com/SanderMuller/repo-init/compare/1.12.0...1.13.0)
@@ -161,6 +174,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 **Full Changelog**: [https://github.com/SanderMuller/repo-init/compare/1.11.0...1.12.0](https://github.com/SanderMuller/repo-init/compare/1.11.0...1.12.0)
@@ -196,6 +210,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 **Full Changelog**: [https://github.com/SanderMuller/repo-init/compare/1.10.0...1.11.0](https://github.com/SanderMuller/repo-init/compare/1.10.0...1.11.0)
@@ -213,6 +228,7 @@ The tag left the interactive skill-tag picker. The stub hard-codes it:
 
 ```php
 ->withTags(['voice'__SKILL_TAGS__])
+
 
 
 
@@ -284,6 +300,7 @@ Audit phases gained a HIGH-severity rule for the duplicate registration. Upgrade
 ```bash
 composer remove --dev rector/type-perfect --no-update
 composer require --dev tomasvotruba/type-coverage:^2.3
+
 
 
 
@@ -694,6 +711,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 For existing scaffolded packages, the next audit walk will surface the `sandermuller/package-boost-php: true` entry as MEDIUM-stale. The upgrade phase handles removal correctly — bump first, then drop the entry.
@@ -797,6 +815,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 No further steps. Scaffold output, the `repo-init` skill, audit/upgrade phases, stubs — all identical to 0.8.1.
@@ -834,6 +853,7 @@ If you installed 0.8.0:
 ```bash
 composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
+
 
 
 
@@ -898,6 +918,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 The `composer global exec --` form runs `boost` from Composer's global `vendor/bin/` regardless of the user's current directory; the literal `--` stops Composer from interpreting boost's flags as its own. `--scope=user --all` publishes every globally-installed package's `resources/boost/skills/` into `~/.{agent}/skills/<vendor>__<package>/`. See `references/boost-core-user-scope.md` for the full contract.
@@ -914,6 +935,7 @@ repo-init now uses the shared `sandermuller/boost-skills` library (code-review, 
 
 ```bash
 gh release create X.Y.Z --notes-file internal/release-notes-X.Y.Z.md
+
 
 
 
@@ -1004,6 +1026,7 @@ composer global exec -- boost sync --scope=user --all   # new: global skill refr
 
 
 
+
 ```
 
 `stubs/shared/boost.php` + repo-init's own `boost.php` docblocks updated accordingly.
@@ -1033,6 +1056,7 @@ Upgrade repo-init itself:
 ```bash
 composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
+
 
 
 
