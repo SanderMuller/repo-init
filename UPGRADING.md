@@ -20,6 +20,14 @@ The `post-update-cmd` hook re-syncs the skill into `~/.claude/skills/sandermulle
 
 ---
 
+## 1.15.x → 1.16.0 (Blade: no inline `@php(...)`)
+
+Additive for repo-init itself — `composer global update sandermuller/repo-init`.
+
+- **Two new `laravel-project` stubs.** `.ai/rules/views.md` is a `laravel/boost` path-scoped rule: Blade PHP is a `@php ... @endphp` block, never the inline `@php(...)` directive. `tests/Unit/Blade/InlinePhpDirectiveTest.php` enforces it, because Pint does not format Blade. The rule file gets a row in `.ai/rules/index.md`.
+- **New audit finding.** An existing `@php(` or `@php (` in `resources/views` is NON-CANONICAL (LOW). The upgrade phase prompts, then rewrites each hit as a block. Do the rewrite in the same pass as the test copy, or the suite goes red.
+- **Package categories are not covered.** A package may have no `resources/views`, and Finder throws on a missing directory.
+
 ## 1.14.x → 1.15.0 (Rector 2.6 canon, PHPStan strictness, PHP floors)
 
 Additive for repo-init itself — `composer global update sandermuller/repo-init`. Every change lands in the `rector.php` canon, verified against `rector/rector` 2.6.7.

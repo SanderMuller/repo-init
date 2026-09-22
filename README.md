@@ -21,6 +21,7 @@ Walks an AI agent (Claude Code, Cursor, GitHub Copilot, …) through **bootstrap
 - Shared `.github/workflows/{phpstan,pint-check,rector-check,zizmor,update-changelog}.yml` + `.github/zizmor.yml` (rule config) + per-category `run-tests.yml` + `dependabot.yml`
 - `tests/Pest.php` (Pest 5, Tia engine on for local runs) or `phpunit.xml` — vendor-driven default. Pest 5 needs a PHP `^8.4` floor
 - `laravel-project` also gets the security canon — session-cookie flags as literals (`encrypt` / `secure` / `http_only` / `partitioned`), HSTS via `zae/strict-transport-security`, a `SecurityHeaders` middleware, and an `ApplicationIntegrityTest` that asserts the header contract. See [`references/laravel-security-canon.md`](references/laravel-security-canon.md)
+- `laravel-project` also gets a Blade rule — a `@php ... @endphp` block, never the inline `@php(...)` directive — as a `laravel/boost` rule in `.ai/rules/views.md`, enforced by `tests/Unit/Blade/InlinePhpDirectiveTest.php`
 - Per-category extras (testbench.yaml, workbench/, ServiceProvider, extension.neon, src/Plugin.{shape}.php for composer-plugin, etc.)
 
 ## Install (one-time per machine)

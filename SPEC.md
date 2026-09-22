@@ -562,6 +562,17 @@ replacement.
 Rationale for the literals: an `env()`-driven security flag fails open. A missing
 key or an un-updated `.env` downgrades the app silently.
 
+### 5.9 Blade: no inline `@php(...)`
+
+`laravel-project` only — the `laravel/laravel` skeleton ships `resources/views/welcome.blade.php`, so the directory the test scans exists.
+
+Blade PHP is a multi-line `@php ... @endphp` block, never the single-line `@php($x = ...)` directive. Pint does not format Blade, so a unit test enforces the rule, not a formatter. Taken from `hihaho/hihaho`.
+
+- `.ai/rules/views.md` — a `laravel/boost` path-scoped rule (`paths: resources/views/**/*.blade.php`), listed in `.ai/rules/index.md`. It stops an agent writing the directive.
+- `tests/Unit/Blade/InlinePhpDirectiveTest.php` — a plain `PHPUnit\Framework\TestCase` (no app boot). It scans `resources/views` with Symfony Finder and fails on any `@php(` or `@php (`, with every hit as `file:line`. It stops the directive being merged.
+
+Stubs: `stubs/laravel-project/.ai/rules/views.md`, `stubs/laravel-project/tests/Unit/Blade/InlinePhpDirectiveTest.php`.
+
 ---
 
 ## 6. Never-Touch List (`checklists/per-category-never-touch.md`)

@@ -38,6 +38,8 @@ For each MISSING file:
 2. Substitute placeholders.
 3. Write — prompt on conflict per `replace` mode.
 
+`.ai/rules/views.md` also needs its row in `.ai/rules/index.md` — same step as bootstrap §7. When the installed `laravel/boost` is below 2.5, prompt to update it, or the rule is inert. On a Pest repo, do not copy `tests/Unit/Blade/InlinePhpDirectiveTest.php`; write the Pest equivalent of the same scan instead.
+
 `README.append.md` is handled specially: APPEND its content to the existing `README.md` (laravel-project ships a README from `laravel new`). Never overwrite the README.
 
 ## Apply MISSING runtime deps
@@ -174,6 +176,7 @@ Don't touch `extra.laravel.providers` for laravel-project — Laravel uses `extr
 - **Both larastan + bare phpstan**: prompt to remove `phpstan/phpstan`.
 - **`composer.lock` NOT committed** (rare — Laravel convention is to commit it for apps): prompt to add to git.
 - **Two managed blocks in `.gitattributes`**: same as upgrade-laravel-package.md.
+- **Inline `@php(...)` directive in Blade**: prompt, then rewrite each hit as a `@php ... @endphp` block — one statement per line, each ending in `;`. Apply MISSING files copies `InlinePhpDirectiveTest` earlier in this phase, and the suite stays red until every hit is rewritten — do both in the same pass. Then run `php artisan test --filter=InlinePhpDirective`.
 - **`minimum-stability` / `prefer-stable`**: add `"minimum-stability": "stable"` + `"prefer-stable": true` to `composer.json` if absent or if `prefer-stable` isn't `true` (the Laravel skeleton ships both; see `references/version-defaults.md`). If `minimum-stability` is looser than `stable`, **default to tightening it to `stable`** — a deployed app rarely has a standing reason for a looser floor. Never loosen a passing `stable` baseline.
 
 ### Security canon fixes

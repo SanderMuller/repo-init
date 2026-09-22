@@ -160,6 +160,8 @@ For each file in `$REPO_INIT_HOME/stubs/laravel-project/`:
 - `config/hsts.php` — copy. Byte-identical in all three reference apps; no substitution.
 - `app/Http/Middleware/SecurityHeaders.php` — copy. The baseline header set.
 - `tests/Feature/ApplicationIntegrityTest.php` — copy. Skip if the repo uses Pest; write the Pest equivalent of the same two assertions instead.
+- `tests/Unit/Blade/InlinePhpDirectiveTest.php` — copy. Keep the path: the test finds the views directory with `dirname(__DIR__, 3)`. Skip if the repo uses Pest; write the Pest equivalent of the same scan instead.
+- `.ai/rules/views.md` — copy. The `laravel/boost` path-scoped rule for Blade: use a `@php ... @endphp` block, never the inline `@php(...)` directive. Pint does not format Blade, so the test above is the enforcement. Then add the row `| resources/views/**/*.blade.php | .ai/rules/views.md |` to `.ai/rules/index.md` (`append-only`). Create the index in the `laravel/boost` format when it is absent — `# Project Rules Index`, the "find the row whose globs match" line, and a `| Applies to | Rule file |` table.
 
 Then apply the security canon that is NOT a whole-file copy — see
 `$REPO_INIT_HOME/references/laravel-security-canon.md`:

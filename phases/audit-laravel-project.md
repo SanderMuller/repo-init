@@ -45,6 +45,8 @@ Ask the user (with auto-inferred defaults):
 - [ ] `config/hsts.php`
 - [ ] `app/Http/Middleware/SecurityHeaders.php` (any path is fine — mijntp uses `app/Http/Middleware`, collectiq `app/Middleware`; only flag MISSING when no such class exists)
 - [ ] `tests/Feature/ApplicationIntegrityTest.php` (or the Pest equivalent)
+- [ ] `tests/Unit/Blade/InlinePhpDirectiveTest.php` (or the Pest equivalent) — only when `resources/views` holds a `.blade.php` file
+- [ ] `.ai/rules/views.md`, listed in `.ai/rules/index.md` — same condition. The rule reaches agents only on `laravel/boost` 2.5+: older releases do not tell agents to read `.ai/rules/index.md`. When the installed `laravel/boost` is below 2.5, report that too.
 
 ## MISSING runtime deps (must be in `require`)
 
@@ -165,6 +167,7 @@ Same logic as `audit-laravel-package.md` §OUTDATED — apply each file's mode f
 - [ ] **PHP floor below the category floor in `require.php`** (`^8.4` for a package, `^8.5` for `laravel-project`): NON-CANONICAL. The bump is ATOMIC with dropping `rector/type-perfect` and `symplify/phpstan-extensions` — both successors need PHP `^8.4`. See `$REPO_INIT_HOME/references/version-defaults.md` "PHP".
 - [ ] `composer.lock` NOT committed: for laravel-project the lockfile IS committed (Laravel convention — apps pin deps). If missing, suggest committing.
 - [ ] Two managed blocks in `.gitattributes`.
+- [ ] **Inline `@php(...)` directive in Blade** (LOW severity): `grep -rnE '@php[[:blank:]]*\(' resources/views`. Canonical Blade PHP is a multi-line `@php ... @endphp` block. Pint does not format Blade, so nothing catches this except `InlinePhpDirectiveTest`. Report each hit as `file:line`. Flag NON-CANONICAL.
 
 ### Security canon (see `$REPO_INIT_HOME/references/laravel-security-canon.md`)
 
