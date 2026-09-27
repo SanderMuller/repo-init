@@ -22,11 +22,11 @@
     ],
     "require": {
         "php": "^8.3",
-        "sandermuller/boost-core": "^1.6"
+        "sandermuller/boost-core": "^1.13"
     },
     "require-dev": {
         "laravel/pint": "^1.30",
-        "sandermuller/boost-skills": "^2.27.0",
+        "sandermuller/boost-skills": "^2.48.0",
         "sandermuller/package-boost-php": "^1.0"
     },
     "scripts": {
