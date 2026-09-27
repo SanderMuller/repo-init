@@ -102,6 +102,7 @@ categories:
       - README.md           # laravel-project appends via README.append.md
       - .config/boost.php   # laravel-project uses laravel/boost, not boost-core (stub at stubs/shared/.config/boost.php)
       - tests/              # Laravel ships its own test suite
+      - .mcp.json           # laravel/boost writes its own; the phase copies ours only if absent
 
   laravel-package:
     mandatory:
@@ -133,6 +134,8 @@ categories:
         - sandermuller/package-boost-php  # framework-agnostic boost umbrella; pulls boost-core transitively
     optional: {}
     shared-exclusions: []
+    shared-stub-skip:
+      - .mcp.json  # shared stub runs `vendor/bin/testbench boost:mcp`; no testbench MCP here
 
   phpstan-extension:
     mandatory:
@@ -151,6 +154,8 @@ categories:
           - phpstan/phpstan
     shared-exclusions:
       - phpstan/phpstan  # because added to require
+    shared-stub-skip:
+      - .mcp.json  # shared stub runs `vendor/bin/testbench boost:mcp`; no testbench MCP here
 
   rector-extension:
     mandatory:
@@ -167,6 +172,8 @@ categories:
         require-dev: []
     shared-exclusions:
       - rector/rector  # because added to require
+    shared-stub-skip:
+      - .mcp.json  # shared stub runs `vendor/bin/testbench boost:mcp`; no testbench MCP here
 
   composer-plugin:
     mandatory:
@@ -183,6 +190,8 @@ categories:
         require-dev: []
     shared-exclusions:
       - orchestra/testbench  # plugins don't fit testbench
+    shared-stub-skip:
+      - .mcp.json  # shared stub runs `vendor/bin/testbench boost:mcp`; no testbench MCP here
     sub-flags:
       # Detected from src/, not from composer.json keys. Audit derives.
       command-provider:
