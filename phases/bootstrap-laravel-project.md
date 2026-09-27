@@ -83,11 +83,11 @@ Build the list from `$REPO_INIT_HOME/references/per-category-deps.md#laravel-pro
 - `laravel/pail`
 - `laravel/tinker` (Laravel may already include this — check)
 - `driftingly/rector-laravel`
-- All shared deps from `$REPO_INIT_HOME/references/shared-dev-deps.md` minus anything Laravel installer already pulled. Read the freshly-generated `composer.json` to determine what's already there. Common already-installed by `laravel new`: `laravel/pint`, `nunomaduro/collision`, `phpunit/phpunit` (when test-framework=phpunit). Anything else from the shared list needs explicit `composer require --dev`: `laravel/pao`, `phpstan/extension-installer`, `phpstan/phpstan-strict-rules`, `phpstan/phpstan-deprecation-rules`, `phpstan/phpstan-phpunit`, `rector/rector`, `spaze/phpstan-disallowed-calls`, `symplify/phpstan-rules` (`^14.12`), `tomasvotruba/cognitive-complexity`, `tomasvotruba/type-coverage` (`^2.3` — it bundles the abandoned `rector/type-perfect`, which must NOT be installed alongside it; see shared-dev-deps.md "Type-perfect dep"). (`laravel-project` does NOT take `sandermuller/package-boost-php` — `laravel/boost`, above, is its boost-family tool.)
+- All shared deps from `$REPO_INIT_HOME/references/shared-dev-deps.md` minus anything Laravel installer already pulled. Read the freshly-generated `composer.json` to determine what's already there. Common already-installed by `laravel new`: `laravel/pint`, `nunomaduro/collision`, `phpunit/phpunit` (when test-framework=phpunit). Anything else from the shared list needs explicit `composer require --dev`: `laravel/pao`, `phpstan/extension-installer`, `phpstan/phpstan-strict-rules`, `phpstan/phpstan-deprecation-rules`, `phpstan/phpstan-phpunit`, `rector/rector`, `spaze/phpstan-disallowed-calls`, `symplify/phpstan-rules` (`^14.17`), `tomasvotruba/cognitive-complexity`, `tomasvotruba/type-coverage` (`^2.3` — it bundles the abandoned `rector/type-perfect`, which must NOT be installed alongside it; see shared-dev-deps.md "Type-perfect dep"). (`laravel-project` does NOT take `sandermuller/package-boost-php` — `laravel/boost`, above, is its boost-family tool.)
 
 **OPTIONAL (only when opted in):**
 
-- `with-hihaho-rules` (default `y` for vendor=hihaho): `hihaho/phpstan-rules`, `hihaho/rector-rules`, `symplify/phpstan-rules` (pin `^14.12` — below 14.11 there is no error formatter and `phpstan-simplified` breaks; the shared list requires the same constraint, so one entry satisfies both).
+- `with-hihaho-rules` (default `y` for vendor=hihaho): `hihaho/phpstan-rules`, `hihaho/rector-rules`, `symplify/phpstan-rules` (pin `^14.17` — below 14.11 there is no error formatter and `phpstan-simplified` breaks; the shared list requires the same constraint, so one entry satisfies both).
 
 **Test framework** (default `phpunit` for laravel-project — Laravel ships PHPUnit by default; switching to Pest is a user opt-in):
 
@@ -96,7 +96,7 @@ Build the list from `$REPO_INIT_HOME/references/per-category-deps.md#laravel-pro
 
 **Step 1 — raise `require.php`** (mandatory, and before any composer command). Hand-edit `composer.json`: `"require": { "php": "^8.5" }`.
 
-`laravel new` writes `"php": "^8.3"`. `laravel-project` floors at the newest stable PHP (`^8.5`; see `$REPO_INIT_HOME/references/version-defaults.md` "PHP"), and the shared dev deps below need at least `^8.4` — `symplify/phpstan-rules: ^14.12` and `tomasvotruba/type-coverage: ^2.3` both require it. Edit the `require.php` line in `composer.json` by hand before the require call, so one resolution sees the final floor. Leaving it at `^8.3` scaffolds an app whose `run-tests.yml` runs PHP 8.5 against a `^8.3` constraint — it installs, but the floor is fiction and the next `composer update` on an 8.3 machine resolves a different dependency set.
+`laravel new` writes `"php": "^8.3"`. `laravel-project` floors at the newest stable PHP (`^8.5`; see `$REPO_INIT_HOME/references/version-defaults.md` "PHP"), and the shared dev deps below need at least `^8.4` — `symplify/phpstan-rules: ^14.17` and `tomasvotruba/type-coverage: ^2.3` both require it. Edit the `require.php` line in `composer.json` by hand before the require call, so one resolution sees the final floor. Leaving it at `^8.3` scaffolds an app whose `run-tests.yml` runs PHP 8.5 against a `^8.3` constraint — it installs, but the floor is fiction and the next `composer update` on an 8.3 machine resolves a different dependency set.
 
 **Step 2 — allow-list the plugin dev deps** (mandatory — do not fold this into the require call):
 
@@ -143,7 +143,7 @@ Likely conflicts:
 - `.gitattributes` — Laravel's is minimal; ours adds the package-boost managed block. **Use `managed-block` merge mode** (per `$REPO_INIT_HOME/references/upgrade-merge-modes.md`) — don't replace; insert our entries inside (or alongside) Laravel's content.
 - `phpunit.xml` — already present from Laravel. **Skip ours** (Laravel's is more app-appropriate).
 - `tests/Pest.php` — skip unless user opted into Pest in step 5.
-- `.github/workflows/` — Laravel may have its own (`tests.yml`, etc.); ours adds `phpstan.yml`, `pint-check.yml`, `rector-check.yml`, `zizmor.yml`, `update-changelog.yml`, plus the `.github/zizmor.yml` rule config (disables `unpinned-uses`). Different filenames → no conflict; just add.
+- `.github/workflows/` — Laravel may have its own (`tests.yml`, etc.); ours adds `phpstan.yml`, `pint-check.yml`, `rector-check.yml`, `zizmor.yml`, `update-changelog.yml`, plus the `.github/zizmor.yml` rule config (disables `unpinned-uses`). Different filenames → no conflict; just add. Then set `php-version: '8.5'` in `phpstan.yml`, `pint-check.yml` and `rector-check.yml`: the shared stubs pin `8.4`, and this category is always `^8.5` (see `$REPO_INIT_HOME/references/version-defaults.md` "PHP version in CI workflows").
 - `.mcp.json` — `laravel/boost` writes this on install. If absent (user opted out of Boost), copy ours.
 - `.config/boost.php` — **skip; do not copy.** `.config/boost.php` configures `sandermuller/boost-core`, which a `laravel-project` does not carry (it uses `laravel/boost`). It would be inert here. The other categories get it from `stubs/shared/.config/boost.php`; `laravel-project` is the one exclusion.
 

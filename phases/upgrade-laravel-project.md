@@ -63,7 +63,7 @@ Why it matters: Pest 5 requires PHP `^8.4` and PHPUnit 13. So the PHP floor bump
 2. Raise `pestphp/pest` and every `pestphp/*` plugin to `^5.0`.
 3. Replace `mrpunyapal/rector-pest` with `pestphp/pest-plugin-rector: ^5.0`, and add `pestphp/pest-plugin-phpstan: ^5.0` + `pestphp/pest-plugin-agent: ^5.0`.
 4. If the target carries `stolt/lean-package-validator`, raise it to `^6.0.1` — 6.0.0 caps `sebastian/diff` at `^7` and cannot install next to PHPUnit 13. Composer backtracks to 6.0.1 by itself, so this is a clarity fix, not a blocker.
-5. Apply the PHP >= 8.4 dep set in the same `composer.json` pass: remove `rector/type-perfect`, set `tomasvotruba/type-coverage: ^2.3`, and replace `symplify/phpstan-extensions: ^12.0` with `symplify/phpstan-rules: ^14.12`.
+5. Apply the PHP >= 8.4 dep set in the same `composer.json` pass: remove `rector/type-perfect`, set `tomasvotruba/type-coverage: ^2.3`, and replace `symplify/phpstan-extensions: ^12.0` with `symplify/phpstan-rules: ^14.17`. In the same pass, add the `parameters.symplify` block from the stub `phpstan.neon.dist` (all eight sets `false`); 14.17 turns every set on without it. See `$REPO_INIT_HOME/references/phpstan-config.md` "Symplify rules".
 6. If the target carries `orchestra/testbench`, change the constraint to `^11.0`; for a Laravel package category also drop every Laravel 12 / testbench 10 cell from `run-tests.yml` — Pest 5 needs `symfony/process: ^8.1` and testbench 10 pins `^7.2`. Leave the runtime `illuminate/*` range alone.
 7. Run one resolution: `composer update`.
 
@@ -127,7 +127,7 @@ Per-category mandatory `require-dev` for `laravel-project`:
 - `laravel/tinker` (Laravel may ship this already)
 - `driftingly/rector-laravel`
 
-Plus shared dev deps from `$REPO_INIT_HOME/references/shared-dev-deps.md` minus what Laravel installer typically already ships (read freshly-generated composer.json to confirm): `laravel/pao`, `laravel/pint` (already), `phpstan/extension-installer`, `phpstan/phpstan-strict-rules`, `phpstan/phpstan-deprecation-rules`, `phpstan/phpstan-phpunit`, `rector/rector`, `spaze/phpstan-disallowed-calls`, `symplify/phpstan-rules` (`^14.12` — see shared-dev-deps.md "Symplify formatter dep"), `tomasvotruba/cognitive-complexity`, `tomasvotruba/type-coverage` (`^2.3` — it bundles the abandoned `rector/type-perfect`, which must NOT be installed alongside it; see shared-dev-deps.md "Type-perfect dep"), `nunomaduro/collision` (Laravel ships), `orchestra/testbench` (typically NOT in laravel-project — skip). `laravel-project` does NOT take `sandermuller/package-boost-php` — `laravel/boost` (above) is its boost-family tool.
+Plus shared dev deps from `$REPO_INIT_HOME/references/shared-dev-deps.md` minus what Laravel installer typically already ships (read freshly-generated composer.json to confirm): `laravel/pao`, `laravel/pint` (already), `phpstan/extension-installer`, `phpstan/phpstan-strict-rules`, `phpstan/phpstan-deprecation-rules`, `phpstan/phpstan-phpunit`, `rector/rector`, `spaze/phpstan-disallowed-calls`, `symplify/phpstan-rules` (`^14.17` — see shared-dev-deps.md "Symplify formatter dep"), `tomasvotruba/cognitive-complexity`, `tomasvotruba/type-coverage` (`^2.3` — it bundles the abandoned `rector/type-perfect`, which must NOT be installed alongside it; see shared-dev-deps.md "Type-perfect dep"), `nunomaduro/collision` (Laravel ships), `orchestra/testbench` (typically NOT in laravel-project — skip). `laravel-project` does NOT take `sandermuller/package-boost-php` — `laravel/boost` (above) is its boost-family tool.
 
 Plus confirmed opt-ins:
 

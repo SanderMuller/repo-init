@@ -39,7 +39,7 @@
         "sandermuller/package-boost-php": "^1.0",
         "spaze/phpstan-disallowed-calls": "^4.13",
         "stolt/lean-package-validator": "^6.0.1",
-        "symplify/phpstan-rules": "^14.12",
+        "symplify/phpstan-rules": "^14.17",
         "tomasvotruba/cognitive-complexity": "^1.2",
         "tomasvotruba/type-coverage": "^2.3"
     },

@@ -15,7 +15,7 @@ shared:
       - phpstan/phpstan-phpunit
       - rector/rector
       - spaze/phpstan-disallowed-calls
-      - "symplify/phpstan-rules: ^14.12"  # requires PHP ^8.4; supersedes the abandoned symplify/phpstan-extensions (see shared-dev-deps.md "Symplify formatter dep")
+      - "symplify/phpstan-rules: ^14.17"  # requires PHP ^8.4; supersedes the abandoned symplify/phpstan-extensions (see shared-dev-deps.md "Symplify formatter dep")
       - tomasvotruba/cognitive-complexity
       - "tomasvotruba/type-coverage: ^2.3"  # bundles the abandoned rector/type-perfect; ^2.2 is NOT acceptable (2.2.2 registers no type_perfect params). rector/type-perfect must NOT be installed alongside it — see shared-dev-deps.md "Type-perfect dep"
       - nunomaduro/collision

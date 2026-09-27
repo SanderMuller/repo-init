@@ -8,11 +8,8 @@ includes:
     # - vendor/hihaho/phpstan-rules/extension.neon
 
 rules:
-    # symplify/phpstan-rules spreads its rules over opt-in config files. Its composer
-    # `extra.phpstan.includes` auto-loads only config/services/services.neon,
-    # ctor-rules.neon, mock-rules.neon and phpstan-extensions.neon (the error formatter
-    # the dep is carried for), so none of the rules below registers on its own. The list
-    # is hihaho/phpstan.neon's, which a large app converged on.
+    # Hand-picked symplify/phpstan-rules rules (its rule sets are off, see
+    # parameters.symplify). The list is hihaho/phpstan.neon's.
     - Symplify\PHPStanRules\Rules\StringFileAbsolutePathExistsRule
     - Symplify\PHPStanRules\Rules\Complexity\NoArrayMapWithArrayCallableRule
     - Symplify\PHPStanRules\Rules\Complexity\ForbiddenArrayMethodCallRule
@@ -27,6 +24,17 @@ rules:
 
 parameters:
     tmpDir: .cache/phpstan
+
+    # symplify/phpstan-rules >= 14.17 turns these rule sets on by default.
+    symplify:
+        naming: false
+        complexity: false
+        configurable: false
+        static: false
+        symfony: false
+        symfonyConfig: false
+        doctrine: false
+        phpunit: false
 
     paths:
         - app

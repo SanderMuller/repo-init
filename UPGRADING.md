@@ -20,6 +20,18 @@ The `post-update-cmd` hook re-syncs the skill into `~/.claude/skills/sandermulle
 
 ---
 
+## 1.16.x → 1.17.0 (symplify 14.17, scaffold fixes)
+
+Additive for repo-init itself — `composer global update sandermuller/repo-init`. Existing repos need the edits below by hand where noted: `phpstan.neon.dist` and `rector.php` are notify-only, so an upgrade never rewrites them.
+
+- **`symplify/phpstan-rules` floor is `^14.17`.** From 14.17.0 the package turns on all its rule sets (naming, complexity, configurable, static, symfony, symfonyConfig, doctrine, phpunit) through `phpstan/extension-installer`, so a repo that resolves 14.17 gets many new errors. Every stub `phpstan.neon.dist` now sets `parameters.symplify.<set>: false` for all eight. Those keys are unknown to older versions, so raise the constraint in the same pass. See `references/phpstan-config.md` "Symplify rules".
+- **`testbench.yaml` no longer lists `SanderMuller\PackageBoost\PackageBoostServiceProvider`.** `sandermuller/package-boost-laravel` has no such class, so `vendor/bin/testbench` and Larastan could not boot. The file is `replace` mode, so the upgrade phase fixes it.
+- **PHP version in CI workflows.** On a `^8.5` floor, every `8.4` in `.github/workflows/` becomes `8.5`: the `run-tests.yml` cells and the `php-version:` of `phpstan.yml`, `pint-check.yml` and `rector-check.yml`. An added `8.5` cell next to `8.4` could not install. `laravel-project` is always `^8.5`, so its shared workflows always take `8.5`. See `references/version-defaults.md` "PHP version in CI workflows".
+- **`rector.php` creates `.cache/rectorContainer/`.** Rector fails when `containerCacheDirectory` does not exist, which hit every local run on a fresh clone. Add the `is_dir(...) || mkdir(...)` line before `RectorConfig::configure()`.
+- **`.mcp.json` in `shared-stub-skip`** for `laravel-project`, `php-package`, `phpstan-extension`, `rector-extension` and `composer-plugin`, matching the bootstrap phases. No change to what an agent scaffolds.
+- **The `rector-extension` stub `run-tests.yml` runs `vendor/bin/phpunit`**, matching its PHPUnit-only stub. The Pest swap changes it to `vendor/bin/pest --ci`.
+- **The user-scope skill path is `~/.{agent}/skills/repo-init-user/`** with boost-core 1.13+. Checks accept the old `sandermuller__repo-init/` path too.
+
 ## 1.15.x → 1.16.0 (Blade: no inline `@php(...)`)
 
 Additive for repo-init itself — `composer global update sandermuller/repo-init`.

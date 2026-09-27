@@ -13,7 +13,7 @@ phpstan/phpstan-deprecation-rules
 phpstan/phpstan-phpunit
 rector/rector
 spaze/phpstan-disallowed-calls
-symplify/phpstan-rules        # ^14.12 — see "Symplify formatter dep" below
+symplify/phpstan-rules        # ^14.17 — see "Symplify formatter dep" below
 tomasvotruba/cognitive-complexity
 tomasvotruba/type-coverage    # ^2.3 — it bundles the abandoned rector/type-perfect; see "Type-perfect dep" below
 nunomaduro/collision
@@ -49,11 +49,11 @@ The boost-family umbrella is assigned **per category** — see the line above th
 
 `symplify/phpstan-extensions` was **abandoned upstream** at 12.0.2 (Nov 2025). Its features (the `symplify` error formatter used by the `phpstan-simplified` script, plus return-type extensions) were merged into `symplify/phpstan-rules` **14.11.0** (Jun 2026). The merged release is a drop-in for that usage: `--error-format symplify` works unchanged via `phpstan/extension-installer`.
 
-Canonical dep: **`symplify/phpstan-rules: ^14.12`**, unconditionally. It requires PHP `^8.4` and PHPStan `^2.2`; every category repo-init scaffolds floors at `^8.4` or higher, so there is no second branch. A constraint that can resolve below 14.11 does NOT satisfy the line — those versions ship no error formatter and `phpstan-simplified` breaks.
+Canonical dep: **`symplify/phpstan-rules: ^14.17`**, unconditionally. It requires PHP `^8.4` and PHPStan `^2.2`; every category repo-init scaffolds floors at `^8.4` or higher, so there is no second branch. A constraint that can resolve below 14.11 does NOT satisfy the line — those versions ship no error formatter and `phpstan-simplified` breaks. The floor is 14.17, not 14.11: 14.17 turns on all its rule sets by default, and the canonical `phpstan.neon.dist` turns them off with `parameters.symplify`, keys that older versions reject. See `phpstan-config.md` "Symplify rules".
 
-`symplify/phpstan-extensions` in `require-dev` is NON-CANONICAL on any repo. Upgrade: `composer remove --dev symplify/phpstan-extensions && composer require --dev symplify/phpstan-rules:^14.12`. No config change is needed for the formatter (`phpstan-simplified` keeps `--error-format symplify`) — but see `phpstan-config.md`, because the canonical `phpstan.neon.dist` also registers this package's opt-in rules, which auto-registration does not reach.
+`symplify/phpstan-extensions` in `require-dev` is NON-CANONICAL on any repo. Upgrade: `composer remove --dev symplify/phpstan-extensions && composer require --dev symplify/phpstan-rules:^14.17`. The formatter needs no config change (`phpstan-simplified` keeps `--error-format symplify`). The rule sets do: add the `parameters.symplify` block to `phpstan.neon.dist` in the same pass — see `upgrade-merge-modes.md` (`notify-only` exception) and `phpstan-config.md` "Symplify rules".
 
-For `laravel-project` with `--with-hihaho-rules`: that bundle already adds `symplify/phpstan-rules`; pin it `^14.12` and it satisfies this line on its own.
+For `laravel-project` with `--with-hihaho-rules`: that bundle already adds `symplify/phpstan-rules`; pin it `^14.17` and it satisfies this line on its own.
 
 ## Type-perfect dep (single source of truth)
 

@@ -24,9 +24,19 @@ Both floors shift together, one minor apart. When PHP 8.6 goes stable,
 
 The `^8.4` floor is what lets the canon carry NO abandoned packages. Both
 `symplify/phpstan-extensions` and `rector/type-perfect` existed in earlier canon
-only to serve a `^8.3` floor; their successors (`symplify/phpstan-rules ^14.12`,
+only to serve a `^8.3` floor; their successors (`symplify/phpstan-rules ^14.17`,
 `tomasvotruba/type-coverage ^2.3`) each require PHP `^8.4`. See
 `shared-dev-deps.md` → "Symplify formatter dep" and "Type-perfect dep".
+
+### PHP version in CI workflows
+
+The package stubs pin PHP `8.4` in `.github/workflows/`: the `run-tests.yml`
+matrix cells and the `php-version:` of `phpstan.yml`, `pint-check.yml` and
+`rector-check.yml`. When the repo's floor is `^8.5`, **replace** every `8.4`
+there with `8.5`. Do not add an `8.5` cell next to the `8.4` one: a `^8.5`
+floor cannot install on PHP 8.4, so that job fails. `laravel-project` is always
+`^8.5`, so its shared workflows always take the replacement; its own
+`run-tests.yml` stub already ships `8.5`.
 
 A repo below the floor is flagged NON-CANONICAL on its `require.php` constraint;
 the upgrade phase offers the bump as a single `composer.json` edit, which also

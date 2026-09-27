@@ -13,6 +13,9 @@ use Rector\Privatization\Rector\ClassMethod\PrivatizeFinalClassMethodRector;
 use Rector\TypeDeclaration\Rector\ArrowFunction\AddArrowFunctionReturnTypeRector;
 use RectorLaravel\Set\LaravelSetList;
 
+// Rector rejects a containerCacheDirectory that does not exist yet.
+is_dir(__DIR__ . '/.cache/rectorContainer') || mkdir(__DIR__ . '/.cache/rectorContainer', recursive: true);
+
 return RectorConfig::configure()
     ->withCache(
         cacheDirectory: './.cache/rector',

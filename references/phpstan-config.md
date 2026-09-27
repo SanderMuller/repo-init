@@ -27,6 +27,18 @@ rules:
 
 parameters:
     tmpDir: .cache/phpstan
+
+    # symplify/phpstan-rules >= 14.17 turns these rule sets on by default.
+    symplify:
+        naming: false
+        complexity: false
+        configurable: false
+        static: false
+        symfony: false
+        symfonyConfig: false
+        doctrine: false
+        phpunit: false
+
     level: max
     strictRules:
         allRules: true
@@ -71,15 +83,18 @@ parameters:
 
 ## Symplify rules — opt-in, registered by hand
 
-`symplify/phpstan-rules` spreads its rules over opt-in config files. Its
-`composer.json` `extra.phpstan.includes` lists only four —
-`config/services/services.neon`, `config/ctor-rules.neon`,
-`config/mock-rules.neon` and `config/phpstan-extensions.neon` (the error
-formatter the dep is carried for). Traced in the installed package, 14.13.1.
+From 14.17.0, `symplify/phpstan-rules` loads all its rule sets through
+`phpstan/extension-installer`: naming, complexity, configurable, static,
+symfony, symfonyConfig, doctrine and phpunit are on by default, switched by
+`parameters.symplify.*`. Traced in the installed package, 14.17.0
+(`config/phpstan-extensions.neon`). With the sets on, a plain `abstract class
+Base` already fails (`symplify.explicitAbstractPrefixName`).
 
-So `phpstan/extension-installer` registers NONE of the rules above. A config that
-only requires the package gets the formatter and nothing else. The `rules:` block
-is the whole of what repo-init enables.
+So every canonical `phpstan.neon.dist` sets all eight to `false`, and the
+`rules:` block is the whole of what repo-init enables. Older versions do not
+know these keys: the 14.15.3 schema has only `mocks`, `ctor` and the three
+return-type switches, so PHPStan rejects the config. The floor is therefore
+`^14.17` (see `shared-dev-deps.md` "Symplify formatter dep").
 
 Provenance: the list is `hihaho/phpstan.neon`'s, which a large application
 converged on. It is NOT the reference-app intersection — `mijntp` registers no

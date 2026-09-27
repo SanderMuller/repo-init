@@ -13,6 +13,9 @@ question — either side can be the stale one.
 use Rector\Caching\ValueObject\Storage\FileCacheStorage;
 use Rector\Config\RectorConfig;
 
+// Rector rejects a containerCacheDirectory that does not exist yet.
+is_dir(__DIR__ . '/.cache/rectorContainer') || mkdir(__DIR__ . '/.cache/rectorContainer', recursive: true);
+
 return RectorConfig::configure()
     ->withCache(
         cacheDirectory: './.cache/rector',
@@ -89,6 +92,9 @@ and removes it on a Pest target. Removing the last flag removes the whole call.
 container cache in the system temp directory, where
 `.github/workflows/rector-check.yml` — which caches `.cache/rectorContainer/` —
 cannot see it.
+Rector also fails when that directory does not exist, so each stub creates it
+before `RectorConfig::configure()`. Without that line, a local run on a fresh
+clone fails. CI does not hit this, because `rector-check.yml` creates the directory.
 
 ## Per-category `withPaths` and `withSets`
 

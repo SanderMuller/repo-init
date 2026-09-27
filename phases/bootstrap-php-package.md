@@ -40,12 +40,12 @@ Also verify file content has no literal `__VENDOR__` / `__PACKAGE__` / etc. plac
 
 For each file under `$REPO_INIT_HOME/stubs/php-package/`:
 
-- `composer.json` — substitute placeholders. Note: `type: library`, no `illuminate/*` in require, `phpstan/phpstan` (NOT `larastan/larastan`) in require-dev. The stub ships the canonical dep set: `pestphp/*: ^5.0`, `symplify/phpstan-rules: ^14.12`, `tomasvotruba/type-coverage: ^2.3`, and NO `rector/type-perfect` (keeping type-perfect alongside type-coverage >= 2.3 double-registers `MethodNodeAnalyser` and PHPStan aborts at boot). The set is unconditional — the `^8.4` floor is what every package category now takes. If `php=8.5`, add an `8.5` cell to `run-tests.yml`. See `references/shared-dev-deps.md` "Symplify formatter dep" and "Type-perfect dep".
+- `composer.json` — substitute placeholders. Note: `type: library`, no `illuminate/*` in require, `phpstan/phpstan` (NOT `larastan/larastan`) in require-dev. The stub ships the canonical dep set: `pestphp/*: ^5.0`, `symplify/phpstan-rules: ^14.17`, `tomasvotruba/type-coverage: ^2.3`, and NO `rector/type-perfect` (keeping type-perfect alongside type-coverage >= 2.3 double-registers `MethodNodeAnalyser` and PHPStan aborts at boot). The set is unconditional — the `^8.4` floor is what every package category now takes. If `php=8.5`, replace every `8.4` PHP version in `.github/workflows/` with `8.5` (see `$REPO_INIT_HOME/references/version-defaults.md` "PHP version in CI workflows"). See `references/shared-dev-deps.md` "Symplify formatter dep" and "Type-perfect dep".
 - `.lpv` — lean-package-validator config (no placeholders).
 - `PUBLIC_API.md` — substitute placeholders.
 - `src/__PACKAGE_STUDLY__.php` — copy + substitute file name.
 - `phpstan.neon.dist`, `rector.php` — copy + substitute `__PHP_VERSION_NEON__`.
-- `.github/workflows/run-tests.yml` — copy (2-cell PHP-only matrix on PHP 8.4, no Laravel axis; `php=8.5` needs an `8.5` cell).
+- `.github/workflows/run-tests.yml` — copy (2-cell PHP-only matrix on PHP 8.4, no Laravel axis; on `php=8.5` the cells become `8.5`).
 
 ### 4. Compose test-framework variant
 
@@ -55,7 +55,7 @@ The shipped stubs default to **Pest** for php-package. If the user picked PHPUni
 
 **(a) `composer.json`**: swap `pestphp/*` deps for `phpunit/phpunit`; change `"test"` from `vendor/bin/pest` to `vendor/bin/phpunit`; change `"test-coverage"` to `vendor/bin/phpunit --coverage-html=coverage`; remove `pestphp/pest-plugin: true` from `config.allow-plugins`. The PHPStan dep set does not change — it is the same on every accepted floor.
 
-**(b) `.github/workflows/run-tests.yml`**: change the last step's `run:` from `vendor/bin/pest --ci` to `vendor/bin/phpunit`. **Without this edit, CI fails immediately.** On `php=8.5`, also add the `8.5` matrix cells; the stub ships `8.4` cells only.
+**(b) `.github/workflows/run-tests.yml`**: change the last step's `run:` from `vendor/bin/pest --ci` to `vendor/bin/phpunit`. **Without this edit, CI fails immediately.** On `php=8.5`, the `8.4` cells become `8.5` (see `$REPO_INIT_HOME/references/version-defaults.md` "PHP version in CI workflows").
 
 **(c) `rector.php`**: add `->withComposerBased(phpunit: true)` after the `withPreparedSets()` block. The Pest-flavoured stub ships no such call; the PHPUnit composer-based set rewrites `TestCase` subclasses, which only a PHPUnit suite has. See `references/rector-config.md`.
 
@@ -149,4 +149,4 @@ Tested in CI via `check-bootstrap-idempotency.sh`.
 
 - **`larastan/larastan` accidentally installed**: php-package uses `phpstan/phpstan` only. If `larastan` is in deps, remove it: `composer remove --dev larastan/larastan`. Don't install both.
 - **`vendor/bin/lean-package-validator` warns**: missing export-ignore. Add to `.lpv` + update the managed block in `.gitattributes` per the contract.
-- **PHP version below the floor in target**: php-package floors at `^8.4` (per `references/version-defaults.md`). A lower floor cannot install `symplify/phpstan-rules ^14.12` or `tomasvotruba/type-coverage ^2.3`, so it is not a documentable deviation — raise the floor or drop those two deps explicitly with the user.
+- **PHP version below the floor in target**: php-package floors at `^8.4` (per `references/version-defaults.md`). A lower floor cannot install `symplify/phpstan-rules ^14.17` or `tomasvotruba/type-coverage ^2.3`, so it is not a documentable deviation — raise the floor or drop those two deps explicitly with the user.

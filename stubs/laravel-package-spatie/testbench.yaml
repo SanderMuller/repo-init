@@ -2,7 +2,6 @@ laravel: '@testbench'
 
 providers:
   - Laravel\Boost\BoostServiceProvider
-  - SanderMuller\PackageBoost\PackageBoostServiceProvider
   - __NAMESPACE__\__PACKAGE_STUDLY__ServiceProvider
   - Workbench\App\Providers\WorkbenchServiceProvider
 
