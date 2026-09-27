@@ -20,10 +20,10 @@ Before any phase:
 2. **If `REPO_INIT_HOME/SPEC.md` is missing**: tell the user:
    > Repo-init isn't installed. Run `composer global require sandermuller/repo-init` to install it (one-time, machine-wide). Then ask me again.
    And stop.
-3. **Verify skill is synced to user-level dir**: check `~/.claude/skills/sandermuller__repo-init/SKILL.md` exists. boost-core 0.2.0+ auto-syncs this on `composer global require` / `composer global update` (global-context auto-sync writes to `~/.{agent}/skills/{vendor}__{package}/` for every globally-installed package with `resources/boost/skills/`; boost-core 0.4.0+ namespaces the dir by the full `{vendor}__{package}` slug and auto-migrates the legacy `~/.{agent}/skills/repo-init/` dir on first sync post-upgrade). If missing — fallback:
+3. **Verify skill is synced to user-level dir**: check `~/.claude/skills/repo-init-user/SKILL.md` exists. `composer global exec -- boost sync --scope=user --all` publishes it (boost-core 1.13+ writes flat `~/.{agent}/skills/<skill>-user/` dirs; older boost-core wrote `~/.{agent}/skills/sandermuller__repo-init/`, which also counts). If neither exists — run the sync:
 
    ```bash
-   cd $REPO_INIT_HOME && vendor/bin/boost sync --scope=user
+   composer global exec -- boost sync --scope=user --all
    ```
 
    (Propagates into `~/.claude/skills/`, `~/.cursor/skills/`, `~/.amp/skills/`, etc.)
@@ -79,7 +79,7 @@ Before opening a bootstrap phase, gather these. Skill prompts the user for any y
 
 - `vendor` (e.g. `sandermuller`, `hihaho`, custom) — required.
 - `name` (kebab-case) — OPTIONAL. If provided, scaffold into `./<name>/`; if absent, scaffold into cwd (which must be empty modulo `.git/`). If cwd-empty precondition fails, stop and ask for a `name`.
-- `php` — default `8.3`. Accepted: `8.3`, `8.4`, `8.5`. `8.2` rejected (laravel/pao floor).
+- `php` — packages default `8.4`, accepted `8.4`, `8.5`. `laravel-project` takes `8.5` only. `8.3` and below rejected. See `$REPO_INIT_HOME/references/version-defaults.md` "PHP".
 - `laravel` (laravel-package only) — default `^12.0||^13.0`. (Laravel 11 dropped in 0.3.0 due to pao conflict.)
 - `test-framework` — default `pest` for vendor `sandermuller`, `phpunit` for vendor `hihaho`. `phpstan-extension` always `phpunit`.
 - `with-hihaho-rules` — default `y` for vendor `hihaho`, `N` otherwise.

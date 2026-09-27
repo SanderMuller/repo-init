@@ -17,12 +17,8 @@ composer global remove sandermuller/repo-init
 Optional skill cleanup (the synced user-level skill dirs survive `composer global remove`):
 
 ```bash
-rm -rf ~/.claude/skills/sandermuller__repo-init \
-       ~/.cursor/skills/sandermuller__repo-init \
-       ~/.agents/skills/sandermuller__repo-init \
-       ~/.junie/skills/sandermuller__repo-init \
-       ~/.kiro/skills/sandermuller__repo-init \
-       ~/.github/skills/sandermuller__repo-init
+rm -rf ~/.{claude,cursor,agents,junie,kiro,github}/skills/repo-init-user \
+       ~/.{claude,cursor,agents,junie,kiro,github}/skills/sandermuller__repo-init
 ```
 
 (Keep the synced skills if you might re-install later — re-running `composer global require sandermuller/repo-init` will re-sync them, so leaving them in place is harmless.)
@@ -40,7 +36,7 @@ vendor/bin/boost sync  # or skip — the project-local skill stays under .claude
 composer global require sandermuller/repo-init
 ```
 
-The post-install hook re-syncs the skill into `~/.claude/skills/sandermuller__repo-init/`. User is back where they were.
+Then run `composer global exec -- boost sync --scope=user --all` to re-sync the skill into `~/.claude/skills/repo-init-user/`. User is back where they were.
 
 ## Verify removal
 

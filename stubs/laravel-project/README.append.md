@@ -28,4 +28,4 @@ Run `composer qa` to format + run Rector + PHPStan in sequence.
 
 - This project uses [`laravel/boost`](https://github.com/laravel/boost) — Laravel's own AI tooling, installed by `laravel new --boost`. It writes `boost.json` and wires the MCP server.
 - Laravel Boost installs AI agent skills based on the packages detected in `composer.json`. Run `php artisan boost:install` once; `php artisan boost:update` re-syncs after dependency changes.
-- The global-install `repo-init` skill — synced to `~/.claude/skills/sandermuller__repo-init/` when you `composer global require sandermuller/repo-init` — can audit or upgrade this repo's tooling against the canonical baseline.
+- The global-install `repo-init` skill — synced to `~/.claude/skills/repo-init-user/` by `composer global exec -- boost sync --scope=user --all` after `composer global require sandermuller/repo-init` — can audit or upgrade this repo's tooling against the canonical baseline.

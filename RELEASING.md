@@ -52,7 +52,8 @@ What counts as breaking for repo-init:
 
    ```bash
    composer global require sandermuller/repo-init:X.Y.Z
-   ls -la ~/.claude/skills/sandermuller__repo-init/SKILL.md
+   composer global exec -- boost sync --scope=user --all
+   ls -la ~/.claude/skills/repo-init-user/SKILL.md
    ```
 
 7. **GitHub release** — publish with the drafted release notes as the body:
