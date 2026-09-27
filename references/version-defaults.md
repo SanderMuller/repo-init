@@ -53,6 +53,15 @@ Rationale: Laravel 11 was the previous floor but was dropped in repo-init 0.3.0 
 
 With `--test-framework=pest`, `require-dev` takes `orchestra/testbench: ^11.0` and CI tests Laravel 13 only — Pest 5 and testbench 10 cannot install together (`symfony/process` ^8.1 against ^7.2). The `require` range still allows Laravel 12. See `pest-vs-phpunit.md` → "Pest 5 and orchestra/testbench".
 
+### Laravel majors in the CI matrix
+
+The `run-tests.yml` matrix tests only the Laravel majors the package can install. Remove every `laravel: '12.*'` / `testbench: '10.*'` cell when either is true:
+
+- the `laravel` range is `^13.0`, or
+- the test framework is Pest (testbench 10 cannot install next to Pest 5).
+
+The `laravel-package-spatie` stub ships `12.*` and `13.*` cells; the Pest stubs already ship `13.*` only. A matrix trimmed this way is correct, not OUTDATED.
+
 ## Pest
 
 - **Floor**: `^5.0`

@@ -23,7 +23,7 @@ Per-file declaration of how the upgrade phase reconciles a stub against an exist
 - `.github/dependabot.yml`
 - `tests/Pest.php` (pest-only; replaced when test-framework is pest)
 - `phpunit.xml` (phpunit-only)
-- Category-specific run-tests workflows: `.github/workflows/run-tests.yml` — exception: a matrix aligned to the repo's `require.php` floor (cells below the floor removed, cells added above the stub's coverage — e.g. an `8.5` cell on a `^8.5` floor) is correct, not OUTDATED; the package stubs ship `8.4` cells and `laravel-project` ships `8.5`. A test step that matches the repo's test framework is also correct: `vendor/bin/pest --ci` for Pest, `vendor/bin/phpunit` for PHPUnit, whichever runner the stub ships
+- Category-specific run-tests workflows: `.github/workflows/run-tests.yml` — exception: a matrix aligned to the repo's `require.php` floor (cells below the floor removed, cells added above the stub's coverage — e.g. an `8.5` cell on a `^8.5` floor) is correct, not OUTDATED; the package stubs ship `8.4` cells and `laravel-project` ships `8.5`. A matrix without Laravel majors the repo cannot install is also correct (see `version-defaults.md` "Laravel majors in the CI matrix"). A test step that matches the repo's test framework is also correct: `vendor/bin/pest --ci` for Pest, `vendor/bin/phpunit` for PHPUnit, whichever runner the stub ships
 - `testbench.yaml` (laravel-package only)
 - `workbench/app/Providers/WorkbenchServiceProvider.php` (laravel-package only)
 - `extension.neon` skeleton (phpstan-extension only; the `services:` block is user-owned past bootstrap — but the file structure is `replace` and the user is expected to edit only the inner blocks)

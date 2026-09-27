@@ -16,7 +16,7 @@ Ask the user up-front for any value not already known. Skill (`SKILL.md` "Knobs 
 - `name` (kebab-case) — optional per target-dir rule.
 - `description` — required, one-line summary.
 - `php` — default `8.4`. Accepted: `8.4`, `8.5`. Reject `8.3` and below. See `$REPO_INIT_HOME/references/version-defaults.md` "PHP" — packages floor one minor below the newest stable PHP.
-- `laravel` — default `^12.0||^13.0`. Other options: `^13.0`. (Laravel 11 support dropped in repo-init 0.3.0 because `laravel/pao` 1.x conflicts with Laravel <12.)
+- `laravel` — default `^12.0||^13.0`. Other options: `^13.0`. (Laravel 11 support dropped in repo-init 0.3.0 because `laravel/pao` 1.x conflicts with Laravel <12.) With `^13.0`, step 5 removes the `laravel: '12.*'` cells from `run-tests.yml`.
 - `test-framework` — default `pest` for `sandermuller`, `phpunit` for `hihaho`.
 - `author-name` / `author-email` — defaults from `git config user.name` / `git config user.email`.
 - `variant` — `sander` (default) or `spatie`. Auto-set to `spatie` if vendor is `hihaho`. If `spatie`, the stub source is `$REPO_INIT_HOME/stubs/laravel-package-spatie/` instead of `$REPO_INIT_HOME/stubs/laravel-package/`.
@@ -72,6 +72,7 @@ Special handling for `tests/`: copy `tests/Pest.php` only when `test-framework=p
 - (pest) `composer.json` `require-dev` contains NO `phpunit/phpunit` (Pest pulls it transitively at the right version; explicit entry can pin a conflicting version)
 - (phpunit) `tests/**/*.php` contain NO pest syntax: `grep -rE '^(test|it)\(|^expect\(' tests/` returns no hits; (pest) inverse check optional
 - (pest) `composer.json` `config.allow-plugins."pestphp/pest-plugin"` is `true`
+- (pest, or `laravel=^13.0`) `.github/workflows/run-tests.yml` has no `laravel: '12.*'` cells
 
 **If precondition met:** skip — variant already composed.
 
@@ -87,6 +88,7 @@ Special handling for `tests/`: copy `tests/Pest.php` only when `test-framework=p
 **(b) `.github/workflows/run-tests.yml`**:
 
 - Change the last step's `run:` from `vendor/bin/pest --ci` (pest default) to `vendor/bin/phpunit` (phpunit) — or vice versa. **Without this edit, CI fails immediately because the workflow runs the wrong test binary.**
+- Pest, or `laravel=^13.0`: remove the `laravel: '12.*'` / `testbench: '10.*'` cells (only the `laravel-package-spatie` stub ships them). Apply this even when the framework is the stub's default, so a spatie + PHPUnit + `^13.0` target runs only this edit. See `$REPO_INIT_HOME/references/version-defaults.md` "Laravel majors in the CI matrix".
 
 **(c) `rector.php`** — the `phpunit:` flag on `withComposerBased()` follows the chosen framework:
 
