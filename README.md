@@ -12,7 +12,7 @@ AI playbook + stub library for bootstrapping the canonical Sander / hihaho dev s
 
 Walks an AI agent (Claude Code, Cursor, GitHub Copilot, …) through **bootstrap**, **audit**, or **upgrade** of a PHP repo against a canonical baseline:
 
-- `pint.json`, `phpstan.neon.dist`, `phpstan-baseline.neon`, `rector.php` — code-quality tooling. PHPStan runs at `level: max` with `strictRules.allRules`, 100% type coverage and `symplify/phpstan-rules`' opt-in rules registered by hand (the package auto-registers none of them)
+- `pint.json`, `phpstan.neon.dist`, `phpstan-baseline.neon`, `rector.php` — code-quality tooling. PHPStan runs at `level: max` with `strictRules.allRules`, 100% type coverage and a hand-picked `symplify/phpstan-rules` list (its rule sets are switched off, because 14.17 turns them all on)
 - A PHP floor per repo kind — `^8.5` for `laravel-project` (an application takes the newest stable PHP), `^8.4` for every package and plugin category. PHP 8.3 is not supported
 - `.editorconfig`, `.gitattributes` (with the `# >>> package-boost (managed) >>>` block — sentinel name preserved for backward compat; owned by `package-boost-php`), `.gitignore`
 - `.mcp.json` (Laravel-aware categories only; the framework-agnostic categories — `php-package`, `composer-plugin`, `phpstan-extension`, `rector-extension`, `skill-bundle` — skip it)
@@ -31,9 +31,7 @@ composer global require sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
 ```
 
-The second command publishes the `repo-init` skill (and any other globally-installed [`sandermuller/boost-core`](https://github.com/SanderMuller/boost-core) consumer's skills) into `~/.claude/skills/repo-init-user/`, `~/.cursor/skills/repo-init-user/`, `~/.agents/skills/repo-init-user/`, etc. (boost-core before 1.13 used `sandermuller__repo-init/`). The skill then auto-activates in any project. Re-run `composer global exec -- boost sync --scope=user --all` after each `composer global update` to refresh. (The `composer global exec --` form runs `boost` from Composer's global `vendor/bin/` regardless of your current directory; the literal `--` separator stops Composer from interpreting `boost`'s flags as its own.) See `references/boost-core-user-scope.md` for the full contract.
-
-> **Changed in boost-core 0.6.0.** Before 0.6.0 boost-core was a Composer plugin and auto-synced on every `composer global` install/update. 0.6.0 removed the plugin (boost-core is now `type: library`); the sync is the one-line manual command above instead. Older boost-core migrations (e.g. the 0.4.0 user-scope slug rename) are covered in [`UPGRADING.md`](UPGRADING.md).
+The second command publishes the `repo-init` skill, and the skills of every other globally installed [`sandermuller/boost-core`](https://github.com/SanderMuller/boost-core) consumer, into `~/.{claude,cursor,agents,…}/skills/repo-init-user/` (`sandermuller__repo-init/` before boost-core 1.13). The skill then activates in any project. `composer global exec --` runs `boost` from Composer's global `vendor/bin/`, and the `--` stops Composer from reading `boost`'s flags as its own. See `references/boost-core-user-scope.md` for the full contract.
 
 ## Use
 
@@ -52,7 +50,7 @@ composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
 ```
 
-The second line is required: boost-core 0.6.0 removed the auto-sync plugin, so refreshing the user-scope skill dirs is a manual command after every update.
+The second line refreshes the user-scope skill dirs. Composer does not run it for you.
 
 ## Repo categories supported
 
@@ -98,7 +96,7 @@ Optional skill cleanup (the synced user-level skill dirs survive `composer globa
 rm -rf ~/.{claude,cursor,agents,github,amp,gemini,junie,kiro,opencode}/skills/{repo-init-user,sandermuller__repo-init}
 ```
 
-(boost-core 0.6+ fans into 9 agent targets — the brace expansion above clears all of them in one line. Keep the synced skills if you might re-install later — re-running the install + `composer global exec -- boost sync --scope=user --all` re-syncs them, so leaving them in place is harmless.)
+(The brace expansion covers all 9 agent targets. Keep the synced skills if you might re-install later: the install and sync commands overwrite them.)
 
 ## Design
 
@@ -116,7 +114,7 @@ Highlights:
 
 Runtime (`require`) — what `composer global require sandermuller/repo-init` pulls in for every consumer:
 
-- [`sandermuller/boost-core`](https://github.com/SanderMuller/boost-core) — `type: library` from 0.6.0 (the Composer plugin was removed in that release). Ships the standalone `vendor/bin/boost` bin and the `BoostAutoSync::run` auto-sync engine (silent on no-op installs; prints the one-line sync summary when `wrote>0`). Categories that depend on boost-core directly (`skill-bundle`) wire `BoostAutoSync::run` in `post-install-cmd` / `post-update-cmd`; package wrapper categories instead wire their wrapper's namespace façade (`PackageBoostPhp\Scripts\AutoSync::run` / `PackageBoostLaravel\Scripts\AutoSync::run`), which delegates to it — so the scaffold references only a class from its own direct dependency. `laravel-project` is the exception: it wires a dev-mode-guarded `artisan project-boost:sync` call instead, because `BoostAutoSync::run` runs the bare `vendor/bin/boost sync` and bypasses `sandermuller/project-boost-laravel`'s injection pipeline. See [`references/composer-scripts.md`](references/composer-scripts.md).
+- [`sandermuller/boost-core`](https://github.com/SanderMuller/boost-core) — `type: library`. Ships the `vendor/bin/boost` bin and the `BoostAutoSync::run` auto-sync engine. `skill-bundle` wires `BoostAutoSync::run` in `post-install-cmd` / `post-update-cmd`. The package categories wire their wrapper's `AutoSync::run` façade, which delegates to it. `laravel-project` wires a dev-mode-guarded `artisan project-boost:sync` call instead. See [`references/composer-scripts.md`](references/composer-scripts.md).
 
 Maintenance (`require-dev`) — used only by repo-init's own dev workflow; NOT propagated to consumers (Composer never installs a required package's `require-dev`):
 
