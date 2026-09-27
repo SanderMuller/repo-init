@@ -81,9 +81,44 @@ Before opening a bootstrap phase, gather these. Skill prompts the user for any y
 - `name` (kebab-case) — OPTIONAL. If provided, scaffold into `./<name>/`; if absent, scaffold into cwd (which must be empty modulo `.git/`). If cwd-empty precondition fails, stop and ask for a `name`.
 - `php` — packages default `8.4`, accepted `8.4`, `8.5`. `laravel-project` takes `8.5` only. `8.3` and below rejected. See `$REPO_INIT_HOME/references/version-defaults.md` "PHP".
 - `laravel` (laravel-package only) — default `^12.0||^13.0`. (Laravel 11 dropped in 0.3.0 due to pao conflict.)
-- `test-framework` — default `pest` for vendor `sandermuller`, `phpunit` for vendor `hihaho`. `phpstan-extension` always `phpunit`.
+- `test-framework` — default `pest` for vendor `sandermuller`, `phpunit` for vendor `hihaho`. `phpstan-extension` always `phpunit`. `laravel-project` defaults to `phpunit` for every vendor; Pest is a user opt-in.
 - `with-hihaho-rules` — default `y` for vendor `hihaho`, `N` otherwise.
 - `skill-tags` — the `sandermuller/boost-skills` tags to activate in the scaffolded `.config/boost.php`. **Walk the user through this interactively** — present `php`, `frontend`, `github`, `jira` as a checklist and let them confirm/adjust; do not silently auto-config. Pre-select sensible defaults by category: php-package / laravel-package / phpstan-extension / rector-extension / composer-plugin / skill-bundle pre-select `php`; add `frontend` for a frontend-facing package; `github` / `jira` are opt-in. Picking none is valid. The chosen tags fill the `__SKILL_TAGS__` placeholder inside the array argument of `->withTags(['voice'__SKILL_TAGS__])` in `.config/boost.php`, each rendered with a leading comma (e.g. `, 'php', 'jira'` → `->withTags(['voice', 'php', 'jira'])`); none → the placeholder is empty and the line reads `->withTags(['voice'])` (the universal boost-skills skills still sync). **`voice` is not part of this picker** — the stub hard-codes it, every scaffolded repo keeps it, and it never appears in the checklist (see `references/placeholder-rules.md`). boost-core 0.20+ takes an array, not variadic args. `laravel-project` has no `.config/boost.php` — skip this knob for it.
+
+## Fast path: the `repo new` CLI
+
+`sandermuller/repo-new` (`composer global require sandermuller/repo-new`) does the mechanical part of a bootstrap — stubs, placeholders, `composer install` / `require` — in one command. Use it when all of these are true:
+
+- `repo --version` prints `repo-new 1.2.0` or later. Older versions write broken scaffolds against this repo-init.
+- The user gave a `name`. `repo new` needs one for package categories, so a scaffold into cwd stays on the manual path.
+- The category is one of `laravel-project`, `laravel-package`, `php-package`, `phpstan-extension`, `rector-extension`, `composer-plugin`, `skill-bundle`. `filament-plugin` and `nova-tool` stay on the manual path.
+
+Collect the knobs above first, then pass them as flags:
+
+```bash
+repo new <name> --type=<category> --vendor=<vendor> --description="<one line>" \
+    --php=<php> --test-framework=<pest|phpunit> --skill-tags=<php,jira> -n
+```
+
+| Knob | Flag |
+|---|---|
+| `name` | positional `<name>` |
+| `php`, `laravel`, `test-framework`, `skill-tags` | `--php`, `--laravel`, `--test-framework`, `--skill-tags` (comma-separated, never `voice`) |
+| laravel-package stub variant (sander / spatie) | `--variant=sander\|spatie` |
+| `with-hihaho-rules` (laravel-project) | `--with-hihaho-rules` / `--no-with-hihaho-rules`; health checks: `--with-health-checks` |
+| Laravel-aware (phpstan / rector extension) | `--laravel-aware` |
+| composer-plugin shape | `--plugin-shape=command-provider\|event-subscriber\|both\|none` |
+
+`repo new --help` lists every flag. Do not pass `--commit`: the user decides when to commit.
+
+Then `cd <name>` and open `$REPO_INIT_HOME/phases/bootstrap-<category>.md`. `repo new` already created the target, so skip every target-directory check and step: the "Target-dir verification" section of `checklists/preflight.md`, the phase's `mkdir <name>` / `cd <name>` / empty-cwd check, and `laravel new` for `laravel-project`. The non-empty directory is expected. Run every other step. Each has a skip-if-done guard, so on a complete scaffold the phase only verifies the result and prints the next steps. Fix anything it reports as missing.
+
+If `repo` is not on PATH or is older than 1.2.0, use the manual path below. If `repo new` exits non-zero:
+
+- It wrote nothing → remove the empty `<name>/` directory if `repo new` created one, then use the manual path below.
+- It wrote files → treat the target as a partial scaffold. Run the phase the same way as above; the skip-if-done guards resume where `repo new` stopped. Report the `repo new` error to the user.
+
+Say which path ran in the summary.
 
 ## Greenfield package bootstrap (no composer.json yet)
 

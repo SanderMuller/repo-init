@@ -43,6 +43,8 @@ Ask Claude (or any agent with the synced skill):
 
 The agent reads the `repo-init` skill, decides intent + category, and opens the matching phase file from `$(composer global config home)/vendor/sandermuller/repo-init/phases/`. Everything happens in your conversation; nothing is written to your target repo by repo-init itself (the agent does the writes, following the phase's instructions).
 
+For a new repo, the [`repo new`](https://github.com/SanderMuller/repo-new) CLI (`composer global require sandermuller/repo-new`) does the mechanical scaffolding in one command. The skill uses it when version 1.2.0 or later is installed, and falls back to the manual phase steps otherwise.
+
 ## Update
 
 ```bash
