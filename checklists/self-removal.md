@@ -14,14 +14,15 @@ Mostly N/A. Repo-init is installed globally (`composer global require sandermull
 composer global remove sandermuller/repo-init
 ```
 
-Optional skill cleanup (the synced user-level skill dirs survive `composer global remove`):
+The synced user-level skill dirs survive `composer global remove`. The next `composer global exec -- boost sync --scope=user --all` deletes them (an edited copy stays), as long as boost-core is still installed globally. Otherwise, clean up by hand:
 
 ```bash
-rm -rf ~/.{claude,cursor,agents,junie,kiro,github}/skills/repo-init-user \
-       ~/.{claude,cursor,agents,junie,kiro,github}/skills/sandermuller__repo-init
+rm -rf ~/.{claude,cursor,agents,amp,gemini,junie,kiro,opencode}/skills/{repo-init-user,sandermuller__repo-init}
 ```
 
-(Keep the synced skills if you might re-install later — re-running `composer global require sandermuller/repo-init` will re-sync them, so leaving them in place is harmless.)
+A `~/.{agent}/skills/repo-init/` folder from before boost-core 0.4 may also exist. No manifest covers it, so check that it is repo-init's before you delete it.
+
+(Keep the synced skills if you might re-install later — the install and sync commands overwrite them, so leaving them in place is harmless.)
 
 ## Project-local removal (if installed locally per §3.4)
 

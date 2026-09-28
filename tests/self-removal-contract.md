@@ -1,81 +1,78 @@
 # Self-removal contract
 
-Documents the survives-vs-clean tradeoff when removing `sandermuller/repo-init` from a target environment, plus the load-bearing contract with `sandermuller/package-boost` that makes the "survives" case work.
+Documents what stays behind when `sandermuller/repo-init` is removed from a machine, and the property of `sandermuller/boost-core`'s user-scope sync that decides it.
 
-This file isn't a runtime artifact — it's a design document for contributors. The matching logic lives in `checklists/self-removal.md`.
+This file isn't a runtime artifact — it's a design document for contributors. The matching user-facing steps live in `checklists/self-removal.md`. The sync mechanics are in `references/boost-core-user-scope.md`.
 
 ## The contract (one line)
 
-> When `package-boost:sync` copies `.ai/skills/<package>/SKILL.md` from `vendor/<package>/.ai/skills/` to `~/.claude/skills/<package>/SKILL.md` (user-scope) or `<target>/.claude/skills/<package>/SKILL.md` (project-scope), it **copies** the file. It does **not** symlink.
+> `boost sync --scope=user --all` **copies** `resources/boost/skills/repo-init/SKILL.md` from the global vendor dir to `~/.{agent}/skills/repo-init-user/SKILL.md` as a regular file. It does **not** symlink.
 
-This is the property that makes "you can `composer global remove sandermuller/repo-init` and still keep the skill" work.
+So removing the package does not break the skill copy it left behind.
 
 ## Why this matters
 
-In v7's global-install model:
+In the global-install model:
 
-1. User runs `composer global require sandermuller/repo-init`.
-2. `post-install-cmd` fires `vendor/bin/boost sync --scope=user`.
-3. package-boost reads `vendor/sandermuller/repo-init/.ai/skills/repo-init/SKILL.md` from the global vendor dir.
-4. package-boost **copies** the file to `~/.claude/skills/sandermuller__repo-init/SKILL.md`.
-5. From any future Claude Code session in any project, the skill auto-activates.
+1. The user runs `composer global require sandermuller/repo-init`, then `composer global exec -- boost sync --scope=user --all`.
+2. boost-core reads `vendor/sandermuller/repo-init/resources/boost/skills/repo-init/SKILL.md` from the global vendor dir.
+3. boost-core **copies** it to `~/.claude/skills/repo-init-user/SKILL.md` (and the other agent dirs) and records it in `~/.boost/manifests/sandermuller__repo-init.json`.
+4. From any future session in any project, the skill auto-activates.
 
 If `composer global remove sandermuller/repo-init` happens later:
 
 - `vendor/sandermuller/repo-init/` is deleted.
-- BUT `~/.claude/skills/sandermuller__repo-init/SKILL.md` remains (copy, not symlink).
-- The skill is still activatable. When invoked, its pre-flight detects the missing `vendor/` and prompts the user to re-install.
+- `~/.claude/skills/repo-init-user/SKILL.md` stays (copy, not symlink). The skill still activates; its pre-flight finds no `SPEC.md` under the global vendor dir and tells the user to re-install.
+- The next `boost sync --scope=user --all` removes it, if boost-core is still installed globally through another package. boost-core reconciles removed packages: it deletes the files the package's manifest names, when their hash still matches, and then the manifest. An edited copy stays. When repo-init was the only global package that required boost-core, the removal also removes boost-core, and the copy stays until the user deletes it.
 
-If package-boost used symlinks instead, the second-to-last bullet would break — removing the global package would break the user-scope skill.
+If boost-core wrote symlinks instead, the second bullet would break: removing the package would leave a dangling link.
 
 ## Verifying the contract
 
 ```bash
 # Install
 composer global require sandermuller/repo-init
+composer global exec -- boost sync --scope=user --all
 
 # Confirm it's a copy, not a symlink:
-ls -la ~/.claude/skills/sandermuller__repo-init/SKILL.md
+ls -la ~/.claude/skills/repo-init-user/SKILL.md
 # Expected: regular file (no `->` arrow indicating a symlink target).
 
-# Compute hashes — should be identical right after install:
+# The copy is not byte-identical to the vendor source: the sync renames the
+# skill to `repo-init-user` in its frontmatter. Compare it with the hash boost-core
+# recorded in the ownership manifest instead — they match right after the sync:
 # (sha256sum on Linux; on macOS use `shasum -a 256` instead.)
-sha256sum "$(composer global config home)/vendor/sandermuller/repo-init/resources/boost/skills/repo-init/SKILL.md"
-sha256sum ~/.claude/skills/sandermuller__repo-init/SKILL.md
+sha256sum ~/.claude/skills/repo-init-user/SKILL.md
+grep -o '"\.claude/skills/repo-init-user/SKILL.md": *"[0-9a-f]*"' ~/.boost/manifests/sandermuller__repo-init.json
 
 # Now remove:
 composer global remove sandermuller/repo-init
 
-# Confirm user-scope skill survives:
-ls -la ~/.claude/skills/sandermuller__repo-init/SKILL.md
+# Confirm the user-scope skill survives the removal:
+ls -la ~/.claude/skills/repo-init-user/SKILL.md
 # Expected: still present, still a regular file with the previous hash.
+
+# Confirm the next user-scope sync reaps it. Skip this step when the removal also
+# removed boost-core (`composer global show sandermuller/boost-core` fails):
+composer global show sandermuller/boost-core && composer global exec -- boost sync --scope=user --all
+ls -la ~/.claude/skills/repo-init-user/SKILL.md
+# Expected: gone.
 ```
 
-If the second `ls` shows the file is gone or the symlink target is broken, the contract is violated — file an issue against `sandermuller/package-boost`.
+If the second `ls` shows the file is gone or a broken symlink, the copy contract is violated — file an issue against `sandermuller/boost-core`. If the last `ls` still shows an unedited file, reconcile-on-remove did not run — check that `~/.boost/manifests/sandermuller__repo-init.json` exists.
 
 ## What happens if the contract breaks
 
-If package-boost shifts to symlinks (intentionally or accidentally), repo-init's user-scope skill becomes a dangling reference after `composer global remove`. The fix per `checklists/self-removal.md`:
+If boost-core shifts to symlinks, repo-init's user-scope skill becomes a dangling reference after `composer global remove`. The fix per `checklists/self-removal.md`:
 
-1. Detect the broken symlink: `readlink ~/.claude/skills/sandermuller__repo-init/SKILL.md` returns a path that doesn't exist.
+1. Detect the broken symlink: `readlink ~/.claude/skills/repo-init-user/SKILL.md` returns a path that doesn't exist.
 2. User must either:
-   - Re-install: `composer global require sandermuller/repo-init`. Skill works again.
-   - Manually clean: `rm ~/.claude/skills/sandermuller__repo-init/SKILL.md`. Skill won't auto-activate next session.
-
-We surface this in `checklists/self-removal.md` "Optional skill cleanup" as a forward guard.
-
-## Alternative: explicit user-scope persistence
-
-If we wanted to make the survives-vs-clean tradeoff EXPLICITLY user-controlled (rather than implicit-via-package-boost-behavior), the design would change:
-
-- Add a flag at install time: `composer global require sandermuller/repo-init --no-persist-skill` would skip the user-scope sync.
-- Add an explicit "persist skill on uninstall" step in `composer global remove sandermuller/repo-init`. (Composer doesn't directly support pre-uninstall hooks for global packages — would need a wrapper script.)
-
-Both options add UX complexity for a property that's already free in the current package-boost-copies-not-symlinks model. We defer them to v0.2+ if user feedback indicates the implicit behavior is surprising.
+   - Re-install: `composer global require sandermuller/repo-init`, then sync. Skill works again.
+   - Manually clean: `rm -rf ~/.claude/skills/repo-init-user`. Skill won't auto-activate next session.
 
 ## Test in CI
 
-Phase 7's integrity workflow does NOT test this contract at the runtime level (it would require installing repo-init globally on the CI runner, which is destructive). Instead:
+The integrity workflow does NOT test this contract at the runtime level (it would require installing repo-init globally on the CI runner, which is destructive). Instead:
 
 - `.github/workflows/integrity.yml` validates the spec + stub layout.
 - This file (`tests/self-removal-contract.md`) serves as the design assertion.
@@ -84,5 +81,6 @@ Phase 7's integrity workflow does NOT test this contract at the runtime level (i
 ## Related
 
 - `checklists/self-removal.md` — the user-facing flow.
+- `references/boost-core-user-scope.md` — the user-scope sync, manifest and reconcile-on-remove.
 - `references/gitattributes-managed-block.md` — a parallel contract with package-boost (preserving foreign entries inside its managed block).
 - SPEC.md §10 + RQ40 — the global-install architecture decision.

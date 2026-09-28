@@ -2,7 +2,9 @@
 
 repo-init's global-install model (per SPEC RQ40 + Open Question #3) needs a way to propagate the `repo-init` skill into `~/.claude/skills/` / `~/.cursor/skills/` / etc. when the package is installed via `composer global require sandermuller/repo-init`. boost-core ships the user-scope sync command; repo-init's install path documents the one-line invocation.
 
-> **Changed in boost-core 0.6.0 (BREAKING).** Before 0.6.0 boost-core was a Composer plugin and auto-synced on every `composer global` install/update. 0.6.0 removed the plugin (boost-core is now `type: library`). User-scope sync is now a run-it-yourself command — the user invokes it once after `composer global require` and again after each `composer global update`. The plugin-driven auto-sync model is gone (Pattern C migration on the boost-core side).
+Traced against boost-core 1.13.0 (`UPGRADING.md` "1.12 → 1.13", `src/Sync/UserScope*.php`) and the files it wrote on a real machine.
+
+> **Changed in boost-core 0.6.0 (BREAKING).** Before 0.6.0 boost-core was a Composer plugin and auto-synced on every `composer global` install/update. 0.6.0 removed the plugin (boost-core is now `type: library`). User-scope sync is now a run-it-yourself command — the user invokes it once after `composer global require` and again after each `composer global update`.
 
 ## Command surface
 
@@ -10,27 +12,54 @@ repo-init's global-install model (per SPEC RQ40 + Open Question #3) needs a way 
 composer global exec -- boost sync --scope=user --all
 ```
 
-- `--scope=project` (default): project-local sync — writes to `<cwd>/.claude/skills/<skill>/SKILL.md`, etc. NOT namespaced by package.
-- `--scope=user`: writes to `$HOME/.claude/skills/<vendor>__<package>/<skill>/SKILL.md` and the equivalent dirs for 9 agents (`.cursor`, `.agents`, `.github`, `.amp`, `.gemini`, `.junie`, `.kiro`, `.opencode`). The `.agents` dir is shared (used by Codex via the AGENTS.md convention; Amp also writes its `commands/` there).
-- `--all`: publishes EVERY installed Composer package that ships a `resources/boost/skills/` directory (discovered via `Composer\InstalledVersions`). No vendor allowlist filtering and no tag filtering — user scope has no `boost.php`, so `withAllowedVendors()` / `withTags()` (project-scope controls) do not apply. Skills only; guidelines (`CLAUDE.md` / `AGENTS.md`) are never fanned to `$HOME`.
+- `--scope=project` (default): project-local sync — writes to `<cwd>/.claude/skills/<skill>/SKILL.md`, etc.
+- `--scope=user`: publishes a package's `resources/boost/skills/` into flat `~/.{agent}/skills/<skill>-user/` dirs, plus the guidelines its author marked user-scope eligible into `~/.claude/boost/<pkg>.md`.
+- `--all`: publishes EVERY installed Composer package that ships a `resources/boost/skills/` directory. No vendor allowlist and no tag filtering — user scope has no `boost.php`. A package publishes all its skills unless `~/.boost/user-scope.php` lists the ones to keep:
 
-Each globally-installed package nests under its own `<vendor>__<package>/` subdir so multiple tools (repo-init + future siblings) don't collide. The `/` in the Composer name is replaced by `__` — a sequence the Composer name spec forbids inside vendor or project parts, so the slug mapping is injective.
+```php
+<?php
 
-When the source skill directory is named after the package basename (repo-init ships its single skill at `resources/boost/skills/repo-init/`), boost-core's `rewriteForUserScope` collapses the redundant level — the user-scope output is `~/.{agent}/skills/sandermuller__repo-init/SKILL.md`, not `.../sandermuller__repo-init/repo-init/SKILL.md`.
+return [
+    'skills' => [
+        'sandermuller/boost-skills' => ['interview', 'promptimize', 'write-spec'],
+    ],
+];
+```
 
-## What user-scope sync does
+## Where the skill lands
 
-| Source | Destination |
+Each skill lands at `~/.{agent}/skills/<skill>-user/SKILL.md`. The `-user` suffix keeps a user-scope copy from hiding a project skill of the same name. repo-init ships one skill, `resources/boost/skills/repo-init/`, so it lands at `~/.{agent}/skills/repo-init-user/SKILL.md`.
+
+boost-core 1.13.0 wrote that folder for 8 agents: `.claude`, `.cursor`, `.agents`, `.amp`, `.gemini`, `.junie`, `.kiro`, `.opencode`. The `.agents` dir is shared (Codex reads it via the AGENTS.md convention).
+
+The flat namespace is shared across packages. When two packages publish a skill of the same name, the first one written wins, and the second package's sync reports a collision. A file or symlink of your own at a target path also stops that package's sync with an error.
+
+### Older layouts
+
+| boost-core | Path |
 |---|---|
-| `$COMPOSER_HOME/vendor/sandermuller/repo-init/resources/boost/skills/repo-init/SKILL.md` | `~/.claude/skills/sandermuller__repo-init/SKILL.md` |
-| Same | `~/.cursor/skills/sandermuller__repo-init/SKILL.md` |
-| Same (× 7 more agents) | `~/.{agent}/skills/sandermuller__repo-init/SKILL.md` |
+| 1.13+ | `~/.{agent}/skills/repo-init-user/` |
+| 0.4 – 1.12 | `~/.{agent}/skills/sandermuller__repo-init/` |
+| before 0.4 | `~/.{agent}/skills/repo-init/` |
 
-Guidelines (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`) are **NOT** fanned out to `$HOME` — user-home is the wrong place for project-specific instructions.
+The first user-scope sync on 1.13 writes the flat folder and deletes the old `sandermuller__repo-init/` copy, unless the user edited that file. The pre-0.4 migration no longer runs, so a `~/.{agent}/skills/repo-init/` folder left from before 0.4 stays until the user removes it.
+
+## Ownership manifest
+
+boost-core records every user-scope file it writes in `~/.boost/manifests/<vendor>__<package>.json`, with the file's sha256. Two rules follow from it:
+
+- **Sync overwrites.** A path the manifest names is rewritten on the next sync of an installed package, even when the user edited it. Edit the source skill, not the synced copy.
+- **Reaping is hash-gated.** Deleting a dropped skill, or the files of a removed package, only happens when the file still matches the recorded hash. An edited file stays.
+
+A file the manifest does not name (the user's own) is never overwritten: it stops that package's sync with an error.
 
 ## Copy, never symlink
 
-Load-bearing invariant for the self-removal contract (`tests/self-removal-contract.md`). When `composer global remove sandermuller/repo-init` deletes the source vendor dir, the user-scope copy in `~/.claude/skills/sandermuller__repo-init/` must survive. boost-core's `SyncEngine::syncUser()` does a file copy, not a symlink.
+Load-bearing invariant for the self-removal contract (`tests/self-removal-contract.md`). The sync writes a regular file (`0644`), not a symlink, so the copy in `~/.claude/skills/repo-init-user/` does not depend on the global vendor dir. boost-core also refuses to write through a symlink it finds at a target path.
+
+## Reconcile on remove
+
+A user-scope sync also cleans up after removed packages. When a package that has a manifest is no longer installed, the next `boost sync --scope=user --all` deletes that package's user-scope files (hash-gated, so an edited file stays) and then its manifest. So after `composer global remove sandermuller/repo-init`, the skill copy survives until the next user-scope sync. That sync needs boost-core still installed globally. When repo-init was the only global package that required boost-core, the removal takes boost-core with it, nothing reaps the copy, and it stays until the user deletes it.
 
 ## Idempotency
 
@@ -64,10 +93,10 @@ repo-init is a pure-markdown package — it ships no bin and no `post-install-cm
 
 ## Constraints
 
-repo-init's `composer.json` requires `sandermuller/boost-core: ^1.6` (canonical floor; `.config/boost.php` needs ≥ 0.18, repo-init pins the current `^1.6`). The `--scope=user --all` flag combination is a 0.6.0 feature (the `--all` flag arrived alongside the plugin removal). Pre-0.6.0 boost-core supported `--scope=user` but not `--all` and did the auto-sync via the plugin instead.
+repo-init's `composer.json` requires `sandermuller/boost-core: ^1.13`, the version that writes the flat `<skill>-user/` layout the skill's pre-flight checks for. The pre-flight still accepts the 0.4 – 1.12 `sandermuller__repo-init/` path.
 
 ## See also
 
 - repo-init `SPEC.md` RQ40 — the global-install model that depends on this sync
-- repo-init `tests/self-removal-contract.md` — the copy-never-symlink invariant
-- boost-core's Pattern C migration spec — Composer-plugin removal in 0.6.0
+- repo-init `tests/self-removal-contract.md` — the copy-never-symlink invariant and what removal leaves behind
+- boost-core `UPGRADING.md` "1.12 → 1.13" — the flat `-user` layout and `~/.boost/user-scope.php`

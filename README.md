@@ -95,10 +95,10 @@ composer global remove sandermuller/repo-init
 Optional skill cleanup (the synced user-level skill dirs survive `composer global remove` because `sync` writes file copies — see `references/boost-core-user-scope.md`):
 
 ```bash
-rm -rf ~/.{claude,cursor,agents,github,amp,gemini,junie,kiro,opencode}/skills/{repo-init-user,sandermuller__repo-init}
+rm -rf ~/.{claude,cursor,agents,amp,gemini,junie,kiro,opencode}/skills/{repo-init-user,sandermuller__repo-init}
 ```
 
-(The brace expansion covers all 9 agent targets. Keep the synced skills if you might re-install later: the install and sync commands overwrite them.)
+(The brace expansion covers the 8 agent dirs boost-core writes. A `~/.{agent}/skills/repo-init/` folder from before boost-core 0.4 may also exist: check that it is repo-init's before you delete it. The next `composer global exec -- boost sync --scope=user --all` also removes an unedited copy. Keep the synced skills if you might re-install later: the install and sync commands overwrite them.)
 
 ## Design
 
