@@ -168,6 +168,7 @@ Don't touch `extra.laravel.providers` for laravel-project — Laravel uses `extr
 
 ## Apply NON-CANONICAL fixes (each prompted)
 
+- **Licence is not proprietary**: prompt "set `composer.json` `license` to `proprietary`?" and, when a `LICENSE` file holds an open-source licence, "delete `LICENSE`?" Ask for each; the user can decline either. If `README.md` links to `LICENSE` or says this project is open source, prompt to update that text in the same pass, so the README does not contradict `composer.json`. The stock Laravel README line about the framework's own MIT licence is not a claim about the project.
 - **`phpunit.xml` (no .dist)**: prompt "rename to `phpunit.xml`?" Only if `.dist` doesn't already exist.
 - **PHPUnit cache findings** (if `test-framework=phpunit`): apply `$REPO_INIT_HOME/references/phpunit-config.md` Upgrade-actions section — set `cacheDirectory=".cache/phpunit"`, `rm -rf .phpunit.cache`, `git rm -r --cached .phpunit.cache` if previously committed.
 - **CI path filter drift — `phpstan.yml` missing `composer.json` / `composer.lock`**: insert both lines under the `push.paths` and `pull_request.paths` blocks in `.github/workflows/phpstan.yml`.

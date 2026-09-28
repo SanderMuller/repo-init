@@ -73,7 +73,7 @@ Likely already present (when `--boost` was used):
 
 ### 5. Install our additional dev deps
 
-**Skip if:** every dep in the list below is already in `composer.json` `require-dev` (per `composer show --installed <dep>` AND not in `--no-dev` filter). For partial overlap, install only the missing deps.
+**Skip if:** every dep in the list below is already in `composer.json` `require-dev` (per `composer show --installed <dep>` AND not in `--no-dev` filter) AND `composer.json` `license` is `"proprietary"`. For partial overlap, install only the missing deps, and set the licence if it differs.
 
 Build the list from `$REPO_INIT_HOME/references/per-category-deps.md#laravel-project`:
 
@@ -94,7 +94,7 @@ Build the list from `$REPO_INIT_HOME/references/per-category-deps.md#laravel-pro
 - For PHPUnit: nothing extra (Laravel includes `phpunit/phpunit`).
 - For Pest: drop `phpunit: true` from `withComposerBased()` in `rector.php`, leaving `->withComposerBased(laravel: true)` — the PHPUnit composer-based set rewrites `TestCase` subclasses, which a Pest suite has none of. Also add `pestphp/pest: ^5.0`, `pestphp/pest-plugin-arch: ^5.0`, `pestphp/pest-plugin-laravel: ^5.0`, `pestphp/pest-plugin-rector: ^5.0`, `pestphp/pest-plugin-phpstan: ^5.0`, `pestphp/pest-plugin-agent: ^5.0`. Pest 5 needs PHP `^8.4`, which the `^8.5` floor already exceeds. Note: switching from PHPUnit to Pest changes how `php artisan test` resolves; the user must `vendor/bin/pest --init` separately to migrate.
 
-**Step 1 — raise `require.php`** (mandatory, and before any composer command). Hand-edit `composer.json`: `"require": { "php": "^8.5" }`.
+**Step 1 — raise `require.php`** (mandatory, and before any composer command). Hand-edit `composer.json`: `"require": { "php": "^8.5" }`. In the same edit, set `"license": "proprietary"`: `laravel new` writes `"MIT"`, and an application is not open source.
 
 `laravel new` writes `"php": "^8.3"`. `laravel-project` floors at the newest stable PHP (`^8.5`; see `$REPO_INIT_HOME/references/version-defaults.md` "PHP"), and the shared dev deps below need at least `^8.4` — `symplify/phpstan-rules: ^14.17` and `tomasvotruba/type-coverage: ^2.3` both require it. Edit the `require.php` line in `composer.json` by hand before the require call, so one resolution sees the final floor. Leaving it at `^8.3` scaffolds an app whose `run-tests.yml` runs PHP 8.5 against a `^8.3` constraint — it installs, but the floor is fiction and the next `composer update` on an 8.3 machine resolves a different dependency set.
 
@@ -145,6 +145,7 @@ Likely conflicts:
 - `tests/Pest.php` — skip unless user opted into Pest in step 5.
 - `.github/workflows/` — Laravel may have its own (`tests.yml`, etc.); ours adds `phpstan.yml`, `pint-check.yml`, `rector-check.yml`, `zizmor.yml`, `update-changelog.yml`, plus the `.github/zizmor.yml` rule config (disables `unpinned-uses`). Different filenames → no conflict; just add. Then set `php-version: '8.5'` in `phpstan.yml`, `pint-check.yml` and `rector-check.yml`: the shared stubs pin `8.4`, and this category is always `^8.5` (see `$REPO_INIT_HOME/references/version-defaults.md` "PHP version in CI workflows").
 - `.mcp.json` — `laravel/boost` writes this on install. If absent (user opted out of Boost), copy ours.
+- `LICENSE` — **skip; do not copy.** The shared stub is the MIT licence, and an application is proprietary (`"license": "proprietary"`, set in step 5). `laravel new` ships no licence file. If the target already has an open-source `LICENSE` (an earlier scaffold copied the MIT stub, or repo-new 1.2.x wrote it), prompt to delete it. If `README.md` links to `LICENSE` or says this project is open source, prompt to update that text too. The stock Laravel README line about the framework's own MIT licence is not a claim about the project.
 - `.config/boost.php` — **skip; do not copy.** `.config/boost.php` configures `sandermuller/boost-core`, which a `laravel-project` does not carry (it uses `laravel/boost`). It would be inert here. The other categories get it from `stubs/shared/.config/boost.php`; `laravel-project` is the one exclusion.
 
 ### 7. Overlay laravel-project-specific stubs

@@ -20,6 +20,14 @@ The `post-update-cmd` hook re-syncs the skill into `~/.claude/skills/sandermulle
 
 ---
 
+## 1.18.x → 1.19.0 (proprietary licence for applications)
+
+Additive for repo-init itself — `composer global update sandermuller/repo-init`.
+
+- **`laravel-project` is proprietary.** Bootstrap sets `composer.json` `"license": "proprietary"` (`laravel new` writes `"MIT"`) and no longer copies the MIT `LICENSE` stub (`LICENSE` is in the category's `shared-stub-skip`).
+- **New audit finding** (MEDIUM, `laravel-project` only): a `license` other than `"proprietary"`, or an open-source `LICENSE` file. The upgrade phase prompts to fix each one.
+- **Packages keep MIT.** No package category changes, and an MIT package is not flagged.
+
 ## 1.16.x → 1.17.0 (symplify 14.17, scaffold fixes)
 
 Additive for repo-init itself — `composer global update sandermuller/repo-init`. Existing repos need the edits below by hand where noted: `phpstan.neon.dist` and `rector.php` are notify-only, so an upgrade never rewrites them.

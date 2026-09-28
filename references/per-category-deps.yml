@@ -103,6 +103,7 @@ categories:
       - .config/boost.php   # laravel-project uses laravel/boost, not boost-core (stub at stubs/shared/.config/boost.php)
       - tests/              # Laravel ships its own test suite
       - .mcp.json           # laravel/boost writes its own; the phase copies ours only if absent
+      - LICENSE             # an application is proprietary; the stub is MIT
 
   laravel-package:
     mandatory:
