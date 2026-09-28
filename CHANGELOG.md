@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Pre-`1.0.0` releases (0.x.x — historical) introduced breaking changes in MINOR bumps; from 1.0.0 onward repo-init follows standard SemVer (breaking changes ship as MAJOR only). The pre-1.0 entries below remain for reference.
 
+## [1.19.0](https://github.com/sandermuller/repo-init/compare/1.18.0...1.19.0) - 2026-09-28
+
+<!-- verified-sha: e495b29b00872edfb4a48918e87d86607f56785e -->
+### Changed
+
+- `laravel-project` is proprietary by default. Bootstrap sets `composer.json` `"license": "proprietary"` and no longer copies the MIT `LICENSE` stub. Package categories keep MIT. See [UPGRADING.md](https://github.com/SanderMuller/repo-init/blob/main/UPGRADING.md#118x--1190-proprietary-licence-for-applications).
+
+### Added
+
+- A `laravel-project` audit finding (MEDIUM) for a licence other than `proprietary`, or an open-source `LICENSE` file. The upgrade phase prompts to fix each one, and to update README text that calls the project open source.
+
+**Full Changelog**: <https://github.com/SanderMuller/repo-init/compare/1.18.0...1.19.0>
+
 ## [1.18.0](https://github.com/sandermuller/repo-init/compare/1.17.0...1.18.0) - 2026-09-27
 
 <!-- verified-sha: cb70e7571b3b9b07e93720739981e1550aa35176 -->
@@ -20,7 +33,7 @@ Pre-`1.0.0` releases (0.x.x — historical) introduced breaking changes in MINOR
 - A `laravel-package` no longer tests Laravel majors it cannot install. With a `^13.0` range or with Pest 5, bootstrap removes the Laravel 12 / testbench 10 cells from `run-tests.yml`. Audit flags existing repos that still have them, and upgrade removes them.
 - The skill's `test-framework` knob says `laravel-project` defaults to `phpunit`, matching its phase file.
 
-**Full Changelog**: <https://github.com/SanderMuller/repo-init/compare/1.17.0...1.18.0>
+**Full Changelog**: [https://github.com/SanderMuller/repo-init/compare/1.17.0...1.18.0](https://github.com/SanderMuller/repo-init/compare/1.17.0...1.18.0)
 
 ## [1.17.0](https://github.com/sandermuller/repo-init/compare/1.16.0...1.17.0) - 2026-09-27
 
@@ -67,6 +80,7 @@ Raise the floor and drop both packages in one pass:
 ```bash
 composer remove --dev rector/type-perfect symplify/phpstan-extensions --no-update
 composer require --dev tomasvotruba/type-coverage:^2.3 symplify/phpstan-rules:^14.12
+
 
 
 
@@ -174,6 +188,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 **Full Changelog**: [https://github.com/SanderMuller/repo-init/compare/1.12.0...1.13.0](https://github.com/SanderMuller/repo-init/compare/1.12.0...1.13.0)
@@ -209,6 +224,7 @@ Additive for repo-init itself. Re-running `audit` on an already-scaffolded repo 
 ```bash
 composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
+
 
 
 
@@ -253,6 +269,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 **Full Changelog**: [https://github.com/SanderMuller/repo-init/compare/1.10.0...1.11.0](https://github.com/SanderMuller/repo-init/compare/1.10.0...1.11.0)
@@ -270,6 +287,7 @@ The tag left the interactive skill-tag picker. The stub hard-codes it:
 
 ```php
 ->withTags(['voice'__SKILL_TAGS__])
+
 
 
 
@@ -344,6 +362,7 @@ Audit phases gained a HIGH-severity rule for the duplicate registration. Upgrade
 ```bash
 composer remove --dev rector/type-perfect --no-update
 composer require --dev tomasvotruba/type-coverage:^2.3
+
 
 
 
@@ -760,6 +779,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 For existing scaffolded packages, the next audit walk will surface the `sandermuller/package-boost-php: true` entry as MEDIUM-stale. The upgrade phase handles removal correctly — bump first, then drop the entry.
@@ -866,6 +886,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 No further steps. Scaffold output, the `repo-init` skill, audit/upgrade phases, stubs — all identical to 0.8.1.
@@ -903,6 +924,7 @@ If you installed 0.8.0:
 ```bash
 composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
+
 
 
 
@@ -973,6 +995,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 The `composer global exec --` form runs `boost` from Composer's global `vendor/bin/` regardless of the user's current directory; the literal `--` stops Composer from interpreting boost's flags as its own. `--scope=user --all` publishes every globally-installed package's `resources/boost/skills/` into `~/.{agent}/skills/<vendor>__<package>/`. See `references/boost-core-user-scope.md` for the full contract.
@@ -989,6 +1012,7 @@ repo-init now uses the shared `sandermuller/boost-skills` library (code-review, 
 
 ```bash
 gh release create X.Y.Z --notes-file internal/release-notes-X.Y.Z.md
+
 
 
 
@@ -1085,6 +1109,7 @@ composer global exec -- boost sync --scope=user --all   # new: global skill refr
 
 
 
+
 ```
 
 `stubs/shared/boost.php` + repo-init's own `boost.php` docblocks updated accordingly.
@@ -1114,6 +1139,7 @@ Upgrade repo-init itself:
 ```bash
 composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
+
 
 
 
