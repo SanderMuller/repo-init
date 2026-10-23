@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Pre-`1.0.0` releases (0.x.x — historical) introduced breaking changes in MINOR bumps; from 1.0.0 onward repo-init follows standard SemVer (breaking changes ship as MAJOR only). The pre-1.0 entries below remain for reference.
 
+## [1.20.0](https://github.com/sandermuller/repo-init/compare/1.19.1...1.20.0) - 2026-10-23
+
+<!-- verified-sha: a679ef446ae11f5f67c8008b6b1fa9472163a05d -->
+### Added
+
+- Every scaffolded repo declares Cloudflare's [`security-audit`](https://github.com/cloudflare/security-audit-skill) skill in `withRemoteSkills()`, pinned to a commit SHA. Audit flags a missing entry (MEDIUM) and upgrade adds it. Opt out with `withExcludedSkills()`. See `references/remote-skills.md`.
+- `laravel-project` takes `sandermuller/project-boost-laravel` next to `laravel/boost`, with its own `.config/boost.php` stub. Upgrade asks before it adds the wrapper, runs `project-boost:reconcile` first, and keeps the existing agents, tags, and vendor skills. See [UPGRADING.md](https://github.com/SanderMuller/repo-init/blob/main/UPGRADING.md#119x--1200-canonical-remote-skills-project-boost-laravel).
+- `laravel-project` takes `sandermuller/boost-skills` and the always-on `voice` tag. The skill-tag picker now applies to it.
+
+### Fixed
+
+- `stubs/laravel-project/boost.json` uses the current `laravel/boost` agent names (`copilot`, `codex`).
+
+**Full Changelog**: <https://github.com/SanderMuller/repo-init/compare/1.19.1...1.20.0>
+
 ## [1.19.1](https://github.com/sandermuller/repo-init/compare/1.19.0...1.19.1) - 2026-09-28
 
 <!-- verified-sha: edef79136a8907347715f7596cfff419ee49b940 -->
@@ -15,7 +30,7 @@ Pre-`1.0.0` releases (0.x.x — historical) introduced breaking changes in MINOR
 - The user-scope docs describe the boost-core 1.13 layout: skills land in `~/.{agent}/skills/repo-init-user/`, the next user-scope sync removes the copy of a removed package, and a sync overwrites an edited copy.
 - The uninstall steps in the README and `checklists/self-removal.md` list the agent folders boost-core actually writes, and warn to check a pre-0.4 `repo-init/` folder before deleting it.
 
-**Full Changelog**: <https://github.com/SanderMuller/repo-init/compare/1.19.0...1.19.1>
+**Full Changelog**: [https://github.com/SanderMuller/repo-init/compare/1.19.0...1.19.1](https://github.com/SanderMuller/repo-init/compare/1.19.0...1.19.1)
 
 ## [1.19.0](https://github.com/sandermuller/repo-init/compare/1.18.0...1.19.0) - 2026-09-28
 
@@ -90,6 +105,7 @@ Raise the floor and drop both packages in one pass:
 ```bash
 composer remove --dev rector/type-perfect symplify/phpstan-extensions --no-update
 composer require --dev tomasvotruba/type-coverage:^2.3 symplify/phpstan-rules:^14.12
+
 
 
 
@@ -201,6 +217,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 **Full Changelog**: [https://github.com/SanderMuller/repo-init/compare/1.12.0...1.13.0](https://github.com/SanderMuller/repo-init/compare/1.12.0...1.13.0)
@@ -236,6 +253,7 @@ Additive for repo-init itself. Re-running `audit` on an already-scaffolded repo 
 ```bash
 composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
+
 
 
 
@@ -284,6 +302,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 **Full Changelog**: [https://github.com/SanderMuller/repo-init/compare/1.10.0...1.11.0](https://github.com/SanderMuller/repo-init/compare/1.10.0...1.11.0)
@@ -301,6 +320,7 @@ The tag left the interactive skill-tag picker. The stub hard-codes it:
 
 ```php
 ->withTags(['voice'__SKILL_TAGS__])
+
 
 
 
@@ -377,6 +397,7 @@ Audit phases gained a HIGH-severity rule for the duplicate registration. Upgrade
 ```bash
 composer remove --dev rector/type-perfect --no-update
 composer require --dev tomasvotruba/type-coverage:^2.3
+
 
 
 
@@ -797,6 +818,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 For existing scaffolded packages, the next audit walk will surface the `sandermuller/package-boost-php: true` entry as MEDIUM-stale. The upgrade phase handles removal correctly — bump first, then drop the entry.
@@ -905,6 +927,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 No further steps. Scaffold output, the `repo-init` skill, audit/upgrade phases, stubs — all identical to 0.8.1.
@@ -942,6 +965,7 @@ If you installed 0.8.0:
 ```bash
 composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
+
 
 
 
@@ -1016,6 +1040,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 The `composer global exec --` form runs `boost` from Composer's global `vendor/bin/` regardless of the user's current directory; the literal `--` stops Composer from interpreting boost's flags as its own. `--scope=user --all` publishes every globally-installed package's `resources/boost/skills/` into `~/.{agent}/skills/<vendor>__<package>/`. See `references/boost-core-user-scope.md` for the full contract.
@@ -1032,6 +1057,7 @@ repo-init now uses the shared `sandermuller/boost-skills` library (code-review, 
 
 ```bash
 gh release create X.Y.Z --notes-file internal/release-notes-X.Y.Z.md
+
 
 
 
@@ -1132,6 +1158,7 @@ composer global exec -- boost sync --scope=user --all   # new: global skill refr
 
 
 
+
 ```
 
 `stubs/shared/boost.php` + repo-init's own `boost.php` docblocks updated accordingly.
@@ -1161,6 +1188,7 @@ Upgrade repo-init itself:
 ```bash
 composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
+
 
 
 
