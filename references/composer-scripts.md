@@ -46,7 +46,7 @@ Baseline 11 minus `sync-ai` (the stub omits it deliberately; `post-install-cmd` 
 
 ### `laravel-project` (8 unconditional + 2 scaffold-conditional)
 
-Baseline 11 minus `sync-ai`, minus the two auto-sync hooks unless the scaffold carries `sandermuller/project-boost-laravel`.
+Baseline 11 minus `sync-ai`, minus the two auto-sync hooks unless the scaffold carries `sandermuller/project-boost-laravel`. repo-init scaffolds the wrapper by default (see `per-category-deps.md`); an app scaffolded before that carries `laravel/boost` alone until upgrade adds the wrapper.
 
 - **Unconditional (8)**: `phpstan`, `phpstan-simplified`, `phpstan-clear-cache`, `format`, `rector`, `test`, `test-coverage`, `qa`.
 - **Scaffold-conditional (2)**: `post-install-cmd`, `post-update-cmd` → the dev-mode-guarded artisan call below. Detection is `sandermuller/project-boost-laravel` in `require-dev` — nothing else. A vanilla laravel-project carries `laravel/boost` alone and gets no boost entry in either array.
@@ -76,7 +76,7 @@ The better long-term fix belongs upstream: `sandermuller/project-boost-laravel` 
 
 **Never `BoostAutoSync::run` in a laravel-project.** The wrapper pulls `sandermuller/boost-core` transitively, so the callback DOES autoload — and that is the trap. `BoostAutoSync::run` invokes the bare `vendor/bin/boost sync`, which bypasses the wrapper's injection pipeline: the `laravel/boost` bundled skill set never reaches the agent directories, and the sync still reports success against the smaller set. Flag it MISMATCH, not PRESENT. `BoostAutoSync::run` stays correct for a non-Laravel project consuming the engine directly — this rule is Laravel-application-specific. Source: the `project-boost-laravel` configuration guide, "Why not BoostAutoSync::run here?".
 
-No `sync-ai` script — `laravel/boost` owns AI-asset sync for applications (`php artisan boost:update`); there is no `vendor/bin/boost` here.
+No `sync-ai` script. With the wrapper, AI-asset sync is `php artisan project-boost:sync`, which the two hooks above already run; a `sync-ai` that calls the bare `vendor/bin/boost sync` would bypass the wrapper. Without the wrapper, `laravel/boost` owns the sync and there is no `vendor/bin/boost`.
 
 ### `skill-bundle` (6 keys)
 
@@ -91,10 +91,10 @@ No `sync-ai` script — `laravel/boost` owns AI-asset sync for applications (`ph
   | `php-package`, `phpstan-extension`, `rector-extension`, `composer-plugin` | `sandermuller/package-boost-php` | `SanderMuller\PackageBoostPhp\Scripts\AutoSync::run` | `^1.0` |
   | `laravel-package` (+ `laravel-package-spatie`, `filament-plugin`, `nova-tool`) | `sandermuller/package-boost-laravel` | `SanderMuller\PackageBoostLaravel\Scripts\AutoSync::run` | `^1.0` |
   | `skill-bundle` | `sandermuller/boost-core` (direct `require`) | `SanderMuller\BoostCore\Scripts\BoostAutoSync::run` | `^1.6` (boost-core; canonical floor — `.config/boost.php` needs ≥ 0.18, scaffold pins the current `^1.6`) |
-  | `laravel-project` (with `sandermuller/project-boost-laravel`) | `sandermuller/project-boost-laravel` (`require-dev`) | the dev-mode-guarded `@php -r` one-liner — see the `laravel-project` section | `^1.4` (scaffold pin — see note) |
+  | `laravel-project` (with `sandermuller/project-boost-laravel`) | `sandermuller/project-boost-laravel` (`require-dev`) | the dev-mode-guarded `@php -r` one-liner — see the `laravel-project` section | `^1.5` (scaffold pin — see note) |
   | `laravel-project` (vanilla `laravel/boost` only) | n/a | no boost entry in either array (other handlers untouched) | n/a |
 
-  **The laravel-project floor is a scaffold pin, not a façade floor.** `project-boost:sync` ships in every release of the wrapper (`SyncCommand` is present from `0.1.0`), so no version gates the hook. Pin the current `^1.4`, the way `skill-bundle` pins the current boost-core. The failure mode also differs from the class callbacks: a missing artisan command exits non-zero and Composer reports it, where a non-autoloadable class callback is skipped with a warning. Loud, not silent.
+  **The laravel-project floor is a scaffold pin, not a façade floor.** `project-boost:sync` ships in every release of the wrapper (`SyncCommand` is present from `0.1.0`), so no version gates the hook. The scaffold pins `^1.5` for other reasons: 1.3.0 added the `boost.json` archive and 1.5.0 the `CLAUDE.md` → `@AGENTS.md` swap in `project-boost:reconcile`, and the bootstrap and upgrade phases rely on both. The failure mode also differs from the class callbacks: a missing artisan command exits non-zero and Composer reports it, where a non-autoloadable class callback is skipped with a warning. Loud, not silent.
 
   **Why the fork:** the wrapper categories pull `boost-core` only *transitively* through their wrapper. Naming `BoostCore\Scripts\BoostAutoSync::run` there is a transitive-class reference — declaring a symbol the `composer.json` doesn't directly depend on. Each wrapper ships a namespace façade (`PackageBoostPhp\Scripts\AutoSync` / `PackageBoostLaravel\Scripts\AutoSync`) that delegates to `BoostAutoSync`, so the scaffold names only a class from its own direct dependency. `skill-bundle` requires `boost-core` *directly*, so `BoostAutoSync::run` is already a direct-dep class there — it keeps the boost-core callback, and the façade rule does not apply.
 
@@ -143,7 +143,7 @@ The baseline above shows the **php-wrapper** callback (`SanderMuller\PackageBoos
 
 ### `laravel-project`
 
-- **No `sync-ai` script.** `laravel-project` carries `laravel/boost` (Laravel's own AI tooling), not `sandermuller/boost-core` — there is no `vendor/bin/boost`. AI-asset sync for an application is `php artisan boost:install` / `boost:update` (see `bootstrap-laravel-project.md` / `upgrade-laravel-project.md`). Drop `sync-ai` from the baseline block for this category.
+- **No `sync-ai` script.** AI-asset sync for an application runs through `sandermuller/project-boost-laravel`: `php artisan project-boost:sync`, fired by the guarded `post-install-cmd` / `post-update-cmd` entries. The bare `vendor/bin/boost sync` a `sync-ai` script would call bypasses the wrapper (see `bootstrap-laravel-project.md` / `upgrade-laravel-project.md`). Drop `sync-ai` from the baseline block for this category.
 
 ## Always added for `laravel-package`
 

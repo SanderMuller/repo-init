@@ -196,6 +196,10 @@ The canonical setup keeps the `voice` tag on in every repo that carries `sanderm
 2. **Floor coupling (ATOMIC):** in the same change, ensure `sandermuller/boost-skills` in `require-dev` cannot resolve below 2.27.0. Run `composer require --dev "sandermuller/boost-skills:^2.27.0"` ONLY when the declared constraint allows an older version; leave a constraint whose floor is already 2.27.0 or later (`^2.27.0`, `^3.0`, …) exactly as it is — rewriting it would downgrade the package. The tag is a silent no-op on a resolved version that does not ship the guideline, so the tag and the floor move together.
 3. Run `vendor/bin/boost sync` and confirm the voice guideline lands in `AGENTS.md` / `CLAUDE.md`.
 
+## Ensure the canonical remote skills
+
+Apply the upgrade step in `$REPO_INIT_HOME/references/remote-skills.md` to the boost config. The sync below fetches and fans out the skill.
+
 ## Run package-boost sync
 
 ```bash

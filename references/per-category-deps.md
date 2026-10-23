@@ -8,7 +8,7 @@ What each category adds on top of the shared list (`shared-dev-deps.md`). Split 
 
 | Category | Adds to `require-dev` | Adds to `require` |
 |---|---|---|
-| `laravel-project` | `larastan/larastan`, `laravel/boost`, `laravel/pail`, `laravel/tinker`, `driftingly/rector-laravel` | `zae/strict-transport-security` (security canon), plus the `laravel new` baseline |
+| `laravel-project` | `larastan/larastan`, `laravel/boost`, `laravel/pail`, `laravel/tinker`, `driftingly/rector-laravel`, `sandermuller/project-boost-laravel` | `zae/strict-transport-security` (security canon), plus the `laravel new` baseline |
 | `laravel-package` | `larastan/larastan`, `laravel/boost`, `driftingly/rector-laravel`, `sandermuller/package-boost-laravel` | `illuminate/contracts`, `illuminate/support` at `__LARAVEL_VERSIONS__` |
 | `php-package` | `phpstan/phpstan`, `stolt/lean-package-validator: ^6.0.1`, `sandermuller/package-boost-php` | (no `illuminate/*`) |
 | `phpstan-extension` | `sandermuller/package-boost-php` (minus `phpstan/phpstan` per shared exclusion) | `phpstan/phpstan: ^2` |
@@ -50,10 +50,10 @@ The `sandermuller/boost-*` umbrella is assigned **per category**, not via the sh
 |---|---|
 | Framework-agnostic Composer package — `php-package`, `phpstan-extension`, `rector-extension`, `composer-plugin` | `sandermuller/package-boost-php` |
 | Laravel-specific Composer package — `laravel-package` (+ `laravel-package-spatie`, `filament-plugin`, `nova-tool`) | `sandermuller/package-boost-laravel` |
-| Laravel application — `laravel-project` | `laravel/boost` |
+| Laravel application — `laravel-project` | `sandermuller/project-boost-laravel`, next to `laravel/boost` |
 | Skill-distribution package — `skill-bundle` | `sandermuller/boost-core` directly, in runtime `require` |
 
-All three umbrellas pull `sandermuller/boost-core` (the skill-sync engine, `type: library` from 0.6.0) transitively; `package-boost-laravel` also pulls `package-boost-php`. Neither `sandermuller/boost-core` nor `sandermuller/package-boost-php` is a composer-plugin anymore — both shed plugin status (boost-core in 0.6.0; package-boost-php in 0.9.0, when its subcommands moved to the standalone `vendor/bin/package-boost-php` bin). Scaffolds therefore need NO `sandermuller/*` entries in `config.allow-plugins`. Pre-0.9.0 scaffolds that still list `sandermuller/package-boost-php: true` (or `sandermuller/boost-core: true` from pre-0.6.0) carry harmless-but-stale entries — Composer ignores them; audit phases flag for removal. Audit and upgrade phases handle this drift; see each category's audit phase.
+Both package umbrellas and `project-boost-laravel` pull `sandermuller/boost-core` (the skill-sync engine, `type: library` from 0.6.0) transitively; `package-boost-laravel` also pulls `package-boost-php`. Neither `sandermuller/boost-core` nor `sandermuller/package-boost-php` is a composer-plugin anymore — both shed plugin status (boost-core in 0.6.0; package-boost-php in 0.9.0, when its subcommands moved to the standalone `vendor/bin/package-boost-php` bin). Scaffolds therefore need NO `sandermuller/*` entries in `config.allow-plugins`. Pre-0.9.0 scaffolds that still list `sandermuller/package-boost-php: true` (or `sandermuller/boost-core: true` from pre-0.6.0) carry harmless-but-stale entries — Composer ignores them; audit phases flag for removal. Audit and upgrade phases handle this drift; see each category's audit phase.
 
 `composer-plugin` GETS `package-boost-php` like the other framework-agnostic categories — the pre-0.5.0 `shared-exclusions` entry that dropped it was removed.
 
@@ -75,7 +75,7 @@ A distributable Composer package whose deliverable is the AI agent skills it shi
 
 - **Denylist, not allowlist** — absent ⇒ copy all of `stubs/shared/`. Consistent with `shared-exclusions`; a newly-added shared stub is caught by the category's bootstrap phase + audit, so silent leakage into a lean category is low-risk.
 - **Entry form** — stub-relative paths, **PRE-rename**: `_gitattributes` (not `.gitattributes`). A trailing `/` marks a directory prefix (`tests/`).
-- Populated for `laravel-project` (Laravel ships its own equivalents; `.config/boost.php` is boost-core-only; `.mcp.json` comes from `laravel/boost`, and the phase copies ours only if absent; `LICENSE` is skipped because an application is proprietary), `skill-bundle` (no PHP toolchain), and the framework-agnostic categories `php-package`, `phpstan-extension`, `rector-extension`, `composer-plugin` (`.mcp.json` only: the shared stub runs `vendor/bin/testbench boost:mcp`). `laravel-package` has no entry — it copies all of `stubs/shared/`.
+- Populated for `laravel-project` (Laravel ships its own equivalents; it copies its own `stubs/laravel-project/.config/boost.php` instead of the shared one; `.mcp.json` comes from `laravel/boost`, and the phase copies ours only if absent; `LICENSE` is skipped because an application is proprietary), `skill-bundle` (no PHP toolchain), and the framework-agnostic categories `php-package`, `phpstan-extension`, `rector-extension`, `composer-plugin` (`.mcp.json` only: the shared stub runs `vendor/bin/testbench boost:mcp`). `laravel-package` has no entry — it copies all of `stubs/shared/`.
 
 ### `phpstan-extension` Laravel-aware
 

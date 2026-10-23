@@ -443,7 +443,7 @@ Always:
 Substitutions:
 
 - `test`/`test-coverage` → `vendor/bin/phpunit` when `test-framework=phpunit`
-- `sync-ai` is dropped for `laravel-project` (it uses `laravel/boost`, not `boost-core`; AI assets sync via `php artisan boost:install` / `boost:update`)
+- `sync-ai` is dropped for `laravel-project` (AI assets sync via `php artisan project-boost:sync`, run by the auto-sync hooks; the bare `vendor/bin/boost sync` would bypass the wrapper)
 - `post-install-cmd` / `post-update-cmd` fork for `laravel-project`. `BoostAutoSync::run` is NEVER the value there — it runs the bare `vendor/bin/boost sync`, which bypasses the wrapper's injection pipeline. With `sandermuller/project-boost-laravel` in `require-dev`, both arrays take the dev-mode-guarded `@php -r` one-liner as an ENTRY; without the wrapper, neither array carries a boost entry. Never write or delete the whole key — the Laravel skeleton ships its own `post-update-cmd` (`vendor:publish --tag=laravel-assets`), and a wholesale write drops it. The guard is mandatory — an unguarded `@php artisan project-boost:sync` aborts `composer install --no-dev`. Copy the value verbatim from `references/composer-scripts.md`, `laravel-project` section, which is authoritative for all four boost families.
 
 Always added for `laravel-package` (per RQ13 — the `--with-workbench-scripts` flag from earlier drafts is dropped; observed across all canonical sander L-packages):

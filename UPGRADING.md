@@ -20,6 +20,15 @@ The `post-update-cmd` hook re-syncs the skill into `~/.claude/skills/sandermulle
 
 ---
 
+## 1.19.x → 1.20.0 (canonical remote skills, `project-boost-laravel`)
+
+Additive for repo-init itself — `composer global update sandermuller/repo-init`. Re-run `audit` on existing repos to find the gaps; `upgrade` applies them.
+
+- **Canonical remote skills.** Every scaffolded `.config/boost.php` declares Cloudflare's `security-audit` skill in `withRemoteSkills()`, pinned to a commit SHA. The first `boost sync` downloads it. See `references/remote-skills.md` for the entry, the audit findings (entry missing is MEDIUM), and how to opt out with `withExcludedSkills()`.
+- **`laravel-project` takes `sandermuller/project-boost-laravel`.** It sits next to `laravel/boost` and reads its own `stubs/laravel-project/.config/boost.php`, so the remote skills reach applications too. Run `php artisan project-boost:reconcile` first: it backs up the `laravel/boost`-seeded agent files, captures hand edits, and replaces `CLAUDE.md` with an `@AGENTS.md` import. A successful sync archives `boost.json` to `.config/boost/boost.json.retired`. After that, sync with `php artisan project-boost:sync` and never run `php artisan boost:update`. The upgrade phase prompts before it adds the wrapper.
+- **`laravel-project` takes `sandermuller/boost-skills` and the `voice` tag.** Both reach the app through the wrapper, like every package category. The skill-tag picker now applies to `laravel-project` too; its stub hard-codes `voice` and `laravel`.
+- **`stubs/laravel-project/boost.json` uses the current `laravel/boost` agent names** (`copilot`, `codex`). boost-core has no case for the old `github_copilot` / `codex_cli` names, so `project-boost:sync` could not adopt them.
+
 ## 1.18.x → 1.19.0 (proprietary licence for applications)
 
 Additive for repo-init itself — `composer global update sandermuller/repo-init`.

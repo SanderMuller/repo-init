@@ -37,7 +37,7 @@ Run after every upgrade phase. If anything is red, stop and report to the user b
 
 - [ ] `php artisan --version` runs.
 - [ ] `php artisan test --compact` returns 0 (or pre-existing failures).
-- [ ] `vendor/bin/boost sync` ran without error (boost-core's standalone bin).
+- [ ] With `sandermuller/project-boost-laravel`: `php artisan project-boost:sync` (or the first-run `project-boost:reconcile`) ran without error. Never the bare `vendor/bin/boost sync`, which skips the injected `laravel/boost` skills. Without the wrapper: `php artisan boost:update` ran.
 
 ### `laravel-package`
 
@@ -82,12 +82,13 @@ Run after every upgrade phase. If anything is red, stop and report to the user b
 
 ## Boost config layout (`.config/` canonical)
 
-Applies to every category except `laravel-project` (which has no boost-core config).
+Applies to every category. For `laravel-project` it applies only when the app carries `sandermuller/project-boost-laravel`; without the wrapper it has no boost-core config.
 
 - [ ] `.config/boost.php` is present (the canonical config location).
 - [ ] No root `boost.php` remains — if the upgrade migrated one, it was **moved**, not copied. Both present is a hard error (`AmbiguousBoostConfigException`).
 - [ ] The gitignored sync manifest is at `.config/boost/manifest.json` (not root `.boost/`); `vendor/bin/boost sync --check` may report a one-time stale-manifest cleanup as advisory — that is expected, not drift.
 - [ ] The `.gitattributes` managed block contains `.config/ export-ignore` and no stale `boost.php export-ignore` line.
+- [ ] The boost config declares the canonical remote skills with the pinned SHA (`$REPO_INIT_HOME/references/remote-skills.md`), or excludes them with `withExcludedSkills()`. `.claude/skills/security-audit/SKILL.md` exists unless excluded.
 
 ## Stop conditions
 

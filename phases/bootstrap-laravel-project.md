@@ -26,6 +26,7 @@ If not installed, ask the user:
 - `php` — `8.5` only for this category. Reject `8.4` and below. `laravel-project` is an application, so it floors at the newest stable PHP, one minor above the package floor. The Laravel skeleton ships `"php": "^8.3"` — raise `require.php` in the same pass. See `$REPO_INIT_HOME/references/version-defaults.md` "PHP".
 - `author-name` / `author-email` — defaults from git config.
 - `with-hihaho-rules` — default `y` for vendor=hihaho, `N` otherwise.
+- `skill-tags` — the `sandermuller/boost-skills` tags for `.config/boost.php`; pre-select `php`. Same picker as the package categories (see the repo-init `SKILL.md` "Knobs to collect"); `voice` and `laravel` are hard-coded in the stub and never offered.
 - `--boost` flag — `laravel new --boost` installs `laravel/boost` (MCP wiring, AGENTS.md / CLAUDE.md scaffolding, `boost.json`). Default ON. Use `--no-boost` only if the user explicitly opts out (then `composer require laravel/boost` runs as a separate step). The installer also auto-detects agent context via env for JSON output — no flag needed for that.
 
 ## Steps
@@ -83,7 +84,9 @@ Build the list from `$REPO_INIT_HOME/references/per-category-deps.md#laravel-pro
 - `laravel/pail`
 - `laravel/tinker` (Laravel may already include this — check)
 - `driftingly/rector-laravel`
-- All shared deps from `$REPO_INIT_HOME/references/shared-dev-deps.md` minus anything Laravel installer already pulled. Read the freshly-generated `composer.json` to determine what's already there. Common already-installed by `laravel new`: `laravel/pint`, `nunomaduro/collision`, `phpunit/phpunit` (when test-framework=phpunit). Anything else from the shared list needs explicit `composer require --dev`: `laravel/pao`, `phpstan/extension-installer`, `phpstan/phpstan-strict-rules`, `phpstan/phpstan-deprecation-rules`, `phpstan/phpstan-phpunit`, `rector/rector`, `spaze/phpstan-disallowed-calls`, `symplify/phpstan-rules` (`^14.17`), `tomasvotruba/cognitive-complexity`, `tomasvotruba/type-coverage` (`^2.3` — it bundles the abandoned `rector/type-perfect`, which must NOT be installed alongside it; see shared-dev-deps.md "Type-perfect dep"). (`laravel-project` does NOT take `sandermuller/package-boost-php` — `laravel/boost`, above, is its boost-family tool.)
+- `sandermuller/boost-skills` (`^2.27.0`) — the shared skill library from the shared list below; `laravel new` never installs it. The floor ships the guideline the always-on `voice` tag needs.
+- `sandermuller/project-boost-laravel` (`^1.5`) — the Laravel-application member of the boost family. It sits next to `laravel/boost`, takes over the agent-file fan-out, and reads `.config/boost.php`. That config carries repo-init's canonical remote skills (`$REPO_INIT_HOME/references/remote-skills.md`).
+- All shared deps from `$REPO_INIT_HOME/references/shared-dev-deps.md` minus anything Laravel installer already pulled. Read the freshly-generated `composer.json` to determine what's already there. Common already-installed by `laravel new`: `laravel/pint`, `nunomaduro/collision`, `phpunit/phpunit` (when test-framework=phpunit). Anything else from the shared list needs explicit `composer require --dev`: `laravel/pao`, `phpstan/extension-installer`, `phpstan/phpstan-strict-rules`, `phpstan/phpstan-deprecation-rules`, `phpstan/phpstan-phpunit`, `rector/rector`, `spaze/phpstan-disallowed-calls`, `symplify/phpstan-rules` (`^14.17`), `tomasvotruba/cognitive-complexity`, `tomasvotruba/type-coverage` (`^2.3` — it bundles the abandoned `rector/type-perfect`, which must NOT be installed alongside it; see shared-dev-deps.md "Type-perfect dep"). (`laravel-project` does NOT take `sandermuller/package-boost-php` — `sandermuller/project-boost-laravel`, above, is its boost-family member.)
 
 **OPTIONAL (only when opted in):**
 
@@ -146,7 +149,7 @@ Likely conflicts:
 - `.github/workflows/` — Laravel may have its own (`tests.yml`, etc.); ours adds `phpstan.yml`, `pint-check.yml`, `rector-check.yml`, `zizmor.yml`, `update-changelog.yml`, plus the `.github/zizmor.yml` rule config (disables `unpinned-uses`). Different filenames → no conflict; just add. Then set `php-version: '8.5'` in `phpstan.yml`, `pint-check.yml` and `rector-check.yml`: the shared stubs pin `8.4`, and this category is always `^8.5` (see `$REPO_INIT_HOME/references/version-defaults.md` "PHP version in CI workflows").
 - `.mcp.json` — `laravel/boost` writes this on install. If absent (user opted out of Boost), copy ours.
 - `LICENSE` — **skip; do not copy.** The shared stub is the MIT licence, and an application is proprietary (`"license": "proprietary"`, set in step 5). `laravel new` ships no licence file. If the target already has an open-source `LICENSE` (an earlier scaffold copied the MIT stub, or repo-new 1.2.x wrote it), prompt to delete it. If `README.md` links to `LICENSE` or says this project is open source, prompt to update that text too. The stock Laravel README line about the framework's own MIT licence is not a claim about the project.
-- `.config/boost.php` — **skip; do not copy.** `.config/boost.php` configures `sandermuller/boost-core`, which a `laravel-project` does not carry (it uses `laravel/boost`). It would be inert here. The other categories get it from `stubs/shared/.config/boost.php`; `laravel-project` is the one exclusion.
+- `.config/boost.php` — **skip the shared one.** It is package-flavoured (package umbrellas in the allowlist, agents without Cursor). `laravel-project` copies its own `stubs/laravel-project/.config/boost.php` in step 7.
 
 ### 7. Overlay laravel-project-specific stubs
 
@@ -154,7 +157,8 @@ Likely conflicts:
 
 For each file in `$REPO_INIT_HOME/stubs/laravel-project/`:
 
-- `boost.json` — `laravel/boost` writes this on install. If absent (user opted out of Boost), copy ours.
+- `boost.json` — handle it BEFORE `.config/boost.php` below. `laravel/boost` writes this on install. Copy ours only when `boost.json`, `.config/boost.php`, and `.config/boost/boost.json.retired` are ALL absent (the user opted out of Boost on a first run). Once the wrapper config exists, the wrapper owns the sync: a missing `boost.json` is the archived state — a clean checkout lacks the gitignored archive too — so never copy the file back. The first successful `project-boost:sync` (step 9) archives it to `.config/boost/boost.json.retired`. That is intended: it stops `php artisan boost:update` (which `herd link` runs on its own) from re-seeding files that `project-boost-laravel` now owns.
+- `.config/boost.php` — copy. **Skip if EITHER `.config/boost.php` OR a root `boost.php` already exists — never create both.** When one exists, apply the upgrade step in `$REPO_INIT_HOME/references/remote-skills.md` instead. Before the first sync, add to `withAgents()` every agent that `boost.json` lists and boost-core supports: the sync archives `boost.json` only when they are all adopted. Substitute `__SKILL_TAGS__` from the `skill-tags` knob per `$REPO_INIT_HOME/references/placeholder-rules.md`. When the app uses Pest, add `'pest'` to `withTags()`. `withAllowedVendors()` is explicit, where `laravel/boost` alone picked up every package that ships its own boost skills: add each such installed package (`ls -d vendor/*/*/resources/boost`) except `laravel/boost`, which the wrapper injects.
 - `phpstan.neon.dist` — copy. Project uses paths `[app, routes, config, database, tests]` (NOT `src tests` — see RQ7).
 - `rector.php` — copy. Project uses `withPaths([app, routes, config, database, tests])`. When `with-hihaho-rules`, also adds `Hihaho\RectorRules\Set\HihahoSetList::ALL`.
 - `README.append.md` — append its content to the existing `README.md` (Laravel ships a README); never overwrite.
@@ -202,16 +206,22 @@ Dedupe — don't add a line that's already there.
 
 ### 9. Sync AI assets
 
-**Skip if:** `laravel/boost` has already installed its skills (an agent skill dir such as `.claude/skills/` holds Boost-managed content) AND no `.ai/` edits are pending.
+**Skip if:** `.claude/skills/security-audit/SKILL.md` exists, `CLAUDE.md` holds only an `@AGENTS.md` import (or is absent), and both `composer.json` arrays below already hold the guarded entry.
 
-`laravel-project` uses `laravel/boost` — installed by `laravel new --boost` in step 2 — as its AI tooling. Laravel Boost v2 installs skills based on the packages detected in `composer.json` and keeps them in sync:
+`laravel-project` runs two boost tools side by side. `laravel/boost` (from `laravel new --boost`) keeps the MCP server and its bundled Laravel skills. `sandermuller/project-boost-laravel` (step 5) takes over the agent-file fan-out, so tag filtering and the canonical remote skills apply to the app too.
 
-```bash
-php artisan boost:install     # --boost already triggered this during `laravel new`; safe to re-run
-php artisan boost:update      # re-sync vendor skills after dependency changes
-```
+1. Add the auto-sync entry to `post-install-cmd` and `post-update-cmd` in `composer.json`. Copy the dev-mode-guarded one-liner verbatim from `$REPO_INIT_HOME/references/composer-scripts.md` (`laravel-project` section). It is an ENTRY in each array, never the whole key — keep the skeleton's `vendor:publish` handler in `post-update-cmd`.
+2. Run the first sync:
 
-`laravel/boost` is the application-level boost tool. It is distinct from the `sandermuller/boost-core` engine used by repo-init's *package* categories — a `laravel-project` does NOT carry `sandermuller/package-boost-php` or `boost-core`, so there is no `vendor/bin/boost` here.
+   ```bash
+   php artisan project-boost:reconcile   # after `laravel new --boost`: CLAUDE.md / AGENTS.md hold laravel/boost-seeded guidance
+   php artisan project-boost:install     # instead, when no agent file exists yet (the --no-boost path)
+   ```
+
+   `project-boost:reconcile` backs the seeded files up to `.boost-reconcile/`, runs `project-boost:sync`, and replaces `CLAUDE.md` with an `@AGENTS.md` import. On a fresh scaffold the backup holds only `laravel/boost`'s own text — delete `.boost-reconcile/`.
+3. Confirm `.claude/skills/security-audit/SKILL.md` exists, `boost.json` is gone (archived to `.config/boost/boost.json.retired`), and `AGENTS.md` carries the `voice` guideline from `sandermuller/boost-skills`.
+
+From here on, sync with `php artisan project-boost:sync`. Never run `php artisan boost:update`, `php artisan boost:install` without `--mcp`, or the bare `vendor/bin/boost sync` — each one bypasses or races the wrapper. See the `project-boost-laravel` configuration guide, "Things to avoid".
 
 If repo-init is also installed in this project locally (escape hatch, rare), its skill propagates here too via the global user-scope sync.
 
@@ -250,7 +260,7 @@ Want to run an audit next (`phases/audit-laravel-project.md`), or are you done w
 
 ## Idempotency invariants (RQ41 contract)
 
-Re-running this phase against a target where all steps' post-conditions are already met must be a no-op: no `laravel new`, no `composer require`, no stub overwrites, no `boost:update`. Steps 1, 3, 4, 10, 11 are read-only and always run. Steps 2, 5-9 have explicit `Skip if:` preconditions.
+Re-running this phase against a target where all steps' post-conditions are already met must be a no-op: no `laravel new`, no `composer require`, no stub overwrites, no `project-boost:sync`. Steps 1, 3, 4, 10, 11 are read-only and always run. Steps 2, 5-9 have explicit `Skip if:` preconditions.
 
 Tested in CI via `check-bootstrap-idempotency.sh`.
 

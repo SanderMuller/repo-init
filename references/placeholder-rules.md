@@ -23,7 +23,7 @@ Exact derivation rules for the placeholders used in `stubs/`. No agent guessing.
 | `__TEST_COVERAGE_FLAG__` | per `--test-framework=`, the `test-coverage` script flag | `--coverage` (pest) or `--coverage-html=coverage` (phpunit) |
 | `__SKILL_TAGS__` | per the bootstrap skill-tag picker; each picked `sandermuller/boost-skills` tag rendered as `, '<tag>'` — a LEADING comma-space per element — or the empty string when nothing is picked. Never carries `'voice'` — the stub hard-codes that one | `, 'php', 'jira'` (or empty) |
 
-`__SKILL_TAGS__` substitutes into the array argument of `->withTags(['voice'__SKILL_TAGS__])` in `stubs/shared/.config/boost.php`. The substitution carries its own leading separators and NO surrounding brackets — the stub supplies the brackets and the first element. The result is exact in both cases, with no cleanup step:
+`__SKILL_TAGS__` substitutes into the array argument of `->withTags(['voice'__SKILL_TAGS__])` in `stubs/shared/.config/boost.php`, and of `->withTags(['voice', Tag::Laravel__SKILL_TAGS__])` in `stubs/laravel-project/.config/boost.php`. The substitution carries its own leading separators and NO surrounding brackets — the stub supplies the brackets and the first element. The result is exact in both cases, with no cleanup step:
 
 ```php
 // picked: php, jira  →  __SKILL_TAGS__ = ", 'php', 'jira'"
@@ -32,13 +32,13 @@ Exact derivation rules for the placeholders used in `stubs/`. No agent guessing.
 ->withTags(['voice'])
 ```
 
-Only `stubs/shared/.config/boost.php` uses it. (boost-core 0.20 changed `withTags()` / `withAgents()` from variadic to array arguments; the stub and this placeholder target the array form.)
+`stubs/shared/.config/boost.php` and `stubs/laravel-project/.config/boost.php` use it. The `laravel-project` stub hard-codes `Tag::Laravel` as well, so the picker never offers `laravel`. (boost-core 0.20 changed `withTags()` / `withAgents()` from variadic to array arguments; the stub and this placeholder target the array form.)
 
 **`'voice'` is hard-coded in the stub, not part of the picker.** The `voice` tag ships `sandermuller/boost-skills`' writing-voice guideline (`resources/boost/guidelines/voice.md`, tagged `voice` in that package's `.boost-tags.yaml`) — the canonical setup wants it in every repo that carries boost-skills, so it is structural, not a knob. Never offer it in the picker, never substitute it through `__SKILL_TAGS__`, and never drop it from a scaffolded or upgraded `.config/boost.php`. The stub floor `sandermuller/boost-skills: ^2.27.0` guarantees the guideline is present — 2.27.0 is verified to ship `voice.md` plus its `.boost-tags.yaml` entry. An older resolved version makes the tag a silent no-op, which is why the tag and the floor move together.
 
 `vendor/bin/boost install` can drop the tag. Its picker rewrites the whole `withTags()` list from the operator's selection, and an empty selection removes the call entirely (`BoostConfigWriter::write()`, `$tags === []` branch). So a later interactive install silently un-does the always-on tag. The audit phases' voice-tag finding is the safety net; the stub comment warns about it.
 
-`laravel-project` is the one category with no `.config/boost.php` (it carries `laravel/boost`, not boost-core, and no boost-skills) — the `voice` tag does not apply there.
+`laravel-project` copies its own `stubs/laravel-project/.config/boost.php` (read by `sandermuller/project-boost-laravel`). It carries boost-skills like every other category, so the `voice` rules above apply there too.
 
 ## Boost config location (canonical: `.config/boost.php`)
 
@@ -55,8 +55,8 @@ ignores it via the managed `.gitignore` block — both handled automatically by
 if EITHER `.config/boost.php` OR a legacy root `boost.php` already exists in the target.
 Never create `.config/boost.php` alongside an existing root `boost.php` — two configs is
 a hard error in boost-core. Bootstrap does not migrate a legacy root `boost.php`; that is
-the upgrade phase's job (`upgrade-<category>.md`). `laravel-project` has no boost-core
-config at all — it uses `laravel/boost`.
+the upgrade phase's job (`upgrade-<category>.md`). The same guard applies to
+`laravel-project`, whose stub lives at `stubs/laravel-project/.config/boost.php`.
 
 ## StudlyCase rule
 

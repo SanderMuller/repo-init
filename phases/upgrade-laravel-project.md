@@ -30,6 +30,12 @@ Per key, read the current `config.allow-plugins` value first:
 
 The merge-keys step later is then a no-op for these keys. See `$REPO_INIT_HOME/references/composer-failure-modes.md` → "Allow-plugins prompt / blocked plugin".
 
+## Decide on `sandermuller/project-boost-laravel` (BEFORE any file or dep step)
+
+When the app does not carry `sandermuller/project-boost-laravel`, ask the user now whether to add it. It takes over the agent-file fan-out from `laravel/boost`, rewrites `CLAUDE.md` to an `@AGENTS.md` import, and archives `boost.json` on the first sync. The answer gates the later steps that need the wrapper: `.config/boost.php` (Apply MISSING files), the wrapper and `sandermuller/boost-skills` (Apply MISSING dev deps), the auto-sync hooks (merge-keys patches), the `voice` tag, and the remote skills. Ask once, here — the boost config must exist before the first sync runs.
+
+When the user accepts — or when the app already carries the wrapper but `CLAUDE.md` / `AGENTS.md` still hold a `<laravel-boost-guidelines>` block, so `project-boost:reconcile` has not run yet — remove any boost auto-sync ENTRY from `post-install-cmd` / `post-update-cmd` now, before the first Composer command of this phase: a `BoostAutoSync::run` callback, a shell conditional that calls `vendor/bin/boost sync`, or a `project-boost:sync` call. Leave the arrays' other handlers in place. Otherwise the `composer require` calls below fire that hook, and a sync runs before `project-boost:reconcile` can capture hand edits in the `laravel/boost`-seeded agent files. Do not add the guarded entry in the merge-keys step either — later steps still run Composer. "Sync AI assets" adds it after `project-boost:reconcile`.
+
 ## Apply MISSING files
 
 For each MISSING file:
@@ -37,6 +43,14 @@ For each MISSING file:
 1. Read stub from `$REPO_INIT_HOME/stubs/<shared|laravel-project>/<path>`.
 2. Substitute placeholders.
 3. Write — prompt on conflict per `replace` mode.
+
+A legacy root `boost.php` (wrapper apps only) moves first: `mkdir -p .config && git mv boost.php .config/boost.php` — never copy, two configs is a hard error. Then edit the moved file instead of copying the stub.
+
+`.config/boost.php` comes from `stubs/laravel-project/.config/boost.php`, not the shared stub. Copy it only when the app carries `sandermuller/project-boost-laravel` or the user accepted it above, and never next to a root `boost.php`. Before the first sync, set three things in the config — the fresh copy, or an existing one (only the `__SKILL_TAGS__` item is copy-only):
+
+- `__SKILL_TAGS__` — substitute per `$REPO_INIT_HOME/references/placeholder-rules.md`. Pre-select `php` in the picker, plus any `boost-skills` tag the user names.
+- `withAgents()` — add every agent that `boost.json` lists. The first sync archives `boost.json` only when all the agents in it that boost-core supports are adopted.
+- `withAllowedVendors()` — `laravel/boost` alone synced the skills of every installed package that ships `resources/boost/`; the wrapper syncs only the vendors listed here. Keep `sandermuller/boost-skills` and add each other such package (`ls -d vendor/*/*/resources/boost`) except `laravel/boost`, which the wrapper injects. `vendor/bin/boost scan` is the interactive picker for the same list. List the agent skill directories before the first sync and compare after it. A skill that disappeared means a missing vendor or a missing tag: the wrapper's tag filter drops, for example, `volt-development` (tagged `laravel livewire frontend`) unless all three tags are listed. Run `php artisan project-boost:where` and `vendor/bin/boost tags`, add the tags the installed stack needs, and sync again.
 
 `.ai/rules/views.md` also needs its row in `.ai/rules/index.md` — same step as bootstrap §7. When the installed `laravel/boost` is below 2.5, prompt to update it, or the rule is inert. On a Pest repo, do not copy `tests/Unit/Blade/InlinePhpDirectiveTest.php`; write the Pest equivalent of the same scan instead.
 
@@ -126,8 +140,10 @@ Per-category mandatory `require-dev` for `laravel-project`:
 - `laravel/pail`
 - `laravel/tinker` (Laravel may ship this already)
 - `driftingly/rector-laravel`
+- `sandermuller/project-boost-laravel` (`^1.5`) — only when the user accepted it at the top of this phase, or the app already carries it at a constraint that can resolve below 1.5.0: raise that constraint, because the sync steps below rely on 1.5's reconcile behaviour. When the user declined, skip it, `sandermuller/boost-skills`, the auto-sync hooks, and the voice and remote-skills steps below.
+- `sandermuller/boost-skills` (`^2.27.0`) — with the wrapper only; without boost-core nothing syncs it. Run `composer require --dev "sandermuller/boost-skills:^2.27.0"` only when the declared constraint can resolve below 2.27.0 or the package is absent.
 
-Plus shared dev deps from `$REPO_INIT_HOME/references/shared-dev-deps.md` minus what Laravel installer typically already ships (read freshly-generated composer.json to confirm): `laravel/pao`, `laravel/pint` (already), `phpstan/extension-installer`, `phpstan/phpstan-strict-rules`, `phpstan/phpstan-deprecation-rules`, `phpstan/phpstan-phpunit`, `rector/rector`, `spaze/phpstan-disallowed-calls`, `symplify/phpstan-rules` (`^14.17` — see shared-dev-deps.md "Symplify formatter dep"), `tomasvotruba/cognitive-complexity`, `tomasvotruba/type-coverage` (`^2.3` — it bundles the abandoned `rector/type-perfect`, which must NOT be installed alongside it; see shared-dev-deps.md "Type-perfect dep"), `nunomaduro/collision` (Laravel ships), `orchestra/testbench` (typically NOT in laravel-project — skip). `laravel-project` does NOT take `sandermuller/package-boost-php` — `laravel/boost` (above) is its boost-family tool.
+Plus shared dev deps from `$REPO_INIT_HOME/references/shared-dev-deps.md` minus what Laravel installer typically already ships (read freshly-generated composer.json to confirm): `laravel/pao`, `laravel/pint` (already), `phpstan/extension-installer`, `phpstan/phpstan-strict-rules`, `phpstan/phpstan-deprecation-rules`, `phpstan/phpstan-phpunit`, `rector/rector`, `spaze/phpstan-disallowed-calls`, `symplify/phpstan-rules` (`^14.17` — see shared-dev-deps.md "Symplify formatter dep"), `tomasvotruba/cognitive-complexity`, `tomasvotruba/type-coverage` (`^2.3` — it bundles the abandoned `rector/type-perfect`, which must NOT be installed alongside it; see shared-dev-deps.md "Type-perfect dep"), `nunomaduro/collision` (Laravel ships), `orchestra/testbench` (typically NOT in laravel-project — skip). `laravel-project` does NOT take `sandermuller/package-boost-php` — `sandermuller/project-boost-laravel` (above) is its boost-family member.
 
 Plus confirmed opt-ins:
 
@@ -157,9 +173,9 @@ Per `references/composer-scripts.md`:
 
 - **`scripts`**: **Read `$REPO_INIT_HOME/references/composer-scripts.md` IN FULL before patching.** Do NOT infer the canonical block from memory — a real laravel-package upgrade (2026-05-25) shipped a Windows-broken `post-install-cmd` and no `post-update-cmd` because the agent auto-completed from training data. For each documented key (10 for laravel-project: baseline 11 minus `sync-ai`; `test` / `test-coverage` may already be present from `laravel new`, don't override): verify present with canonical value. Three cases — **MISSING** (insert), **PRESENT** (leave), **MISMATCH** (prompt — show both sides, offer replace / skip).
 
-  laravel-project does NOT get a `sync-ai` script — `laravel/boost` owns AI-asset sync for applications (`php artisan boost:update`); there is no `vendor/bin/boost` here.
+  laravel-project does NOT get a `sync-ai` script — AI-asset sync is `php artisan project-boost:sync`, which the two hooks below run. A `sync-ai` that calls the bare `vendor/bin/boost sync` bypasses the wrapper.
 
-  **`post-install-cmd` / `post-update-cmd` are scaffold-conditional**: the canonical value — the dev-mode-guarded `@php -r` one-liner, copied verbatim from `references/composer-scripts.md` — applies when `sandermuller/project-boost-laravel` is in `require-dev`. Detect on the wrapper, NOT on `sandermuller/boost-core` — the wrapper pulls boost-core transitively, so boost-core's presence proves nothing. If the wrapper is absent, skip these two keys entirely. Three MISMATCH shapes, all HIGH severity, all prompted before patching: a POSIX-shell value (Windows-broken, and there is no `vendor/bin/boost` here); `["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"]` (autoloads and reports success, but bypasses the wrapper's injection pipeline and syncs a smaller skill set); and an UNGUARDED `["@php artisan project-boost:sync"]` (fires under `composer install --no-dev`, where the dev-only command does not exist, and aborts the install). With the wrapper present, replace any of the three with the guarded one-liner; without it, REMOVE the boost ENTRY — never the key. The Laravel skeleton ships its own `post-update-cmd` (`@php artisan vendor:publish --tag=laravel-assets --ansi --force`); deleting the key drops Laravel's asset publishing. Append the boost entry after the handlers already there.
+  **`post-install-cmd` / `post-update-cmd` are scaffold-conditional**: the canonical value — the dev-mode-guarded `@php -r` one-liner, copied verbatim from `references/composer-scripts.md` — applies when `sandermuller/project-boost-laravel` is in `require-dev`. Detect on the wrapper, NOT on `sandermuller/boost-core` — the wrapper pulls boost-core transitively, so boost-core's presence proves nothing. If the wrapper is absent, skip these two keys entirely. Three MISMATCH shapes, all HIGH severity, all prompted before patching: a POSIX-shell value (Windows-broken, and there is no `vendor/bin/boost` here); `["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"]` (autoloads and reports success, but bypasses the wrapper's injection pipeline and syncs a smaller skill set); and an UNGUARDED `["@php artisan project-boost:sync"]` (fires under `composer install --no-dev`, where the dev-only command does not exist, and aborts the install). With the wrapper present, replace any of the three with the guarded one-liner; without it, REMOVE the boost ENTRY — never the key. The Laravel skeleton ships its own `post-update-cmd` (`@php artisan vendor:publish --tag=laravel-assets --ansi --force`); deleting the key drops Laravel's asset publishing. Append the boost entry after the handlers already there. Exception: when the "Decide" step removed the boost entry, skip it here — "Sync AI assets" adds it after `project-boost:reconcile`.
 - **`scripts.dev`**: if absent, suggest adding the multi-process dev script (concurrent server + queue + pail + vite). This is laravel-project canonical. Show example, ask before inserting.
 - **`config.allow-plugins`**: insert `phpstan/extension-installer: true`, `pestphp/pest-plugin: true` (if pest), `php-http/discovery: true` (Laravel default).
 - **`config.sort-packages`**: set to `true`.
@@ -169,6 +185,7 @@ Don't touch `extra.laravel.providers` for laravel-project — Laravel uses `extr
 ## Apply NON-CANONICAL fixes (each prompted)
 
 - **Licence is not proprietary**: prompt "set `composer.json` `license` to `proprietary`?" and, when a `LICENSE` file holds an open-source licence, "delete `LICENSE`?" Ask for each; the user can decline either. If `README.md` links to `LICENSE` or says this project is open source, prompt to update that text in the same pass, so the README does not contradict `composer.json`. The stock Laravel README line about the framework's own MIT licence is not a claim about the project.
+- **`php artisan boost:update` in a composer script** (with the wrapper only): prompt, then remove that entry. Leave the array's other handlers in place.
 - **`phpunit.xml` (no .dist)**: prompt "rename to `phpunit.xml`?" Only if `.dist` doesn't already exist.
 - **PHPUnit cache findings** (if `test-framework=phpunit`): apply `$REPO_INIT_HOME/references/phpunit-config.md` Upgrade-actions section — set `cacheDirectory=".cache/phpunit"`, `rm -rf .phpunit.cache`, `git rm -r --cached .phpunit.cache` if previously committed.
 - **CI path filter drift — `phpstan.yml` missing `composer.json` / `composer.lock`**: insert both lines under the `push.paths` and `pull_request.paths` blocks in `.github/workflows/phpstan.yml`.
@@ -218,15 +235,36 @@ _ide_helper_models.php
 
 Dedupe — never add a duplicate.
 
-## Run laravel/boost sync
+## Ensure the `voice` and `laravel` tags are set
 
-`laravel-project` uses `laravel/boost` (not `sandermuller/boost-core`) for AI-asset sync. Laravel Boost v2 installs and updates skills from the packages detected in `composer.json`:
+**Skip if:** the app does not carry `sandermuller/project-boost-laravel`, OR the boost config's `withTags([...])` already contains `'voice'` and `'laravel'` (or `Tag::Laravel`), lists `sandermuller/boost-skills` in `withAllowedVendors()`, and `sandermuller/boost-skills` is at `^2.27.0` or higher.
+
+The tag ships `sandermuller/boost-skills`' writing-voice guideline into `AGENTS.md`. It is structural, not a user knob — never prompt to drop it.
+
+1. Add `'voice'` to the `withTags([...])` array — put it first — and `'laravel'` when neither `'laravel'` nor `Tag::Laravel` is there: the wrapper filters its injected `laravel/boost` skills by tag, so without it `laravel-best-practices` never ships. If the config has NO `withTags(...)` call, add `->withTags(['voice', 'laravel'])`.
+2. Add `'sandermuller/boost-skills'` to `withAllowedVendors([...])` when absent.
+3. The `^2.27.0` floor comes from the dev-dep step above. The tag and the floor move together.
+
+## Ensure the canonical remote skills
+
+**Skip if:** the app does not carry `sandermuller/project-boost-laravel`.
+
+Apply the upgrade step in `$REPO_INIT_HOME/references/remote-skills.md` to the boost config.
+
+## Sync AI assets
+
+With `sandermuller/project-boost-laravel`:
 
 ```bash
-php artisan boost:update
+php artisan project-boost:reconcile   # only while CLAUDE.md / AGENTS.md still hold a <laravel-boost-guidelines> block
+php artisan project-boost:sync        # otherwise, and every later sync
 ```
 
-If `laravel/boost` isn't installed yet, run `php artisan boost:install` first (or `composer require laravel/boost` then `php artisan boost:install`).
+When this run removed the boost entry (see the "Decide" step), add the guarded boost entry to `post-install-cmd` / `post-update-cmd` now, after `project-boost:reconcile` — copied verbatim from `$REPO_INIT_HOME/references/composer-scripts.md`.
+
+`project-boost:reconcile` backs the seeded files up to `.boost-reconcile/` and captures any hand-authored text outside `laravel/boost`'s marker into `.ai/guidelines/`. Show the user what it captured before deleting `.boost-reconcile/`. Then confirm `.claude/skills/security-audit/SKILL.md` exists and `AGENTS.md` carries the voice guideline. Never run `php artisan boost:update` or the bare `vendor/bin/boost sync` here — see the `project-boost-laravel` configuration guide, "Things to avoid".
+
+Without the wrapper (the user declined it), `laravel/boost` keeps the sync: `php artisan boost:update`, or `php artisan boost:install` when it is not installed yet.
 
 ## Verification
 

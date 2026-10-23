@@ -20,7 +20,7 @@ shared:
       - "tomasvotruba/type-coverage: ^2.3"  # bundles the abandoned rector/type-perfect; ^2.2 is NOT acceptable (2.2.2 registers no type_perfect params). rector/type-perfect must NOT be installed alongside it — see shared-dev-deps.md "Type-perfect dep"
       - nunomaduro/collision
       - orchestra/testbench
-      - sandermuller/boost-skills  # the boost-skills skill library; synced via boost-core. Canonical floor ^2.27.0 (ships the voice guideline the always-on `voice` tag needs). Excluded for laravel-project (no boost-core). skill-bundle hand-lists it (consumes-shared-dev-deps: false).
+      - sandermuller/boost-skills  # the boost-skills skill library; synced via boost-core. Canonical floor ^2.27.0 (ships the voice guideline the always-on `voice` tag needs). skill-bundle hand-lists it (consumes-shared-dev-deps: false).
   # There is no PHP-floor conditional any more. Every category floors at `^8.4`
   # or higher (laravel-project: `^8.5`), which is what both successor packages
   # require, so `symplify/phpstan-extensions` and `rector/type-perfect` — the two
@@ -29,7 +29,7 @@ shared:
   # boost-family umbrella is NOT shared — it is assigned per category below:
   #   framework-agnostic Composer package  -> sandermuller/package-boost-php
   #   Laravel-specific Composer package    -> sandermuller/package-boost-laravel
-  #   Laravel application                  -> laravel/boost
+  #   Laravel application                  -> sandermuller/project-boost-laravel (next to laravel/boost)
   # All three pull sandermuller/boost-core transitively (the skill-sync engine).
   test-framework:
     pest:
@@ -76,6 +76,7 @@ categories:
         - laravel/pail
         - laravel/tinker
         - driftingly/rector-laravel
+        - "sandermuller/project-boost-laravel: ^1.5"  # Laravel-application boost-family member; pulls boost-core transitively. Takes over the agent-file fan-out from laravel/boost and reads .config/boost.php (remote skills — see references/remote-skills.md)
     optional:
       with-hihaho-rules:
         default-inference: vendor==hihaho OR hihaho/phpstan-rules in require-dev
@@ -89,8 +90,7 @@ categories:
         require:
           - spatie/security-advisories-health-check  # no-op unless SecurityAdvisoriesCheck::new() is registered in the health-check list
         require-dev: []
-    shared-exclusions:
-      - sandermuller/boost-skills  # boost-skills' skills sync via boost-core; laravel-project uses laravel/boost, not boost-core — so boost-skills would be inert here
+    shared-exclusions: []
     # shared-stub-skip: stubs/shared/ files this category does NOT plain-copy
     # (handled specially, or not applicable). DENYLIST — absent ⇒ copy all of
     # stubs/shared/. Paths are stub-relative and PRE-rename (`_gitattributes`,
@@ -100,7 +100,7 @@ categories:
       - .gitignore          # append-only merge into Laravel's
       - phpunit.xml         # Laravel ships its own
       - README.md           # laravel-project appends via README.append.md
-      - .config/boost.php   # laravel-project uses laravel/boost, not boost-core (stub at stubs/shared/.config/boost.php)
+      - .config/boost.php   # laravel-project copies its own stubs/laravel-project/.config/boost.php (project-boost-laravel agents + tags), not the package-flavoured shared one
       - tests/              # Laravel ships its own test suite
       - .mcp.json           # laravel/boost writes its own; the phase copies ours only if absent
       - LICENSE             # an application is proprietary; the stub is MIT

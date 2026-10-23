@@ -39,8 +39,9 @@ Ask the user (with auto-inferred defaults):
 
 **Category-specific (laravel-project):**
 
-- [ ] `boost.json` (`laravel/boost` writes this on install; ours overlays if absent)
-- [ ] `CLAUDE.md` and `AGENTS.md` (package-boost generated)
+- [ ] `.config/boost.php` (or a legacy root `boost.php` — never both) — only when the app carries `sandermuller/project-boost-laravel`, which reads it. Without the wrapper, the missing wrapper dep is the finding, not this file. Canonical shape: `stubs/laravel-project/.config/boost.php`.
+- [ ] `boost.json` (`laravel/boost` writes this on install; ours overlays if absent) — only WITHOUT `sandermuller/project-boost-laravel`. With the wrapper, a successful `project-boost:sync` archives it to the gitignored `.config/boost/boost.json.retired`, so a fresh checkout has neither file: absence is canonical. A committed `boost.json` next to the wrapper means the archive has not happened yet — report it (LOW) and let the next `project-boost:sync` handle it.
+- [ ] `CLAUDE.md` and `AGENTS.md` (boost generated; with the wrapper, `CLAUDE.md` holds only an `@AGENTS.md` import)
 - [ ] `composer.json` with `type: project`
 - [ ] `config/hsts.php`
 - [ ] `app/Http/Middleware/SecurityHeaders.php` (any path is fine — mijntp uses `app/Http/Middleware`, collectiq `app/Middleware`; only flag MISSING when no such class exists)
@@ -66,6 +67,8 @@ From `$REPO_INIT_HOME/references/per-category-deps.md#laravel-project` MANDATORY
 - [ ] `laravel/pail`
 - [ ] `laravel/tinker` (Laravel may ship this already)
 - [ ] `driftingly/rector-laravel`
+- [ ] `sandermuller/project-boost-laravel` — canonical floor `^1.5` (1.3.0 archives `boost.json`, 1.5.0 swaps `CLAUDE.md` for an `@AGENTS.md` import in reconcile); a constraint that can resolve lower is NON-CANONICAL. The boost-family member that delivers tag filtering and the canonical remote skills (`$REPO_INIT_HOME/references/remote-skills.md`). MISSING (MEDIUM, DRIFT) on an app scaffolded before repo-init added it. Confirm with the user before the upgrade adds it: it takes over the agent-file fan-out from `laravel/boost` and archives `boost.json`.
+- [ ] `sandermuller/boost-skills` — canonical floor `^2.27.0`, the version that ships the voice guideline the always-on `voice` tag needs. A constraint that can resolve below 2.27.0 does NOT count. MISSING (MEDIUM, DRIFT) on an app scaffolded before repo-init adopted it; it only syncs through `sandermuller/project-boost-laravel`, so report the two together.
 
 Plus shared (`$REPO_INIT_HOME/references/shared-dev-deps.md`) minus what Laravel already includes:
 
@@ -83,7 +86,7 @@ Plus shared (`$REPO_INIT_HOME/references/shared-dev-deps.md`) minus what Laravel
 - [ ] `nunomaduro/collision` (Laravel ships)
 - [ ] `orchestra/testbench` — typically NOT in laravel-project (it's a package-dev tool). Skip flagging.
 
-`laravel-project` carries `laravel/boost` (above) as its boost-family package — NOT `sandermuller/package-boost-php`. `laravel/boost` handles AI guideline + skill sync for Laravel applications; the `sandermuller/package-boost-*` umbrellas are for distributable packages, not apps.
+`laravel-project` carries `sandermuller/project-boost-laravel` (above) as its boost-family member, next to `laravel/boost` — NOT `sandermuller/package-boost-php`. `laravel/boost` keeps the MCP server and its bundled Laravel skills; the wrapper owns the agent-file fan-out. The `sandermuller/package-boost-*` umbrellas are for distributable packages, not apps.
 
 OPTIONAL (only when opt-in confirmed):
 
@@ -98,7 +101,7 @@ Test-framework:
 
 **Follow `$REPO_INIT_HOME/references/composer-scripts.md#audit-verification-protocol-mandatory`.** Every key below gets an explicit PRESENT / MISSING / MISMATCH verdict. Skimming is the failure mode — see the laravel-package upgrade incident (2026-05-25) where the agent shipped Windows-broken `post-install-cmd` and no `post-update-cmd` because it inferred the canonical block from training data.
 
-Baseline minus `sync-ai` (laravel-project uses `laravel/boost`, not `sandermuller/boost-core`; no `vendor/bin/boost` — AI sync is `php artisan boost:install` / `boost:update`).
+Baseline minus `sync-ai` (AI sync is `php artisan project-boost:sync`, which the auto-sync hooks below run; a `sync-ai` calling the bare `vendor/bin/boost sync` bypasses the wrapper).
 
 **Pre-step**: detect whether the scaffold carries `sandermuller/project-boost-laravel` (grep `composer.json` `require-dev`). This gates the two auto-sync rows below. Do NOT key this on `sandermuller/boost-core` — the wrapper pulls boost-core transitively, so boost-core's presence proves nothing.
 
@@ -168,6 +171,11 @@ Same logic as `audit-laravel-package.md` §OUTDATED — apply each file's mode f
 - [ ] **PHP floor below the category floor in `require.php`** (`^8.4` for a package, `^8.5` for `laravel-project`): NON-CANONICAL. The bump is ATOMIC with dropping `rector/type-perfect` and `symplify/phpstan-extensions` — both successors need PHP `^8.4`. See `$REPO_INIT_HOME/references/version-defaults.md` "PHP".
 - [ ] `composer.lock` NOT committed: for laravel-project the lockfile IS committed (Laravel convention — apps pin deps). If missing, suggest committing.
 - [ ] Two managed blocks in `.gitattributes`.
+- [ ] **`'laravel'` missing from `withTags(...)`** (MEDIUM severity, DRIFT; only with the wrapper): neither `'laravel'` nor `Tag::Laravel` is listed, so the tag filter drops the injected `laravel/boost` skills tagged `laravel` (for example `laravel-best-practices`). Fix = add it.
+- [ ] **`'voice'` missing from `withTags(...)` in the boost config** (MEDIUM severity, DRIFT; only when the app carries `sandermuller/project-boost-laravel`): the tag ships `sandermuller/boost-skills`' writing-voice guideline into `AGENTS.md`. It is structural, not a knob — see `$REPO_INIT_HOME/references/placeholder-rules.md` (`__SKILL_TAGS__`). A config with NO `withTags(...)` call is the same finding. Fix = add `'voice'` to the array, ensure `sandermuller/boost-skills` is at `^2.27.0` and in `withAllowedVendors()`, then run `php artisan project-boost:sync`.
+- [ ] **`sandermuller/boost-skills` installed but not in `withAllowedVendors()`** (MEDIUM severity, DRIFT): the allowlist is explicit, so none of its skills or guidelines sync. Fix = add `'sandermuller/boost-skills'` to the array.
+- [ ] **Canonical remote skills** (only when the app carries `sandermuller/project-boost-laravel`): apply the "Audit findings" rows in `$REPO_INIT_HOME/references/remote-skills.md` to the boost config.
+- [ ] **`php artisan boost:update` in a composer script** (MEDIUM severity, with the wrapper only): it re-seeds the guidance and skill directories the wrapper owns, so the next sync reports a takeover. Flag NON-CANONICAL; fix = remove that entry, leave the array's other handlers.
 - [ ] **Inline `@php(...)` directive in Blade** (LOW severity): `grep -rnE '@php[[:blank:]]*\(' resources/views`. Canonical Blade PHP is a multi-line `@php ... @endphp` block. Pint does not format Blade, so nothing catches this except `InlinePhpDirectiveTest`. Report each hit as `file:line`. Flag NON-CANONICAL.
 
 ### Security canon (see `$REPO_INIT_HOME/references/laravel-security-canon.md`)
