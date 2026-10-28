@@ -23,7 +23,7 @@
         "spatie/laravel-package-tools": "^1.14"
     },
     "require-dev": {
-        "driftingly/rector-laravel": "^2.5",
+        "driftingly/rector-laravel": "^2.7.3",
         "larastan/larastan": "^3.10",
         "laravel/boost": "^2.0||^3.0",
         "laravel/pao": "^1.0",
@@ -35,11 +35,11 @@
         "phpstan/phpstan-phpunit": "^2.0",
         "phpstan/phpstan-strict-rules": "^2.0",
         "phpunit/phpunit": "^11.0||^12.0",
-        "rector/rector": "^2.5",
+        "rector/rector": "^2.8",
         "sandermuller/boost-skills": "^2.27.0",
         "sandermuller/package-boost-laravel": "^1.0",
         "spaze/phpstan-disallowed-calls": "^4.13",
-        "symplify/phpstan-rules": "^14.17",
+        "symplify/phpstan-rules": "^14.19",
         "tomasvotruba/cognitive-complexity": "^1.2",
         "tomasvotruba/type-coverage": "^2.3"
     },

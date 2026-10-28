@@ -14,13 +14,15 @@ use Rector\Caching\ValueObject\Storage\FileCacheStorage;
 use Rector\Config\RectorConfig;
 
 // Rector rejects a containerCacheDirectory that does not exist yet.
-is_dir(__DIR__ . '/.cache/rectorContainer') || mkdir(__DIR__ . '/.cache/rectorContainer', recursive: true);
+is_dir(__DIR__ . '/.cache/phpstan') || mkdir(__DIR__ . '/.cache/phpstan', recursive: true);
 
 return RectorConfig::configure()
     ->withCache(
         cacheDirectory: './.cache/rector',
         cacheClass: FileCacheStorage::class,
-        containerCacheDirectory: './.cache/rectorContainer',
+        // Rector boots a PHPStan container and writes the same reflection cache
+        // entries PHPStan does, so it shares PHPStan's tmpDir: one copy, not two.
+        containerCacheDirectory: './.cache/phpstan',
     )
     ->withPreparedSets(
         deadCode: true,
@@ -88,10 +90,16 @@ The bootstrap "compose test-framework variant" step flips the `phpunit:` flag
 when the user picks the other framework: it adds the flag on a PHPUnit target
 and removes it on a Pest target. Removing the last flag removes the whole call.
 
-`containerCacheDirectory` must be set explicitly. Rector's default puts the
+`containerCacheDirectory` must be set explicitly, to `./.cache/phpstan` — the
+`tmpDir` of the canonical `phpstan.neon.dist`. Rector's default puts the
 container cache in the system temp directory, where
-`.github/workflows/rector-check.yml` — which caches `.cache/rectorContainer/` —
-cannot see it.
+`.github/workflows/rector-check.yml` — which caches
+`.cache/phpstan/cache/PHPStan` — cannot see it. Rector boots a PHPStan container, so it writes the same reflection and
+PHPDoc cache entries PHPStan does. `hihaho/rector.php` measured 1118 of the 1131
+entries Rector writes (99%) as entries PHPStan also wants; a separate
+`.cache/rectorContainer/` keeps a second copy of them. The cache keys carry the
+dependency and PHP versions, so a mismatch misses instead of returning stale
+data, and the two tools can write there at the same time.
 Rector also fails when that directory does not exist, so each stub creates it
 before `RectorConfig::configure()`. Without that line, a local run on a fresh
 clone fails. CI does not hit this, because `rector-check.yml` creates the directory.
@@ -153,30 +161,55 @@ constants belong to `mrpunyapal/rector-pest` and have no first-party equivalent;
 ## `withSkip` — stub defaults
 
 Every stub ships this list. These are repo-init's own defaults, chosen as rules
-that are noisy or that fight the house style. They are NOT drawn from the
-reference apps — none of them appears in `hihaho/rector.php` or
-`mijntp/rector.php`.
+that are noisy or that fight the house style. Most are NOT drawn from the
+reference apps. The exception is `TernaryToNullsafeCoalesceRector`, which
+`hihaho/rector.php` skips: it is in the `php80` set, so `withPhpSets()` runs it
+in every category, and its output fails the canonical PHPStan config. Reproduced
+with Rector 2.8.1 and PHPStan 2.3.3: `$user !== null ? $user->name : 'guest'`
+on a `?self` with a non-null `string $name` becomes `$user?->name ?? 'guest'`,
+which PHPStan reports as `nullsafe.neverNull`.
+
+`ExplicitNullableObjectInstanceRector` is the second exception; both reference
+apps skip it. It is in `codeQuality` from Rector 2.8.0, and every stub runs that
+set together with `deadCode`. Reproduced on Rector 2.8.1 with the full
+`hihaho/rector.php` minus this one skip: guards on a nullable enum parameter turn
+into `instanceof` checks, then `RemoveAlwaysTrueIfConditionRector` and
+`RemoveUnreachableStatementRector` empty a private method to `return;`. A queued
+job dispatch and a failure notification disappeared that way. All cases found
+involve a nullable enum. A single-rule fixture and a run with only the `deadCode`
+set did not reproduce it, so the chain needs more of a full config.
 
 ```php
 ->withSkip([
-    NullToStrictStringFuncCallArgRector::class,
     AddArrowFunctionReturnTypeRector::class,
-    EncapsedStringsToSprintfRector::class,
-    ExplicitBoolCompareRector::class,
     InlineArrayReturnAssignRector::class,
     PrivatizeFinalClassMethodRector::class,
     RemoveUselessParamTagRector::class,
     RemoveUselessReturnTagRector::class,
+    // Its `$x?->prop ?? $d` output fails PHPStan's nullsafe.neverNull.
+    TernaryToNullsafeCoalesceRector::class,
+    // On a nullable enum, its rewrite lets the deadCode set delete reachable code.
+    ExplicitNullableObjectInstanceRector::class,
 ])
 ```
 
 The phase file lets the agent ask the user whether to keep this list as-is or
 trim it.
 
+The list holds no `@deprecated` rule. Rector 2.8.0 removed every deprecated rule
+from the prepared sets and levels, so a skip for one is a no-op. Traced in
+`rector-src` 2.8.0 (`src/Config/Level/*.php`, `config/set/*.php`) and in the
+installed 2.8.1. `EncapsedStringsToSprintfRector` and `ExplicitBoolCompareRector`
+left the list for that reason, and the `rector/rector` floor is `^2.8`.
+`NullToStrictStringFuncCallArgRector` left too: it is not deprecated, but
+rector-src #8234 removed it from the `php81` set before 2.6.0, so no set runs
+it. Rector 2.8.1 warns "This skipped rule is never registered" for it.
+
 ## `withSkip` — laravel-project reference list
 
-Verified 2026-09-07 as the blanket (non-path-scoped) skips present in BOTH
-`hihaho/rector.php` and `mijntp/rector.php`. This is what a mature Laravel app on
+Verified 2026-10-28 (both apps on `rector/rector` 2.8.1) as the blanket
+(non-path-scoped) skips present in BOTH `hihaho/rector.php` and
+`mijntp/rector.php`, minus the two exceptions below. This is what a mature Laravel app on
 this toolchain converges on. Offer it to a `laravel-project` target on top of the
 stub defaults; it does not apply to package categories.
 
@@ -188,30 +221,42 @@ ApplyDefaultInsteadOfNullCoalesceRector::class,
 ArgumentAdderRector::class,
 ArrayExplicitBoolCompareRector::class,
 AssertSeeToAssertSeeHtmlRector::class,
-BinaryOpNullableToInstanceofRector::class,
 CarbonToDateFacadeRector::class,
 ClosureToArrowFunctionRector::class,
 CollectedByPropertyToCollectedByAttributeRector::class,
-CompleteDynamicPropertiesRector::class,
 ContainerBindConcreteWithClosureOnlyRector::class,
-DeclareStrictTypesRector::class, // Pint does this
 DispatchNonShouldQueueToDispatchSyncRector::class,
 EnvVariableToEnvHelperRector::class,
-FlipTypeControlToUseExclusiveTypeRector::class,
 InlineIsAInstanceOfRector::class,
 LocallyCalledStaticMethodToNonStaticRector::class,
 MigrateToSimplifiedAttributeRector::class,
-ObjectExplicitBoolCompareRector::class,
-PostIncDecToPreIncDecRector::class,
 PreferPHPUnitThisCallRector::class,
 RedirectRouteToToRouteHelperRector::class,
-RemoveDuplicatedReturnSelfDocblockRector::class,
 RenameClassRector::class,
 ReplaceServiceContainerCallArgRector::class,
 RestoreDefaultNullToNullableTypePropertyRector::class,
 ScopeNamedClassMethodToScopeAttributedClassMethodRector::class,
 SimplifyIfReturnBoolRector::class,
 ```
+
+Both apps dropped seven skips for rules that Rector 2.8 deprecates and no
+longer runs: `BinaryOpNullableToInstanceofRector`,
+`CompleteDynamicPropertiesRector`, `DeclareStrictTypesRector`,
+`FlipTypeControlToUseExclusiveTypeRector`, `ObjectExplicitBoolCompareRector`,
+`PostIncDecToPreIncDecRector`, `RemoveDuplicatedReturnSelfDocblockRector`. Pint's
+`declare_strict_types` still adds `declare(strict_types=1)`.
+
+`ExplicitNullableObjectInstanceRector` is skipped in both apps but is NOT in
+the list: it is in the stub defaults, so every category skips it.
+
+`RemoveDefaultAuthorizeTrueFromFormRequestRector` is skipped in both apps but is
+NOT in the list. Up to `driftingly/rector-laravel` 2.7.2 it read only the last
+statement, so it removed an `authorize()` that throws on a denied Gate check.
+2.7.3 (rector-laravel #598) only removes a method whose single statement is
+`return true`, which matches the `FormRequest` default. A fixture with
+`Gate::inspect()` and a `throw` stays unchanged on 2.7.3. The rule is in
+`LARAVEL_CODE_QUALITY`, so every Laravel stub floors `driftingly/rector-laravel`
+at `^2.7.3`.
 
 Five more rules are skipped in both apps but scoped to project-specific paths, so
 they carry over as a prompt rather than a default:

@@ -20,6 +20,22 @@ The `post-update-cmd` hook re-syncs the skill into `~/.claude/skills/sandermulle
 
 ---
 
+## 1.20.x → 1.21.0 (symplify 14.19, stricter PHPStan defaults, Rector 2.8)
+
+Additive for repo-init itself — `composer global update sandermuller/repo-init`. `phpstan.neon.dist` is notify-only, so edit existing repos by hand where noted.
+
+- **`symplify/phpstan-rules` floor is `^14.19`.** 14.19.0 adds two default-on rule sets, `modern` and `collections`. `^14.17` already resolves 14.19, so a repo scaffolded before this release runs `ForbiddenTraitRule` (every trait fails) and the other `modern` rules. Add `modern: false` and `collections: false` to `parameters.symplify`, and raise the constraint in the same pass: 14.17 and 14.18 reject the two keys. The upgrade phase adds the two keys under the existing symplify exception. See `references/phpstan-config.md` "Symplify rules".
+- **Five more PHPStan checks in every stub:** `checkTooWideReturnTypesInProtectedAndPublicMethods`, `checkTooWideParameterOutInProtectedAndPublicMethods`, `checkTooWideThrowTypesInProtectedAndPublicMethods`, `reportAlwaysTrueInLastCondition`, `reportAnyTypeWideningInVarTag`. Copy them into an existing `phpstan.neon.dist` if wanted.
+- **`type_coverage.declare` is removed from every stub.** type-coverage 2.5.1 deprecates it, has it do nothing, and prints a warning on each run. Pint's `declare_strict_types` rule already enforces `declare(strict_types=1)`. Delete the line from an existing `phpstan.neon.dist`.
+- **`laravel-project` reads config types.** The stub sets larastan's `checkConfigTypes: true`. Expect findings where an `env()` string reaches a typed parameter; cast in the config file.
+- **Rector shares PHPStan's cache directory.** Every stub `rector.php` sets `containerCacheDirectory: './.cache/phpstan'` and creates that directory, instead of `./.cache/rectorContainer`. Rector writes the same reflection cache PHPStan does, so one copy replaces two. `rector.php` is notify-only: change the `mkdir` line and the parameter by hand, then delete `.cache/rectorContainer/`. The shared `rector-check.yml` (replace mode) now creates `.cache/phpstan/` and caches `.cache/phpstan/cache/PHPStan`.
+- **`rector/rector` floor is `^2.8`, and deprecated skips are gone.** Rector 2.8.0 no longer runs any `@deprecated` rule, so a skip for one does nothing. The stub defaults drop `EncapsedStringsToSprintfRector` and `ExplicitBoolCompareRector`. The stub defaults also drop `NullToStrictStringFuncCallArgRector`, which no set runs from Rector 2.6.0. The `laravel-project` reference list drops seven deprecated rules. See `references/rector-config.md` "`withSkip`".
+- **Every stub skips `ExplicitNullableObjectInstanceRector`.** It is in `codeQuality` from Rector 2.8.0. Together with the `deadCode` rules it removed code that still runs in hihaho: on a nullable enum, a guard became an `instanceof` check, then a method body became `return;`. Add the skip and its `use` import to an existing `rector.php`.
+- **Every stub skips `TernaryToNullsafeCoalesceRector`.** The `php80` set runs it in every category, and its `$x?->prop ?? $d` output fails the canonical PHPStan config with `nullsafe.neverNull`. Add the skip and its `use` import to an existing `rector.php`.
+- **`driftingly/rector-laravel` floor is `^2.7.3`** in the Laravel stubs. Before 2.7.3, `RemoveDefaultAuthorizeTrueFromFormRequestRector` (in `LARAVEL_CODE_QUALITY`) removed an `authorize()` that throws on a denied Gate check.
+- **CI caches stop freezing.** `actions/cache` never overwrites a key that exists, and the old keys held only file hashes, so the first saved cache was restored for every later run. `phpstan.yml`, `pint-check.yml` and `rector-check.yml` now use separate restore and save steps with the commit SHA in the key, and save only on a push to `main`. `pint-check.yml` and `rector-check.yml` now also run on a push to `main` for that save. All three are replace-mode, so the upgrade phase rewrites them.
+- **New shared workflow `cache-prune.yml`.** It runs each night and keeps the newest 3 entries for each of the three cache prefixes on `main`. It needs `actions: write`, so the job holds that permission and runs no third-party action.
+
 ## 1.19.x → 1.20.0 (canonical remote skills, `project-boost-laravel`)
 
 Additive for repo-init itself — `composer global update sandermuller/repo-init`. Re-run `audit` on existing repos to find the gaps; `upgrade` applies them.

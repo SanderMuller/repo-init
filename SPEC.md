@@ -111,6 +111,7 @@ sandermuller/repo-init/
     │           ├── phpstan.yml
     │           ├── pint-check.yml
     │           ├── rector-check.yml
+    │           ├── cache-prune.yml
     │           ├── zizmor.yml
     │           └── update-changelog.yml
     ├── laravel-project/
@@ -356,7 +357,7 @@ orchestra/testbench
 
 `laravel/pao` ("Agent-optimized output for PHP testing tools") wraps phpunit/pest/pint/phpstan/rector/paratest with agent-friendly output formatting — load-bearing for an AI-driven dev setup. It's framework-agnostic (require: `php`, `laravel/agent-detector`) so it applies to every category. Its PHP floor `^8.3` matches our hard floor (§5.7), so no fallback path is needed.
 
-`symplify/phpstan-rules: ^14.17` is unconditional. 14.11 absorbed the abandoned `symplify/phpstan-extensions`, including the `symplify` error formatter, and requires PHP ^8.4 — which every floor now meets. It also ships the opt-in rules the canonical `phpstan.neon.dist` registers by hand; `phpstan/extension-installer` reaches none of them. See `references/shared-dev-deps.md` and `references/phpstan-config.md`.
+`symplify/phpstan-rules: ^14.19` is unconditional. 14.11 absorbed the abandoned `symplify/phpstan-extensions`, including the `symplify` error formatter, and requires PHP ^8.4 — which every floor now meets. It also ships the opt-in rules the canonical `phpstan.neon.dist` registers by hand; `phpstan/extension-installer` reaches none of them. See `references/shared-dev-deps.md` and `references/phpstan-config.md`.
 
 `tomasvotruba/type-coverage: ^2.3` is unconditional, and `rector/type-perfect` is gone. type-coverage 2.3.0 (PHP ^8.4) absorbed the abandoned type-perfect, and installing both double-registers `MethodNodeAnalyser`, so PHPStan aborts at boot. See `references/shared-dev-deps.md` "Type-perfect dep".
 
@@ -475,7 +476,7 @@ parameters:
     strictRules:
         allRules: true
     editorUrl: 'phpstorm://open?file=%%file%%&line=%%line%%'
-    type_coverage: { return: 100, param: 100, property: 100, constant: 100, declare: 100 }
+    type_coverage: { return: 100, param: 100, property: 100, constant: 100 }
     type_perfect: { null_over_false: true, narrow_return: true, narrow_param: true }
     cognitive_complexity: { class: 80, function: 20 }
 ```
@@ -538,7 +539,7 @@ Per-category `withPaths` and `withSets`:
 
 Rationale: an application runs on one interpreter the team controls, so it takes the newest language features immediately; a package runs on whatever its consumers have, so it floors one minor lower. A hard floor also avoids the matrix-of-matrices problem (each PHP × Laravel × test-framework cell that has to be tested).
 
-The `^8.4` floor is what lets the canon carry NO abandoned package. `symplify/phpstan-extensions` and `rector/type-perfect` were both kept only to serve a `^8.3` floor; their successors (`symplify/phpstan-rules ^14.17`, `tomasvotruba/type-coverage ^2.3`) each require PHP `^8.4`. Repos below the floor are flagged `NON-CANONICAL` on `require.php`; the upgrade phase offers the bump as a single composer.json edit, which drops the abandoned pair in the same pass.
+The `^8.4` floor is what lets the canon carry NO abandoned package. `symplify/phpstan-extensions` and `rector/type-perfect` were both kept only to serve a `^8.3` floor; their successors (`symplify/phpstan-rules`, `tomasvotruba/type-coverage`) required PHP `^8.4` when the canon adopted them. Their current releases declare `>=7.4`, so the floor now rests on Pest 5 and PHPUnit 13, which both require PHP `^8.4`. Repos below the floor are flagged `NON-CANONICAL` on `require.php`; the upgrade phase offers the bump as a single composer.json edit, which drops the abandoned pair in the same pass.
 
 ---
 
@@ -677,6 +678,7 @@ Check each path; if absent, mark MISSING and add to the audit report.
 - [ ] .github/workflows/phpstan.yml
 - [ ] .github/workflows/pint-check.yml
 - [ ] .github/workflows/rector-check.yml
+- [ ] .github/workflows/cache-prune.yml
 - [ ] .github/workflows/zizmor.yml
 - [ ] .github/workflows/run-tests.yml
 - [ ] .github/workflows/update-changelog.yml

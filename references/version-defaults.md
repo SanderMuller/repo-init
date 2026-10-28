@@ -24,8 +24,11 @@ Both floors shift together, one minor apart. When PHP 8.6 goes stable,
 
 The `^8.4` floor is what lets the canon carry NO abandoned packages. Both
 `symplify/phpstan-extensions` and `rector/type-perfect` existed in earlier canon
-only to serve a `^8.3` floor; their successors (`symplify/phpstan-rules ^14.17`,
-`tomasvotruba/type-coverage ^2.3`) each require PHP `^8.4`. See
+only to serve a `^8.3` floor; their successors (`symplify/phpstan-rules`,
+`tomasvotruba/type-coverage`) required PHP `^8.4` when the canon adopted them
+(symplify 14.11 to 14.17, type-coverage 2.3.0). Their current releases declare
+`>=7.4` (symplify from 14.18, type-coverage 2.5.1), so today the `^8.4` floor
+rests on Pest 5 and PHPUnit 13 (see "Pest" below). See
 `shared-dev-deps.md` → "Symplify formatter dep" and "Type-perfect dep".
 
 ### PHP version in CI workflows

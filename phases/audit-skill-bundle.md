@@ -22,6 +22,7 @@ None for `skill-bundle`. The category has no sub-flags.
 - [ ] `.config/boost.php` (boost-core agent config — pins claude-code / copilot / codex; canonical location, boost-core ≥ 0.17). A legacy root `boost.php` does NOT satisfy this — see NON-CANONICAL findings (it is flagged as drift to migrate).
 - [ ] `pint.json`
 - [ ] `.github/workflows/pint-check.yml`
+- [ ] `.github/workflows/cache-prune.yml`
 - [ ] `.github/workflows/zizmor.yml`
 - [ ] `.github/workflows/update-changelog.yml`
 - [ ] `.github/zizmor.yml` (zizmor rule config — disables `unpinned-uses`, since every workflow here is tag-pinned by convention)

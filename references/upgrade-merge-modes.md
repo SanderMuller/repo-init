@@ -17,6 +17,7 @@ Per-file declaration of how the upgrade phase reconciles a stub against an exist
 - `.editorconfig`
 - `.mcp.json`
 - `.github/workflows/phpstan.yml`, `.github/workflows/pint-check.yml`, `.github/workflows/rector-check.yml` — exception: `php-version: '8.5'` on a `^8.5` floor is correct, not OUTDATED (see `version-defaults.md` "PHP version in CI workflows")
+- `.github/workflows/cache-prune.yml`
 - `.github/workflows/zizmor.yml`
 - `.github/zizmor.yml`
 - `.github/workflows/update-changelog.yml`
@@ -59,7 +60,7 @@ Per-file declaration of how the upgrade phase reconciles a stub against an exist
 
 For `notify-only` files, audit mentions drift in the report ("`phpstan.neon.dist` has drifted from our stub; review manually") but doesn't push a fix.
 
-One exception: when an upgrade raises `symplify/phpstan-rules` to `^14.17` (or `composer update` resolves 14.17), it adds the `parameters.symplify` block from `phpstan-config.md` to `phpstan.neon.dist` in the same pass. Without the block, 14.17 turns on every Symplify rule set, so the dependency change breaks PHPStan on its own. The upgrade inserts only that block and touches nothing else in the file.
+One exception: when an upgrade raises `symplify/phpstan-rules` to `^14.19` (or `composer update` resolves 14.17 or later), it adds the `parameters.symplify` block from `phpstan-config.md` to `phpstan.neon.dist` in the same pass. Without the block, 14.17 turns on every Symplify rule set, and 14.19 adds `modern` and `collections`, so the dependency change breaks PHPStan on its own. When the block exists but lacks `modern` and `collections`, the upgrade adds those two keys. The upgrade inserts only that block and touches nothing else in the file.
 
 ## Why this matters
 

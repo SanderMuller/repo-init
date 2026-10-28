@@ -23,15 +23,17 @@ rules:
 parameters:
     tmpDir: .cache/phpstan
 
-    # symplify/phpstan-rules >= 14.17 turns these rule sets on by default.
+    # symplify/phpstan-rules turns these rule sets on by default.
     symplify:
         naming: false
         complexity: false
         configurable: false
         static: false
+        modern: false
         symfony: false
         symfonyConfig: false
         doctrine: false
+        collections: false
         phpunit: false
 
     paths:
@@ -51,7 +53,6 @@ parameters:
         param: 100
         property: 100
         constant: 100
-        declare: 100
 
     type_perfect:
         null_over_false: true
@@ -61,6 +62,13 @@ parameters:
     cognitive_complexity:
         class: 80
         function: 20
+
+    # Off at every level, and phpstan-strict-rules does not set them.
+    checkTooWideReturnTypesInProtectedAndPublicMethods: true
+    checkTooWideParameterOutInProtectedAndPublicMethods: true
+    checkTooWideThrowTypesInProtectedAndPublicMethods: true
+    reportAlwaysTrueInLastCondition: true
+    reportAnyTypeWideningInVarTag: true
 
     treatPhpDocTypesAsCertain: false
 
