@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Pre-`1.0.0` releases (0.x.x — historical) introduced breaking changes in MINOR bumps; from 1.0.0 onward repo-init follows standard SemVer (breaking changes ship as MAJOR only). The pre-1.0 entries below remain for reference.
 
+## [1.21.0](https://github.com/sandermuller/repo-init/compare/1.20.0...1.21.0) - 2026-10-28
+
+<!-- verified-sha: 0cba0b446ac45408d172343b49603f41540c0b4e -->
+### Added
+
+- New shared workflow `cache-prune.yml`. It runs each night and keeps the newest 3 PHPStan, Pint and Rector cache entries on `main`.
+- Every stub `phpstan.neon.dist` turns on `checkTooWideReturnTypesInProtectedAndPublicMethods`, `checkTooWideParameterOutInProtectedAndPublicMethods`, `checkTooWideThrowTypesInProtectedAndPublicMethods`, `reportAlwaysTrueInLastCondition` and `reportAnyTypeWideningInVarTag`.
+- `laravel-project` sets larastan's `checkConfigTypes: true`, so `config()` reads return the type in `config/*.php` instead of `mixed`.
+- Audit flags a `rector.php` that lacks the `ExplicitNullableObjectInstanceRector` skip (HIGH) or the `TernaryToNullsafeCoalesceRector` skip (MEDIUM), skips a rule no Rector 2.8 set runs (LOW), or still uses `.cache/rectorContainer` (LOW).
+
+### Changed
+
+- The `symplify/phpstan-rules` floor is `^14.19`, and every stub turns off the `modern` and `collections` sets. 14.19 turns both on by default, so a repo on `^14.17` runs `ForbiddenTraitRule`, which fails every trait. See [UPGRADING.md](https://github.com/SanderMuller/repo-init/blob/main/UPGRADING.md#120x--1210-symplify-1419-stricter-phpstan-defaults-rector-28).
+- The `rector/rector` floor is `^2.8`, and `driftingly/rector-laravel` is `^2.7.3` in the Laravel stubs.
+- Every stub `rector.php` skips `ExplicitNullableObjectInstanceRector`, which together with the `deadCode` set removed reachable code on a nullable enum, and `TernaryToNullsafeCoalesceRector`, whose output fails PHPStan with `nullsafe.neverNull`.
+- Rector's `containerCacheDirectory` is `./.cache/phpstan`, shared with PHPStan, instead of `./.cache/rectorContainer`.
+- The stub skip lists drop `EncapsedStringsToSprintfRector`, `ExplicitBoolCompareRector` and `NullToStrictStringFuncCallArgRector`, which no Rector 2.8 set runs.
+- `type_coverage.declare` is gone from every stub. type-coverage deprecates it, and Pint already enforces `declare(strict_types=1)`.
+
+### Fixed
+
+- The `phpstan.yml`, `pint-check.yml` and `rector-check.yml` caches no longer freeze at their first save. Each save uses a per-commit key, and only a push to `main` saves. The PHPStan and Rector caches leave out the compiled DI containers, which never match in CI.
+
+**Full Changelog**: <https://github.com/SanderMuller/repo-init/compare/1.20.0...1.21.0>
+
 ## [1.20.0](https://github.com/sandermuller/repo-init/compare/1.19.1...1.20.0) - 2026-10-23
 
 <!-- verified-sha: a679ef446ae11f5f67c8008b6b1fa9472163a05d -->
@@ -20,7 +45,7 @@ Pre-`1.0.0` releases (0.x.x — historical) introduced breaking changes in MINOR
 
 - `stubs/laravel-project/boost.json` uses the current `laravel/boost` agent names (`copilot`, `codex`).
 
-**Full Changelog**: <https://github.com/SanderMuller/repo-init/compare/1.19.1...1.20.0>
+**Full Changelog**: [https://github.com/SanderMuller/repo-init/compare/1.19.1...1.20.0](https://github.com/SanderMuller/repo-init/compare/1.19.1...1.20.0)
 
 ## [1.19.1](https://github.com/sandermuller/repo-init/compare/1.19.0...1.19.1) - 2026-09-28
 
@@ -105,6 +130,7 @@ Raise the floor and drop both packages in one pass:
 ```bash
 composer remove --dev rector/type-perfect symplify/phpstan-extensions --no-update
 composer require --dev tomasvotruba/type-coverage:^2.3 symplify/phpstan-rules:^14.12
+
 
 
 
@@ -218,6 +244,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 **Full Changelog**: [https://github.com/SanderMuller/repo-init/compare/1.12.0...1.13.0](https://github.com/SanderMuller/repo-init/compare/1.12.0...1.13.0)
@@ -253,6 +280,7 @@ Additive for repo-init itself. Re-running `audit` on an already-scaffolded repo 
 ```bash
 composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
+
 
 
 
@@ -303,6 +331,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 **Full Changelog**: [https://github.com/SanderMuller/repo-init/compare/1.10.0...1.11.0](https://github.com/SanderMuller/repo-init/compare/1.10.0...1.11.0)
@@ -320,6 +349,7 @@ The tag left the interactive skill-tag picker. The stub hard-codes it:
 
 ```php
 ->withTags(['voice'__SKILL_TAGS__])
+
 
 
 
@@ -397,6 +427,7 @@ Audit phases gained a HIGH-severity rule for the duplicate registration. Upgrade
 ```bash
 composer remove --dev rector/type-perfect --no-update
 composer require --dev tomasvotruba/type-coverage:^2.3
+
 
 
 
@@ -819,6 +850,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 For existing scaffolded packages, the next audit walk will surface the `sandermuller/package-boost-php: true` entry as MEDIUM-stale. The upgrade phase handles removal correctly — bump first, then drop the entry.
@@ -928,6 +960,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 No further steps. Scaffold output, the `repo-init` skill, audit/upgrade phases, stubs — all identical to 0.8.1.
@@ -965,6 +998,7 @@ If you installed 0.8.0:
 ```bash
 composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
+
 
 
 
@@ -1041,6 +1075,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 The `composer global exec --` form runs `boost` from Composer's global `vendor/bin/` regardless of the user's current directory; the literal `--` stops Composer from interpreting boost's flags as its own. `--scope=user --all` publishes every globally-installed package's `resources/boost/skills/` into `~/.{agent}/skills/<vendor>__<package>/`. See `references/boost-core-user-scope.md` for the full contract.
@@ -1057,6 +1092,7 @@ repo-init now uses the shared `sandermuller/boost-skills` library (code-review, 
 
 ```bash
 gh release create X.Y.Z --notes-file internal/release-notes-X.Y.Z.md
+
 
 
 
@@ -1159,6 +1195,7 @@ composer global exec -- boost sync --scope=user --all   # new: global skill refr
 
 
 
+
 ```
 
 `stubs/shared/boost.php` + repo-init's own `boost.php` docblocks updated accordingly.
@@ -1188,6 +1225,7 @@ Upgrade repo-init itself:
 ```bash
 composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
+
 
 
 
