@@ -20,7 +20,7 @@ Before any phase:
 2. **If `REPO_INIT_HOME/SPEC.md` is missing**: tell the user:
    > Repo-init isn't installed. Run `composer global require sandermuller/repo-init` to install it (one-time, machine-wide). Then ask me again.
    And stop.
-3. **Verify skill is synced to user-level dir**: check `~/.claude/skills/repo-init-user/SKILL.md` exists. `composer global exec -- boost sync --scope=user --all` publishes it (boost-core 1.13+ writes flat `~/.{agent}/skills/<skill>-user/` dirs; older boost-core wrote `~/.{agent}/skills/sandermuller__repo-init/`, which also counts). If neither exists — run the sync:
+3. **Verify skill is synced to user-level dir**: check `~/.claude/skills/repo-init-user/SKILL.md` exists. `composer global exec -- boost sync --scope=user --all` publishes it to a flat `~/.{agent}/skills/<skill>-user/` directory. If it does not exist, run the sync:
 
    ```bash
    composer global exec -- boost sync --scope=user --all
@@ -80,10 +80,10 @@ Before opening a bootstrap phase, gather these. Skill prompts the user for any y
 - `vendor` (e.g. `sandermuller`, `hihaho`, custom) — required.
 - `name` (kebab-case) — OPTIONAL. If provided, scaffold into `./<name>/`; if absent, scaffold into cwd (which must be empty modulo `.git/`). If cwd-empty precondition fails, stop and ask for a `name`.
 - `php` — packages default `8.4`, accepted `8.4`, `8.5`. `laravel-project` takes `8.5` only. `8.3` and below rejected. See `$REPO_INIT_HOME/references/version-defaults.md` "PHP".
-- `laravel` (laravel-package only) — default `^12.0||^13.0`. (Laravel 11 dropped in 0.3.0 due to pao conflict.)
+- `laravel` (laravel-package only) — default `^12.0||^13.0`. (Laravel 11 is not supported: `laravel/pao` 1.0.5+ conflicts with `laravel/framework` below 12.)
 - `test-framework` — default `pest` for vendor `sandermuller`, `phpunit` for vendor `hihaho`. `phpstan-extension` always `phpunit`. `laravel-project` defaults to `phpunit` for every vendor; Pest is a user opt-in.
 - `with-hihaho-rules` — default `y` for vendor `hihaho`, `N` otherwise.
-- `skill-tags` — the `sandermuller/boost-skills` tags to activate in the scaffolded `.config/boost.php`. **Walk the user through this interactively** — present `php`, `frontend`, `github`, `jira` as a checklist and let them confirm/adjust; do not silently auto-config. Pre-select sensible defaults by category: php-package / laravel-package / phpstan-extension / rector-extension / composer-plugin / skill-bundle / laravel-project pre-select `php`; add `frontend` for a frontend-facing package; `github` / `jira` are opt-in. Picking none is valid. The chosen tags fill the `__SKILL_TAGS__` placeholder inside the array argument of `->withTags(['voice'__SKILL_TAGS__])` in `.config/boost.php`, each rendered with a leading comma (e.g. `, 'php', 'jira'` → `->withTags(['voice', 'php', 'jira'])`); none → the placeholder is empty and the line reads `->withTags(['voice'])` (the universal boost-skills skills still sync). **`voice` is not part of this picker** — the stub hard-codes it, every scaffolded repo keeps it, and it never appears in the checklist (see `references/placeholder-rules.md`). boost-core 0.20+ takes an array, not variadic args. `laravel-project` uses the same knob for its own `stubs/laravel-project/.config/boost.php`, whose line reads `->withTags(['voice', Tag::Laravel__SKILL_TAGS__])` — `laravel` is hard-coded there, so never offer it.
+- `skill-tags` — the `sandermuller/boost-skills` tags to activate in the scaffolded `.config/boost.php`. **Walk the user through this interactively** — present `php`, `frontend`, `github`, `jira` as a checklist and let them confirm/adjust; do not silently auto-config. Pre-select sensible defaults by category: php-package / laravel-package / phpstan-extension / rector-extension / composer-plugin / skill-bundle / laravel-project pre-select `php`; add `frontend` for a frontend-facing package; `github` / `jira` are opt-in. Picking none is valid. The chosen tags fill the `__SKILL_TAGS__` placeholder inside the array argument of `->withTags(['voice'__SKILL_TAGS__])` in `.config/boost.php`, each rendered with a leading comma (e.g. `, 'php', 'jira'` → `->withTags(['voice', 'php', 'jira'])`); none → the placeholder is empty and the line reads `->withTags(['voice'])` (the universal boost-skills skills still sync). **`voice` is not part of this picker** — the stub hard-codes it, every scaffolded repo keeps it, and it never appears in the checklist (see `references/placeholder-rules.md`). `withTags()` takes an array, not variadic arguments. `laravel-project` uses the same knob for its own `stubs/laravel-project/.config/boost.php`, whose line reads `->withTags(['voice', Tag::Laravel__SKILL_TAGS__])` — `laravel` is hard-coded there, so never offer it.
 
 ## Fast path: the `repo new` CLI
 
@@ -153,10 +153,10 @@ All documented in phase files; summary:
 composer global update sandermuller/repo-init
 ```
 
-The user-level skill auto-re-syncs via boost-core's global-context auto-sync hook (POST_AUTOLOAD_DUMP under `composer global`). Manual fallback:
+A global update does not re-sync the user-level skill. Run the sync after every update:
 
 ```bash
-cd $REPO_INIT_HOME && vendor/bin/boost sync --scope=user
+composer global exec -- boost sync --scope=user --all
 ```
 
 ## Project-local install (escape hatch)
