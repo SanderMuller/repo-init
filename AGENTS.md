@@ -40,7 +40,7 @@ Write a test when the PHPStan error indicates a fault that would surface at runt
 
 ### Annotate Rather Than Suppress
 
-Some errors are PHPStan reading a signature that says less than the code does — a return type a parameter decides, a bool helper that proves a type. The `backend-quality` skill carries the two annotations that state the missing fact, and the rules for when each one lies.
+Some errors are PHPStan reading a signature that says less than the code does. When a parameter decides the return type, add a conditional `@return ($param is Type ? A : B)`. When a bool method is a pure type check, add `@phpstan-assert-if-true`. Add either one only where it holds for every call; a wrong one makes the analysis worse. The `backend-quality` skill, where the project ships it, has the full rules and examples.
 
 ### When to Skip the Test
 
@@ -173,7 +173,8 @@ This guideline governs **how a sentence is built**, and how much you write. It n
 
 **Write in ASD-STE100 Simplified Technical English.** Say the same thing in fewer, simpler words.
 
-- One idea per sentence. Keep procedural sentences to 20 words or less, descriptive sentences to 25 or less.
+- One idea per sentence. Keep procedural sentences to 20 words or less, descriptive sentences to 25 or less. These limits are a ceiling, not a target.
+- Vary sentence length. A run of short sentences of the same size reads as machine output, as a run of long ones does. Join two clauses that carry one idea with "because", "so", or "although" instead of splitting them into two short sentences.
 - Use the active voice. Name the actor. Use the passive only when the actor is unknown.
 - Use simple tenses only — simple present, simple past, simple future, infinitive, imperative. No complex constructions built from auxiliary verbs.
 - Use one word for one meaning. Use the same word for the same thing every time — do not vary it for style.
