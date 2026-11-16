@@ -69,7 +69,7 @@ Why it matters: Pest 5 requires PHP `^8.4` and PHPUnit 13. So the PHP floor bump
 1. Raise `require.php` to `^8.4` (or `^8.5`) in `composer.json`.
 2. Raise `pestphp/pest` and every `pestphp/*` plugin to `^5.0`.
 3. Replace `mrpunyapal/rector-pest` with `pestphp/pest-plugin-rector: ^5.0`, and add `pestphp/pest-plugin-phpstan: ^5.0` + `pestphp/pest-plugin-agent: ^5.0`.
-4. If the target carries `stolt/lean-package-validator`, replace it with `stolt/php-lean: ^0.9.3` and set the `validate-gitattributes` script to `vendor/bin/php-lean lint`. The old package is abandoned. If the target has a `.lpv`, apply `$REPO_INIT_HOME/phases/upgrade-php-package.md` "Migrate to `stolt/php-lean`".
+4. If the target carries `stolt/lean-package-validator`, replace it with `stolt/php-lean: ^0.9.3` in this `composer.json` pass, so step 7 does not resolve the old validator next to PHPUnit 13. "Migrate to `stolt/php-lean`" below finishes the change.
 5. Apply the PHP >= 8.4 dep set in the same `composer.json` pass: remove `rector/type-perfect`, set `tomasvotruba/type-coverage: ^2.3`, and replace `symplify/phpstan-extensions: ^12.0` with `symplify/phpstan-rules: ^14.19`. In the same pass, add the `parameters.symplify` block from the stub `phpstan.neon.dist` (all ten sets `false`); 14.19 turns every set on without it. A block that lacks only `modern` and `collections` gets those two keys. A repo that already has `symplify/phpstan-rules: ^14.17` and no `phpstan-extensions` still takes the symplify part of this step: raise the constraint to `^14.19` and add the two keys, because 14.19 already resolves and runs `ForbiddenTraitRule` on every trait. See `$REPO_INIT_HOME/references/phpstan-config.md` "Symplify rules".
 6. If the target carries `orchestra/testbench`, change the constraint to `^11.0`; for a Laravel package category also drop every Laravel 12 / testbench 10 cell from `run-tests.yml` — Pest 5 needs `symfony/process: ^8.1` and testbench 10 pins `^7.2`. Leave the runtime `illuminate/*` range alone.
 7. Run one resolution: `composer update`.
@@ -123,6 +123,16 @@ vendor/bin/phpstan analyse --memory-limit=2G
 ```
 
 Expect exactly one line: `tomasvotruba/type-coverage` at `2.3.x`, and no `rector/type-perfect`. PHPStan must reach analysis — a boot-time duplicate-service error is the failure this step exists to remove.
+
+## Migrate to `stolt/php-lean`
+
+**Skip if:** `composer.json` does not require `stolt/lean-package-validator` AND no composer script calls `lean-package-validator`.
+
+`stolt/lean-package-validator` is abandoned. Its successor is `stolt/php-lean`, which has no `validate` command: `lint` runs the same check.
+
+1. If `composer.json` still requires `stolt/lean-package-validator`, run `composer remove --dev stolt/lean-package-validator`, then `composer require --dev stolt/php-lean:^0.9.3`.
+2. Change the script that runs `lean-package-validator validate` to `vendor/bin/php-lean lint`.
+3. If the target has a `.lpv`, apply steps 3–5 of `$REPO_INIT_HOME/phases/upgrade-php-package.md` "Migrate to `stolt/php-lean`".
 
 ## Apply MISSING dev deps
 

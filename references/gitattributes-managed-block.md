@@ -91,7 +91,7 @@ CHANGELOG.md
 pint.json
 ```
 
-The validator joins the lines into a single brace glob (`{.editorconfig,.github,.lpv,CHANGELOG.md,pint.json}*`) and checks that everything matching it is `export-ignore`d in `.gitattributes`. A line written in `.gitattributes` form (`pint.json export-ignore`) becomes the literal glob `pint.json export-ignore` — with the space — which matches no file, so the expected-export-ignore set collapses to empty and `validate` **passes vacuously**, silently defeating its own purpose. When the validator warns about a missing artifact: add the `<path> export-ignore` line to the `.gitattributes` managed block AND the **bare `<path>`** (no suffix) to `.lpv`.
+The validator joins the lines into a single brace glob (`{.editorconfig,.github,.lpv,CHANGELOG.md,pint.json}*`) and checks that everything matching it is `export-ignore`d in `.gitattributes`. A line written in `.gitattributes` form (`pint.json export-ignore`) becomes the literal glob `pint.json export-ignore` — with the space — which matches no file, so the expected-export-ignore set collapses to empty and the check **passes vacuously**, silently defeating its own purpose. When the validator warns about a missing artifact: add the `<path> export-ignore` line to the `.gitattributes` managed block AND the **bare `<path>`** (no suffix) to `.lpv`.
 
 **No trailing `/` on a folder.** The appended `*` turns `tests/` into `tests/*`, which matches every path inside `tests/`. The validator then asks for an export-ignore line for each of them (`tests/Unit/`, `tests/Pest.php`, and so on) and fails, although the archive is lean. Write `tests`, not `tests/`.
 
