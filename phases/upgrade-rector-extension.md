@@ -122,7 +122,7 @@ Expect exactly one line: `tomasvotruba/type-coverage` at `2.3.x`, and no `rector
 
 `stolt/lean-package-validator` is abandoned. Its successor is `stolt/php-lean`, which has no `validate` command: `lint` runs the same check.
 
-1. If `composer.json` still requires `stolt/lean-package-validator`, run `composer remove --dev stolt/lean-package-validator`, then `composer require --dev stolt/php-lean:^0.9.3`.
+1. If `composer.json` does not require `stolt/php-lean`, run `composer require --dev stolt/php-lean:^0.9.3`. Run `composer remove --dev stolt/lean-package-validator` first when the target still requires it.
 2. Change the script that runs `lean-package-validator validate` to `vendor/bin/php-lean lint`.
 3. If the target has a `.lpv`, apply steps 3–5 of `$REPO_INIT_HOME/phases/upgrade-php-package.md` "Migrate to `stolt/php-lean`".
 

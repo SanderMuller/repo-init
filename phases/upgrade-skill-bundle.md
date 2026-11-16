@@ -34,7 +34,7 @@ On failure, consult `$REPO_INIT_HOME/references/composer-failure-modes.md`.
 
 `stolt/lean-package-validator` is abandoned. Its successor is `stolt/php-lean`, which has no `validate` command: `lint` runs the same check.
 
-1. If `composer.json` still requires `stolt/lean-package-validator`, run `composer remove --dev stolt/lean-package-validator`, then `composer require --dev stolt/php-lean:^0.9.3`.
+1. If `composer.json` does not require `stolt/php-lean`, run `composer require --dev stolt/php-lean:^0.9.3`. Run `composer remove --dev stolt/lean-package-validator` first when the target still requires it.
 2. Set the `validate-gitattributes` script to `vendor/bin/php-lean lint`. Keep the script name, because `qa` and `qa-check` call it.
 3. In `.lpv`, remove the trailing `/` from every line, and add a `.lpv` line.
 4. Add `.lpv export-ignore` to the `# >>> package-boost (managed) >>>` block in `.gitattributes`.
