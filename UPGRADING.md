@@ -20,6 +20,15 @@ The `post-update-cmd` hook re-syncs the skill into `~/.claude/skills/sandermulle
 
 ---
 
+## 1.21.x → 1.22.0 (shared Rector preset)
+
+Additive for repo-init itself — `composer global update sandermuller/repo-init`. `rector.php` is notify-only, so nothing rewrites an existing config.
+
+- **Every stub `rector.php` uses `sandermuller/rector-preset`.** A stub is now `Preset::package()`, or `Preset::app()` for `laravel-project`, plus `withPhpSets()`. The preset owns the cache, parallel workers, prepared sets, shared skips, paths, composer-based sets and extension sets. Re-run `audit`: a `rector.php` that does not use the preset is a MEDIUM finding. The upgrade phase offers the migration, asks first, keeps the project's own rules and skips, and runs `rector process --dry-run` before and after. See `references/rector-config.md`.
+- **New shared dev dependency `sandermuller/rector-preset: ~2.8.0`.** It requires PHP `^8.4` and `rector/rector: ~2.8.0`: its minor follows Rector's, so a later Rector minor arrives through a preset bump. A project that passes `withoutSets` needs `~2.8.1`.
+- **A new `laravel-project` scaffold scans different paths.** The preset scans the folders that exist, adds `database/factories` and `database/seeders`, and never scans `database/migrations`. The old stub scanned all of `database/`. `Preset::app()` also carries its own skip list; see `references/rector-config.md` "Skips in the preset".
+- **`rector-check.yml` fails on a Rector warning.** Rector exits 0 on a clean dry run even when it prints `[WARNING]`, for example for a skipped rule that no set registers. The workflow is replace-mode, so the upgrade phase rewrites it. Expect the first run to fail on a stale skip; remove the skip.
+
 ## 1.20.x → 1.21.0 (symplify 14.19, stricter PHPStan defaults, Rector 2.8)
 
 Additive for repo-init itself — `composer global update sandermuller/repo-init`. `phpstan.neon.dist` is notify-only, so edit existing repos by hand where noted.
