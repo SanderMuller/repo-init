@@ -41,7 +41,7 @@ Also verify file content has no literal `__VENDOR__` / `__PACKAGE__` / etc. plac
 For each file under `$REPO_INIT_HOME/stubs/php-package/`:
 
 - `composer.json` — substitute placeholders. Note: `type: library`, no `illuminate/*` in require, `phpstan/phpstan` (NOT `larastan/larastan`) in require-dev. The stub ships the canonical dep set: `pestphp/*: ^5.0`, `symplify/phpstan-rules: ^14.19`, `tomasvotruba/type-coverage: ^2.3`, and NO `rector/type-perfect` (keeping type-perfect alongside type-coverage >= 2.3 double-registers `MethodNodeAnalyser` and PHPStan aborts at boot). The set is unconditional — the `^8.4` floor is what every package category now takes. If `php=8.5`, replace every `8.4` PHP version in `.github/workflows/` with `8.5` (see `$REPO_INIT_HOME/references/version-defaults.md` "PHP version in CI workflows"). See `references/shared-dev-deps.md` "Symplify formatter dep" and "Type-perfect dep".
-- `.lpv` — lean-package-validator config (no placeholders).
+- `.lpv` — php-lean glob-pattern file (no placeholders).
 - `PUBLIC_API.md` — substitute placeholders.
 - `src/__PACKAGE_STUDLY__.php` — copy + substitute file name.
 - `phpstan.neon.dist`, `rector.php` — copy + substitute `__PHP_VERSION_NEON__`.
@@ -82,7 +82,7 @@ From `$REPO_INIT_HOME/references/per-category-deps.md#php-package`:
 **MANDATORY:**
 
 - `phpstan/phpstan` (NOT `larastan/larastan` — this is framework-agnostic; never both per `references/phpstan-config.md` §exclusivity)
-- `stolt/lean-package-validator`
+- `stolt/php-lean`
 
 **Plus shared deps** (`$REPO_INIT_HOME/references/shared-dev-deps.md`).
 
@@ -107,7 +107,7 @@ Otherwise skip.
 
 Read-only check (no mutation). Always run.
 
-The php-package category uses `stolt/lean-package-validator` to ensure the published archive (`composer install --prefer-dist`) excludes dev/test/AI dirs. Run:
+The php-package category uses `stolt/php-lean` to ensure the published archive (`composer install --prefer-dist`) excludes dev/test/AI dirs. Run:
 
 ```bash
 composer validate-gitattributes
@@ -148,5 +148,5 @@ Tested in CI via `check-bootstrap-idempotency.sh`.
 ## Common issues
 
 - **`larastan/larastan` accidentally installed**: php-package uses `phpstan/phpstan` only. If `larastan` is in deps, remove it: `composer remove --dev larastan/larastan`. Don't install both.
-- **`vendor/bin/lean-package-validator` warns**: missing export-ignore. Add to `.lpv` + update the managed block in `.gitattributes` per the contract.
+- **`vendor/bin/php-lean lint` fails**: missing export-ignore. Add to `.lpv` + update the managed block in `.gitattributes` per the contract.
 - **PHP version below the floor in target**: php-package floors at `^8.4` (per `references/version-defaults.md`). A lower floor cannot install Pest 5 or PHPUnit 13, which both require PHP `^8.4`, so it is not a documentable deviation — raise the floor with the user.

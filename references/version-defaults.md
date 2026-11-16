@@ -75,7 +75,7 @@ The `laravel-package-spatie` stub ships `12.*` and `13.*` cells; the Pest stubs 
 
 `pestphp/pest-plugin-rector` is first-party and replaces `mrpunyapal/rector-pest`. Its one set is `Pest\Rector\Set\PestSetList::CODING_STYLE` — see `rector-config.md`.
 
-`stolt/lean-package-validator` only allows PHPUnit 13 from **6.0.1** — it widened `sebastian/diff` to `^8||^9`, and 6.0.0 still caps it at `^7`. This is what unblocked Pest 5 for the validator-carrying categories. Composer still resolves a `^6.0` constraint correctly, `--prefer-lowest` included: 6.0.0 is unsatisfiable next to PHPUnit 13, so it backtracks to 6.0.1 (verified with `composer update --dry-run --prefer-lowest`). The `php-package` and `composer-plugin` stubs ship `^6.0.1` anyway, because that is the real floor. `skill-bundle` has no test runner, so it stays on `^6.0`. Audit: a `^6.0` constraint on a Pest repo is a LOW-severity tightening, not a breakage.
+`stolt/php-lean` replaces the abandoned `stolt/lean-package-validator`. It allows `sebastian/diff` from `^4.0.3` to `^9.0`, so it installs next to PHPUnit 13. The `php-package`, `composer-plugin` and `skill-bundle` stubs ship `^0.9.3`. php-lean is still on 0.x, so `^0.9.3` does not pick up 0.10: raise the constraint by hand for a new minor. Audit: `stolt/lean-package-validator` in `require-dev` is a MEDIUM finding.
 
 ### Tia engine (test impact analysis)
 

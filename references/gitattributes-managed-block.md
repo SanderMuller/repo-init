@@ -74,23 +74,28 @@ workbench/              export-ignore
 Plus per-category extras:
 
 - `php-package`, `composer-plugin`, `skill-bundle`: also `.lpv` (the
-  lean-package-validator glob file — see "`.lpv` file format" below). `php-package`
+  php-lean glob file — see "`.lpv` file format" below). `php-package`
   additionally ships `PUBLIC_API.md`.
 - `phpstan-extension`: also `extension.neon`
 - `rector-extension`: also `config/` (the extension's own rector config dir — careful, this is a real published path; only the test-fixture `config/` is `export-ignore`d when applicable)
 
 ## `.lpv` file format (NOT `.gitattributes` syntax)
 
-`.lpv` is lean-package-validator's glob-pattern file (`php-package`, `composer-plugin`, and `skill-bundle` ship one). It does **not** use `.gitattributes` syntax. Each line is a **bare glob pattern** — one artifact per line, with **no `export-ignore` suffix**:
+`.lpv` is php-lean's glob-pattern file (`php-package`, `composer-plugin`, and `skill-bundle` ship one). It does **not** use `.gitattributes` syntax. Each line is a **bare glob pattern** — one artifact per line, with **no `export-ignore` suffix**:
 
 ```text
 .editorconfig
-.github/
+.github
+.lpv
 CHANGELOG.md
 pint.json
 ```
 
-The validator joins the lines into a single brace glob (`{.editorconfig,.github/,CHANGELOG.md,pint.json}*`) and checks that everything matching it is `export-ignore`d in `.gitattributes`. A line written in `.gitattributes` form (`pint.json export-ignore`) becomes the literal glob `pint.json export-ignore` — with the space — which matches no file, so the expected-export-ignore set collapses to empty and `validate` **passes vacuously**, silently defeating its own purpose. When the validator warns about a missing artifact: add the `<path> export-ignore` line to the `.gitattributes` managed block AND the **bare `<path>`** (no suffix) to `.lpv`.
+The validator joins the lines into a single brace glob (`{.editorconfig,.github,.lpv,CHANGELOG.md,pint.json}*`) and checks that everything matching it is `export-ignore`d in `.gitattributes`. A line written in `.gitattributes` form (`pint.json export-ignore`) becomes the literal glob `pint.json export-ignore` — with the space — which matches no file, so the expected-export-ignore set collapses to empty and `validate` **passes vacuously**, silently defeating its own purpose. When the validator warns about a missing artifact: add the `<path> export-ignore` line to the `.gitattributes` managed block AND the **bare `<path>`** (no suffix) to `.lpv`.
+
+**No trailing `/` on a folder.** The appended `*` turns `tests/` into `tests/*`, which matches every path inside `tests/`. The validator then asks for an export-ignore line for each of them (`tests/Unit/`, `tests/Pest.php`, and so on) and fails, although the archive is lean. Write `tests`, not `tests/`.
+
+**`.lpv` lists itself.** Without a `.lpv` line, the validator does not ask for `.lpv export-ignore`, and `.lpv` ships in the archive.
 
 ## Contract with package-boost
 

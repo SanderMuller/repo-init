@@ -34,7 +34,7 @@ None for `php-package`. The category has no Laravel-aware sub-flag. Detect `test
 **Category-specific (php-package):**
 
 - [ ] `composer.json` with `type: library`
-- [ ] `.lpv` — lean-package-validator config
+- [ ] `.lpv` — php-lean glob-pattern file
 - [ ] `PUBLIC_API.md` — semver-protected surface doc
 - [ ] `src/<PackageStudly>.php` — at least one public class file (or any file under `src/` if user has scaffolded their own)
 
@@ -51,7 +51,7 @@ Apply per-category exclusion: php-package category does NOT include `larastan/la
 From `$REPO_INIT_HOME/references/per-category-deps.md#php-package` MANDATORY:
 
 - [ ] `phpstan/phpstan` (NEVER also `larastan/larastan` per §5.3 exclusivity)
-- [ ] `stolt/lean-package-validator`
+- [ ] `stolt/php-lean`
 
 Plus shared:
 
@@ -91,7 +91,7 @@ Baseline + php-package additions (12 keys):
 - [ ] `test` → `vendor/bin/pest` (or `vendor/bin/phpunit` if `test-framework=phpunit`)
 - [ ] `test-coverage` → `vendor/bin/pest --coverage` (or `vendor/bin/phpunit --coverage-html=coverage`)
 - [ ] `sync-ai` → `vendor/bin/boost sync`
-- [ ] `validate-gitattributes` → `vendor/bin/lean-package-validator validate`
+- [ ] `validate-gitattributes` → `vendor/bin/php-lean lint`
 - [ ] `qa` → `["@rector", "@format", "@phpstan-simplified", "@validate-gitattributes"]` (php-package appends `@validate-gitattributes`)
 - [ ] `post-install-cmd` → `["SanderMuller\\PackageBoostPhp\\Scripts\\AutoSync::run"]`
 - [ ] `post-update-cmd` → `["SanderMuller\\PackageBoostPhp\\Scripts\\AutoSync::run"]`
@@ -126,7 +126,7 @@ Same logic as audit-laravel-package.md, with php-package stub paths. Apply each 
 - [ ] **`rector.php` sets `containerCacheDirectory` to `./.cache/rectorContainer`** (LOW severity, DRIFT): the canon shares PHPStan's `tmpDir`, because Rector writes the same reflection cache. Flag NON-CANONICAL; fix = point the `mkdir` line and `containerCacheDirectory` at `.cache/phpstan`, then delete `.cache/rectorContainer/`.
 - [ ] **`rector.php` missing a `withComposerBased(...)` flag the repo qualifies for** (MEDIUM severity, DRIFT): `withComposerBased()` is the only builder path that pushes `PHPUnitSetList::COMPOSER_BASED` / `LaravelSetList::COMPOSER_BASED` into the set list, and `withSetProviders()` is `@deprecated` in favour of it. Each flag is conditional: `phpunit: true` on a PHPUnit repo ONLY (its rules rewrite `TestCase` subclasses, which a Pest suite does not have), `laravel: true` on `laravel-project` ONLY. Flag NON-CANONICAL when a flag the repo qualifies for is absent, AND when a flag it does not qualify for is present. A repo that qualifies for neither omits the call — an argument-less `withComposerBased()` registers nothing. See `$REPO_INIT_HOME/references/rector-config.md`. Flag NON-CANONICAL; fix = add `->withComposerBased(phpunit: true)`.
 - [ ] **`tests/Pest.php` without `pest()->tia()->locally()`** (LOW severity, applies only when the repo uses Pest): the Tia engine re-runs only the tests a change touched, on developer machines only. Fix = add the call to `tests/Pest.php`. Do NOT add `--tia` to any composer script or CI step. See `$REPO_INIT_HOME/references/pest-vs-phpunit.md` "Tia engine".
-- [ ] **`stolt/lean-package-validator: ^6.0`** (LOW severity, applies only when the repo carries the validator AND uses Pest): 6.0.0 caps `sebastian/diff` at `^7` and cannot install next to PHPUnit 13. Composer backtracks to 6.0.1 on its own, `--prefer-lowest` included, so nothing breaks — but `^6.0.1` states the real floor. Fix = tighten the constraint.
+- [ ] **`stolt/lean-package-validator` in `require-dev`** (MEDIUM severity, applies only when the repo carries it): the package is abandoned, and its successor is `stolt/php-lean`. Flag NON-CANONICAL. Fix = replace it with `stolt/php-lean: ^0.9.3` and set the `validate-gitattributes` script to `vendor/bin/php-lean lint`.
 
 - [ ] **`rector/type-perfect` present alongside a `tomasvotruba/type-coverage` constraint that can resolve to >= 2.3** (HIGH severity, PHPStan does not boot): `tomasvotruba/type-coverage` 2.3.0 absorbed type-perfect and now includes `packages/type-perfect/config/extension.neon` itself. With both installed, `phpstan/extension-installer` includes that file twice and PHPStan aborts at startup on the duplicate `MethodNodeAnalyser` service. Composer resolves against the **runtime** PHP, not `require.php` — so an uncapped `^2.2` (what every repo scaffolded before this rule landed carries) was green on a PHP 8.3 CI cell and is dead on 8.4. Flag NON-CANONICAL: remove `rector/type-perfect` and move to `tomasvotruba/type-coverage: ^2.3`. A repo below the `^8.4` floor cannot take that move — both successors need PHP `^8.4` — so the floor bump is part of the same atomic pass. The fix is ATOMIC — see the matching `upgrade-<category>.md`.
 
@@ -148,7 +148,8 @@ Same logic as audit-laravel-package.md, with php-package stub paths. Apply each 
 - [ ] **PHP floor below the category floor in `require.php`** (`^8.4` for a package, `^8.5` for `laravel-project`): NON-CANONICAL. The bump is ATOMIC with dropping `rector/type-perfect` and `symplify/phpstan-extensions` — both successors need PHP `^8.4`. See `$REPO_INIT_HOME/references/version-defaults.md` "PHP".
 - [ ] Missing `validate-gitattributes` script in `composer.json` — php-package should have it.
 - [ ] **POSIX-shell `post-install-cmd` / `post-update-cmd`** (HIGH severity): if either script's value is a shell conditional like `if [ "$COMPOSER_DEV_MODE" = "1" ]; then vendor/bin/boost sync; fi` (or older `vendor/bin/testbench package-boost:sync`), it is Windows-broken and predates boost-core 0.6's PHP callback. Canonical is the array `["SanderMuller\\PackageBoostPhp\\Scripts\\AutoSync::run"]` for BOTH keys. Flag NON-CANONICAL; suggest the merge-keys replace via `phases/upgrade-php-package.md`.
-- [ ] `.lpv` exists but no `vendor/bin/lean-package-validator validate` clean. Run the validator; if it warns, flag NON-CANONICAL with the specific missing export-ignore lines.
+- [ ] **`.lpv` line ends in `/`, or `.lpv` does not list itself** (MEDIUM severity): the validator joins the lines into one glob and appends `*`, so `tests/` becomes `tests/*`. The check then asks for an export-ignore line for every path inside `tests/` and fails, although the archive is lean. Without its own line, `.lpv` ships in the archive. Flag NON-CANONICAL. Fix = remove the trailing slashes, add a `.lpv` line, and add `.lpv export-ignore` to the managed block.
+- [ ] `.lpv` exists but no `vendor/bin/php-lean lint` clean. Run the validator; if it warns, flag NON-CANONICAL with the specific missing export-ignore lines.
 - [ ] **`.gitattributes` package-boost managed block MISSING** (HIGH severity): same as laravel-package — without it, `composer archive` ships local-only files. Flag NON-CANONICAL; suggest `vendor/bin/package-boost-php gitattributes` (boost-core's standalone bin family; maintains the `# >>> package-boost (managed) >>>` block, preserving foreign lines).
 - [ ] **README badge row MISSING or incomplete** (HIGH severity): the first 30 lines of `README.md` MUST contain the canonical badge set — Packagist version, run-tests CI status, Total Downloads, License — each on its own line, all using `?style=flat-square` on shields.io URLs. Grep first 30 lines for `img.shields.io/packagist/v/`, `actions/workflow/status/.+/run-tests.yml`, `img.shields.io/packagist/dt/`, and `img.shields.io/packagist/l/`. Any missing → flag NON-CANONICAL with the specific badge(s) absent. Extra badges (PHPStan, Codecov, Laravel Compatibility, Sponsors, custom) are EXTRA-info only, never flagged. Rationale: badges are the at-a-glance trust signal for a Packagist library.
 

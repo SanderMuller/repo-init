@@ -31,8 +31,8 @@ What to look at:
 
 What to look at:
 
-- `composer.json` — NO `illuminate/*` in `require`, only `php` + `ext-sodium`. `stolt/lean-package-validator` in `require-dev`, `validate-gitattributes` script.
-- `.lpv` — lean-package-validator config.
+- `composer.json` — NO `illuminate/*` in `require`, only `php` + `ext-sodium`. `stolt/php-lean` in `require-dev`, `validate-gitattributes` script.
+- `.lpv` — php-lean glob-pattern file.
 - `PUBLIC_API.md` — semver surface doc.
 - `phpstan.neon.dist` — same shape as laravel-package but no Larastan.
 

@@ -24,7 +24,7 @@ return BoostConfig::configure()
         'sandermuller/repo-init',
         'sandermuller/boost-skills',
         'sandermuller/package-boost-php',
-        'stolt/lean-package-validator',
+        'stolt/php-lean',
     ])
     ->withTags([
         Tag::Php,

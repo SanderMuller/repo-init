@@ -18,6 +18,7 @@
 .gitignore export-ignore
 .junie/ export-ignore
 .kiro/ export-ignore
+.lpv export-ignore
 .mcp.json export-ignore
 .phpunit.cache export-ignore
 AGENTS.md export-ignore

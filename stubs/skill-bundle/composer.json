@@ -25,7 +25,7 @@
     "require-dev": {
         "laravel/pint": "^1.29",
         "sandermuller/boost-skills": "^2.27.0",
-        "stolt/lean-package-validator": "^6.0"
+        "stolt/php-lean": "^0.9.3"
     },
     "scripts": {
         "post-install-cmd": [
@@ -35,7 +35,7 @@
             "SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"
         ],
         "format": "vendor/bin/pint",
-        "validate-gitattributes": "vendor/bin/lean-package-validator validate",
+        "validate-gitattributes": "vendor/bin/php-lean lint",
         "qa": [
             "@format",
             "@validate-gitattributes"

@@ -20,6 +20,17 @@ The `post-update-cmd` hook re-syncs the skill into `~/.claude/skills/sandermulle
 
 ---
 
+## 1.22.x → 1.23.0 (php-lean)
+
+Additive for repo-init itself — `composer global update sandermuller/repo-init`. Re-run `audit` on a repo that ships a `.lpv`; the upgrade phase applies the migration.
+
+- **`stolt/php-lean` replaces `stolt/lean-package-validator`.** The old package is abandoned. The `php-package`, `composer-plugin` and `skill-bundle` stubs require `stolt/php-lean: ^0.9.3`, and their `validate-gitattributes` script runs `vendor/bin/php-lean lint`. php-lean has no `validate` command. The script name stays the same, so `qa` and `qa-check` need no change.
+- **`.lpv` lines no longer end in `/`.** The validator appends `*` to the joined glob, so `tests/` matched every path inside `tests/`. `validate-gitattributes` then failed on a stub `.gitattributes`, although the archive was lean. Remove the trailing slashes from an existing `.lpv`.
+- **`.lpv` stays out of the archive.** Each stub `.lpv` lists itself, and the shared and skill-bundle `_gitattributes` carry `.lpv export-ignore`. An existing package ships its `.lpv` until it gets both lines.
+- **The skill-bundle `_gitattributes` lost three nested lines** (`.config/boost.php`, `.github/dependabot.yml`, `.github/workflows/`). They only satisfied the trailing-slash check. Their parent folders are still export-ignored, so the archive does not change.
+
+---
+
 ## 1.21.x → 1.22.0 (shared Rector preset)
 
 Additive for repo-init itself — `composer global update sandermuller/repo-init`. `rector.php` is notify-only, so nothing rewrites an existing config.

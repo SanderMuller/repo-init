@@ -132,7 +132,7 @@ categories:
       require: []
       require-dev:
         - phpstan/phpstan
-        - stolt/lean-package-validator
+        - stolt/php-lean
         - sandermuller/package-boost-php  # framework-agnostic boost umbrella; pulls boost-core transitively
     optional: {}
     shared-exclusions: []
@@ -218,7 +218,7 @@ categories:
       require-dev:
         - laravel/pint
         - sandermuller/boost-skills  # hand-listed: skill-bundle skips the shared block (consumes-shared-dev-deps: false) but still wants the boost-skills library. Canonical floor ^2.27.0
-        - stolt/lean-package-validator
+        - stolt/php-lean
     optional: {}
     # consumes-shared-dev-deps: false → a consumer/CLI building this category's
     # dependency list MUST skip BOTH shared.always AND shared.test-framework.*
@@ -232,7 +232,7 @@ categories:
     # skill-bundle ships pure-markdown skills and no PHP toolchain, so it skips
     # the PHPStan / Rector / MCP / phpunit shared stubs. It also provides its own
     # lean _gitattributes (the generic shared block ships PHP-toolchain export-ignore
-    # lines lean-package-validator rejects for a skill-bundle) and its own README
+    # lines a skill-bundle does not ship) and its own README
     # (skill-bundle install + boost sync, not a PHP usage / `composer test` example).
     shared-stub-skip:
       - _gitattributes
