@@ -48,8 +48,10 @@ The `^8.4` floor is also what drops the two abandoned packages earlier canon car
 
 ### Rector sets
 
-- `pest`: include `Pest\Rector\Set\PestSetList::CODING_STYLE` — the plugin's only set. It replaces the `PEST_CODE_QUALITY` / `PEST_CHAIN` pair from `mrpunyapal/rector-pest`; the first-party set carries both rule groups.
-- `phpunit`: include `LevelSetList::UP_TO_PHPUNIT_*` if migrating; otherwise no PHPUnit-specific sets.
+The stub `rector.php` needs no edit for either framework: `sandermuller/rector-preset` reads the installed packages. See `rector-config.md`.
+
+- `pest`: the preset adds `Pest\Rector\Set\PestSetList::CODING_STYLE` — the plugin's only set. It replaces the `PEST_CODE_QUALITY` / `PEST_CHAIN` pair from `mrpunyapal/rector-pest`; the first-party set carries both rule groups.
+- `phpunit`: the preset turns on the PHPUnit composer-based set when `phpunit/phpunit` is installed and `pestphp/pest` is not. Add `LevelSetList::UP_TO_PHPUNIT_*` only if migrating.
 
 ### `config.allow-plugins`
 

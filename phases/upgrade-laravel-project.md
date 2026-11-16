@@ -81,7 +81,7 @@ Why it matters: Pest 5 requires PHP `^8.4` and PHPUnit 13. So the PHP floor bump
 6. If the target carries `orchestra/testbench`, change the constraint to `^11.0`; for a Laravel package category also drop every Laravel 12 / testbench 10 cell from `run-tests.yml` — Pest 5 needs `symfony/process: ^8.1` and testbench 10 pins `^7.2`. Leave the runtime `illuminate/*` range alone.
 7. Run one resolution: `composer update`.
 
-Then fix the files the bump touches:
+Then fix the files the bump touches. Skip both `rector.php` items when `rector.php` already returns `Preset::app(...)`: the preset registers the Pest set and the composer-based sets itself.
 
 - `rector.php` — `use Pest\Rector\Set\PestSetList;` and the single set `PestSetList::CODING_STYLE` (replaces `PEST_CODE_QUALITY` / `PEST_CHAIN` / `PEST_LARAVEL`).
 - `rector.php` — drop `instanceOf:`, `if:` and `earlyReturn:` from `withPreparedSets()` (Rector 2.6 deprecates all three; `codeQuality: true` covers them). Add `->withComposerBased(...)` after that block ONLY with a flag the repo qualifies for: `phpunit: true` on a PHPUnit repo, `laravel: true` on `laravel-project`. A Pest package qualifies for neither and gets no call. On `laravel-project`, also add `LaravelSetList::LARAVEL_COLLECTION` to the Laravel set list.
@@ -143,7 +143,7 @@ Per-category mandatory `require-dev` for `laravel-project`:
 - `sandermuller/project-boost-laravel` (`^1.5`) — only when the user accepted it at the top of this phase, or the app already carries it at a constraint that can resolve below 1.5.0: raise that constraint, because the sync steps below rely on 1.5's reconcile behaviour. When the user declined, skip it, `sandermuller/boost-skills`, the auto-sync hooks, and the voice and remote-skills steps below.
 - `sandermuller/boost-skills` (`^2.27.0`) — with the wrapper only; without boost-core nothing syncs it. Run `composer require --dev "sandermuller/boost-skills:^2.27.0"` only when the declared constraint can resolve below 2.27.0 or the package is absent.
 
-Plus shared dev deps from `$REPO_INIT_HOME/references/shared-dev-deps.md` minus what Laravel installer typically already ships (read freshly-generated composer.json to confirm): `laravel/pao`, `laravel/pint` (already), `phpstan/extension-installer`, `phpstan/phpstan-strict-rules`, `phpstan/phpstan-deprecation-rules`, `phpstan/phpstan-phpunit`, `rector/rector`, `spaze/phpstan-disallowed-calls`, `symplify/phpstan-rules` (`^14.19` — see shared-dev-deps.md "Symplify formatter dep"), `tomasvotruba/cognitive-complexity`, `tomasvotruba/type-coverage` (`^2.3` — it bundles the abandoned `rector/type-perfect`, which must NOT be installed alongside it; see shared-dev-deps.md "Type-perfect dep"), `nunomaduro/collision` (Laravel ships), `orchestra/testbench` (typically NOT in laravel-project — skip). `laravel-project` does NOT take `sandermuller/package-boost-php` — `sandermuller/project-boost-laravel` (above) is its boost-family member.
+Plus shared dev deps from `$REPO_INIT_HOME/references/shared-dev-deps.md` minus what Laravel installer typically already ships (read freshly-generated composer.json to confirm): `laravel/pao`, `laravel/pint` (already), `phpstan/extension-installer`, `phpstan/phpstan-strict-rules`, `phpstan/phpstan-deprecation-rules`, `phpstan/phpstan-phpunit`, `rector/rector`, `sandermuller/rector-preset` (`~2.8.0`), `spaze/phpstan-disallowed-calls`, `symplify/phpstan-rules` (`^14.19` — see shared-dev-deps.md "Symplify formatter dep"), `tomasvotruba/cognitive-complexity`, `tomasvotruba/type-coverage` (`^2.3` — it bundles the abandoned `rector/type-perfect`, which must NOT be installed alongside it; see shared-dev-deps.md "Type-perfect dep"), `nunomaduro/collision` (Laravel ships), `orchestra/testbench` (typically NOT in laravel-project — skip). `laravel-project` does NOT take `sandermuller/package-boost-php` — `sandermuller/project-boost-laravel` (above) is its boost-family member.
 
 Plus confirmed opt-ins:
 
@@ -156,6 +156,12 @@ Then the single batched `composer require --dev <list>` call.
 Common: laravel-project usually has `phpunit/phpunit` from `laravel new`. If user opted into Pest in audit, add Pest deps and instruct them to run `vendor/bin/pest --init` separately to migrate tests.
 
 On failure, consult `references/composer-failure-modes.md`.
+
+## Migrate `rector.php` to the preset (prompted)
+
+Skip if `rector.php` already returns `Preset::app(...)`. Runs after "Apply MISSING dev deps", so `sandermuller/rector-preset` is installed, and on every test framework.
+
+Offer to migrate a hand-written config to `Preset::app()` (pass `codingStyle`, `privatization` or `typeDeclarationDocblocks: true` only when the existing config turns them on) (ask first; `rector.php` is notify-only). Keep the project's `withPhpSets()`, configured rules, path skips and rule skips the preset does not already cover. Drop what the preset owns: `withCache()`, `withParallel()`, `withMemoryLimit()`, `withImportNames()`, `withAttributesSets()`, `withFluentCallNewLine()`, `withPreparedSets()` (pass a set the project turns off as a preset parameter), `withPaths()` when the detected paths match, `withComposerBased()`, and the extension sets the preset registers (see `$REPO_INIT_HOME/references/rector-config.md` "The preset"). Keep every other set in `withSets()`, for example `FluentValidationSetList::SCHEMA`, which the preset leaves opt-in. When an extension is installed but the project does not run one of the sets the preset registers for it, pass that set to `withoutSets`, so the switch does not turn it on. For example, a project that runs single hihaho rules passes `withoutSets: [HihahoSetList::ALL]`. When you write it, also raise the constraint to `~2.8.1`, whatever version is installed, so a lowest-version install cannot pick 2.8.0. Then update the package and confirm with `composer show sandermuller/rector-preset` that 2.8.1 or later is installed. Run `vendor/bin/rector process --dry-run` before and after; the diff after the switch shows only the changes the preset defaults bring.
 
 ## Apply OUTDATED files per merge mode
 

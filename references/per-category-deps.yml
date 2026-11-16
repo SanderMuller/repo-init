@@ -14,6 +14,7 @@ shared:
       - phpstan/phpstan-deprecation-rules
       - phpstan/phpstan-phpunit
       - rector/rector
+      - "sandermuller/rector-preset: ~2.8.0"  # the shared Rector config that every stub rector.php calls; its minor follows rector/rector (see rector-config.md)
       - spaze/phpstan-disallowed-calls
       - "symplify/phpstan-rules: ^14.19"  # requires PHP ^8.4; supersedes the abandoned symplify/phpstan-extensions (see shared-dev-deps.md "Symplify formatter dep")
       - tomasvotruba/cognitive-complexity

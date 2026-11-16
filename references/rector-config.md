@@ -5,224 +5,120 @@ agree, and both must agree with the `phases/*-<category>.md` files. A
 disagreement between them is a defect to trace and fix, not a precedence
 question — either side can be the stale one.
 
-## Always (every category)
+## The preset
 
-```php
-<?php declare(strict_types=1);
+Every stub builds on `sandermuller/rector-preset`, a shared `require-dev`
+dependency (see `shared-dev-deps.md`). Its version follows Rector's minor:
+`~2.8.0` requires `rector/rector: ~2.8.0`. Bump the preset to move Rector to a
+new minor. The preset's own README
+(`vendor/sandermuller/rector-preset/README.md`) is the full reference; this file
+records what repo-init relies on.
 
-use Rector\Caching\ValueObject\Storage\FileCacheStorage;
-use Rector\Config\RectorConfig;
-
-// Rector rejects a containerCacheDirectory that does not exist yet.
-is_dir(__DIR__ . '/.cache/phpstan') || mkdir(__DIR__ . '/.cache/phpstan', recursive: true);
-
-return RectorConfig::configure()
-    ->withCache(
-        cacheDirectory: './.cache/rector',
-        cacheClass: FileCacheStorage::class,
-        // Rector boots a PHPStan container and writes the same reflection cache
-        // entries PHPStan does, so it shares PHPStan's tmpDir: one copy, not two.
-        containerCacheDirectory: './.cache/phpstan',
-    )
-    ->withPreparedSets(
-        deadCode: true,
-        codeQuality: true,
-        codingStyle: true,
-        typeDeclarations: true,
-        typeDeclarationDocblocks: true,
-        privatization: true,
-        carbon: true,
-        rectorPreset: true,
-        phpunitCodeQuality: true,
-    )
-    ->withAttributesSets()
-    ->withImportNames()
-    ->withFluentCallNewLine()
-    ->withParallel(300, 15, 15)
-    ->withMemoryLimit('3G')
-    ->withPhpSets(php84: true) // php85 for laravel-project, or per --php=
-```
-
-`withPreparedSets()` must NOT pass `instanceOf`, `if` or `earlyReturn`. Rector
-2.6 marks all three `@deprecated`: the instanceof and early-return rules moved
-into `codeQuality`, and the `if` rules moved into `codeQuality` / `codingStyle`
-or were dropped. `codeQuality: true` already covers them. Verified against
-`rector/rector` 2.6.7, `src/Configuration/RectorConfigBuilder.php`.
-
-## `withComposerBased()` — conditional, never unconditional
-
-`withComposerBased()` is the only builder path that pushes
-`PHPUnitSetList::COMPOSER_BASED` and `LaravelSetList::COMPOSER_BASED` into the
-set list — traced in `RectorConfigBuilder::withComposerBased()`. The older
-`withSetProviders()` is `@deprecated` in favour of it. Nothing else registers a
-composer-based set.
-
-Each flag has its own condition. A config that meets no condition omits the call
-entirely — an argument-less `withComposerBased()` registers nothing.
-
-| Flag | Condition |
+| Category | Stub |
 |---|---|
-| `phpunit: true` | `--test-framework=phpunit` ONLY |
-| `laravel: true` | category `laravel-project` ONLY |
+| `laravel-project` | `Preset::app(codingStyle: true, privatization: true, typeDeclarationDocblocks: true)` |
+| every other category | `Preset::package()` |
 
-`phpunit: true` registers the PHPUnit upgrade set, whose rules rewrite
-`PHPUnit\Framework\TestCase` subclasses. A Pest suite has no such classes, so
-the set is noise there. This matches the reference apps: `hihaho` is PHPUnit and
-passes the flag, `mijntp` is Pest and does not.
+Each stub then adds `->withPhpSets(php__PHP_VERSION_NEON__: true)` and nothing
+else. A project adds its configured rules and its own skips to the result.
 
-`laravel: true` derives Laravel upgrade rules from the installed Laravel
-version. An app pins one version, so that is safe. A package supports a Laravel
-range, and rules derived from the dev-installed version can rewrite code that
-must still run on the package's lower bound.
+The preset sets up, in both presets:
 
-Each stub ships the flags its own default test framework earns. Four stubs are
-PHPUnit-flavoured — `laravel-project`, `laravel-package-spatie`,
-`phpstan-extension` (PHPStan's `RuleTestCase` is PHPUnit-based) and
-`rector-extension`; the rest ship Pest:
+- `withCache()` with `.cache/rector`, and the container cache in
+  `.cache/phpstan` (the `tmpDir` of the canonical `phpstan.neon.dist`). It
+  creates that directory, so the stub needs no `mkdir` line.
+- CPU-aware `withParallel()`, `withMemoryLimit('3G')`, `withImportNames()`,
+  `withAttributesSets()` and `withFluentCallNewLine()`.
+- One `withPreparedSets()` call. `package()` turns on `deadCode`,
+  `codeQuality`, `codingStyle`, `typeDeclarations`, `typeDeclarationDocblocks`,
+  `privatization`, `rectorPreset` and `phpunitCodeQuality`. `app()` leaves
+  `codingStyle`, `typeDeclarationDocblocks` and `privatization` off; the
+  laravel-project stub turns them on. `carbon` is on only when `nesbot/carbon`
+  is installed. A preset never passes the deprecated `instanceOf`, `if` or
+  `earlyReturn` arguments.
+- The paths that exist: `app`, `src`, `config`, `routes`,
+  `database/factories`, `database/seeders`, `tests`, `workbench`, `bootstrap`.
+  `database/migrations` is never scanned, and `bootstrap/cache` and `.cache`
+  are skipped.
+- The sets of the installed Rector extensions: the five rector-laravel sets
+  (`LARAVEL_CODE_QUALITY`, `LARAVEL_ARRAYACCESS_TO_METHOD_CALL`,
+  `LARAVEL_COLLECTION`, `LARAVEL_CONTAINER_STRING_TO_FULLY_QUALIFIED_NAME`,
+  `LARAVEL_FACADE_ALIASES_TO_FULL_NAMES`), `PestSetList::CODING_STYLE` from
+  `pestphp/pest-plugin-rector`, `HihahoSetList::ALL` and the
+  laravel-fluent-validation sets.
+- `withComposerBased()`: `app()` turns on the set of each installed framework
+  (Laravel, Symfony, Doctrine, Twig). Both presets turn on the PHPUnit set only
+  when `phpunit/phpunit` is installed and `pestphp/pest` is not, because a Pest
+  suite has no `TestCase` classes. `package()` never turns on the Laravel set by
+  itself: Rector binds those rules to the installed Laravel version, and a
+  package supports a range.
 
-| Stub | Call |
-|---|---|
-| `laravel-project` | `->withComposerBased(phpunit: true, laravel: true)` |
-| `laravel-package-spatie`, `phpstan-extension`, `rector-extension` | `->withComposerBased(phpunit: true)` |
-| every other stub | no call |
+Do not call `withPreparedSets()` or `withCache()` again in a stub.
+`withPreparedSets()` only adds sets, so turn a set off with its preset
+parameter. `withCache()` resets the container cache directory.
 
-The bootstrap "compose test-framework variant" step flips the `phpunit:` flag
-when the user picks the other framework: it adds the flag on a PHPUnit target
-and removes it on a Pest target. Removing the last flag removes the whole call.
+The test-framework variant needs no `rector.php` edit: the preset reads the
+installed test framework.
 
-`containerCacheDirectory` must be set explicitly, to `./.cache/phpstan` — the
-`tmpDir` of the canonical `phpstan.neon.dist`. Rector's default puts the
-container cache in the system temp directory, where
-`.github/workflows/rector-check.yml` — which caches
-`.cache/phpstan/cache/PHPStan` — cannot see it. Rector boots a PHPStan container, so it writes the same reflection and
-PHPDoc cache entries PHPStan does. `hihaho/rector.php` measured 1118 of the 1131
-entries Rector writes (99%) as entries PHPStan also wants; a separate
-`.cache/rectorContainer/` keeps a second copy of them. The cache keys carry the
-dependency and PHP versions, so a mismatch misses instead of returning stale
-data, and the two tools can write there at the same time.
-Rector also fails when that directory does not exist, so each stub creates it
-before `RectorConfig::configure()`. Without that line, a local run on a fresh
-clone fails. CI does not hit this, because `rector-check.yml` creates the directory.
+## Skips in the preset
 
-## Per-category `withPaths` and `withSets`
+Both presets skip:
 
-| Category | `withPaths` | Extra `withSets` |
-|---|---|---|
-| `laravel-project` | `app, routes, config, database, tests` | the five Laravel sets below + Pest |
-| `laravel-package` | `src, tests, workbench` | the five Laravel sets below + Pest |
-| `laravel-package-spatie` | `src, tests, workbench` | the five Laravel sets below + Pest |
-| `filament-plugin` | `src, tests, workbench` | the five Laravel sets below + Pest |
-| `nova-tool` | `src, tests, workbench` | the five Laravel sets below + Pest |
-| `php-package` | `src, tests` | Pest only |
-| `composer-plugin` | `src, tests` | Pest only |
-| `phpstan-extension` | `src, tests` | Pest only |
-| `rector-extension` | `src, tests, config` | Pest only |
+- `TernaryToNullsafeCoalesceRector`. It is in the `php80` set, so
+  `withPhpSets()` runs it in every category, and its output fails the canonical
+  PHPStan config. Reproduced with Rector 2.8.1 and PHPStan 2.3.3:
+  `$user !== null ? $user->name : 'guest'` on a `?self` with a non-null
+  `string $name` becomes `$user?->name ?? 'guest'`, which PHPStan reports as
+  `nullsafe.neverNull`.
+- `ExplicitNullableObjectInstanceRector`. It is in `codeQuality` from Rector
+  2.8.0, and every stub runs that set together with `deadCode`. Reproduced on
+  Rector 2.8.1 with the full `hihaho/rector.php` minus this one skip: guards on
+  a nullable enum parameter turn into `instanceof` checks, then
+  `RemoveAlwaysTrueIfConditionRector` and `RemoveUnreachableStatementRector`
+  empty a private method to `return;`. A queued job dispatch and a failure
+  notification disappeared that way.
 
-The five Laravel sets, in stub order:
+`package()` also skips `AddArrowFunctionReturnTypeRector`,
+`InlineArrayReturnAssignRector`, `PrivatizeFinalClassMethodRector`,
+`RemoveUselessParamTagRector` and `RemoveUselessReturnTagRector`: rules that are
+noisy or that fight the house style.
 
-```php
-LaravelSetList::LARAVEL_CODE_QUALITY,
-LaravelSetList::LARAVEL_ARRAYACCESS_TO_METHOD_CALL,
-LaravelSetList::LARAVEL_COLLECTION,
-LaravelSetList::LARAVEL_CONTAINER_STRING_TO_FULLY_QUALIFIED_NAME,
-LaravelSetList::LARAVEL_FACADE_ALIASES_TO_FULL_NAMES,
-```
+`app()` also skips `ArgumentAdderRector`, `ClosureToArrowFunctionRector`,
+`PreferPHPUnitThisCallRector`, `RestoreDefaultNullToNullableTypePropertyRector`,
+and rector-laravel's `ApplyDefaultInsteadOfNullCoalesceRector` and
+`ReplaceServiceContainerCallArgRector`. It adds `PreferPHPUnitSelfCallRector`,
+and `PrivatizeFinalClassPropertyRector` while `privatization` is off.
 
-`LARAVEL_COLLECTION` is present in both `hihaho/rector.php` and
-`mijntp/rector.php`.
+A project removes a preset skip with `unskip: [...]`. A skip whose rule class
+does not exist, or whose set is turned off, is left out, so Rector does not
+warn that it is never registered.
 
-No stub ships a version-pinned `LaravelSetList::LARAVEL_{XXX}` set.
-
-The `rector-extension` category includes `config/` because the extension's own
-`config/config.php` is PHP that benefits from refactoring rules.
-
-## Pest set
-
-With `--test-framework=pest`, `pestphp/pest-plugin-rector` supplies one set:
-
-```php
-use Pest\Rector\Set\PestSetList;
-
-->withSets(class_exists(PestSetList::class) ? [
-    PestSetList::CODING_STYLE,
-] : [])
-```
-
-A repo still importing `RectorPest\Set\PestSetList` from `mrpunyapal/rector-pest`
-is NON-CANONICAL — swap the import and the set names in the same pass that drops
-the package.
-
-Confirmed 2026-09-21 against the installed plugin source
-(`vendor/pestphp/pest-plugin-rector/src/Set/PestSetList.php`): `CODING_STYLE` is
-the class's only constant. The `PEST_CODE_QUALITY` / `PEST_CHAIN` / `PEST_LARAVEL`
-constants belong to `mrpunyapal/rector-pest` and have no first-party equivalent;
-`mijntp` still runs that package and is NOT canonical on this point.
-
-## `withSkip` — stub defaults
-
-Every stub ships this list. These are repo-init's own defaults, chosen as rules
-that are noisy or that fight the house style. Most are NOT drawn from the
-reference apps. The exception is `TernaryToNullsafeCoalesceRector`, which
-`hihaho/rector.php` skips: it is in the `php80` set, so `withPhpSets()` runs it
-in every category, and its output fails the canonical PHPStan config. Reproduced
-with Rector 2.8.1 and PHPStan 2.3.3: `$user !== null ? $user->name : 'guest'`
-on a `?self` with a non-null `string $name` becomes `$user?->name ?? 'guest'`,
-which PHPStan reports as `nullsafe.neverNull`.
-
-`ExplicitNullableObjectInstanceRector` is the second exception; both reference
-apps skip it. It is in `codeQuality` from Rector 2.8.0, and every stub runs that
-set together with `deadCode`. Reproduced on Rector 2.8.1 with the full
-`hihaho/rector.php` minus this one skip: guards on a nullable enum parameter turn
-into `instanceof` checks, then `RemoveAlwaysTrueIfConditionRector` and
-`RemoveUnreachableStatementRector` empty a private method to `return;`. A queued
-job dispatch and a failure notification disappeared that way. All cases found
-involve a nullable enum. A single-rule fixture and a run with only the `deadCode`
-set did not reproduce it, so the chain needs more of a full config.
-
-```php
-->withSkip([
-    AddArrowFunctionReturnTypeRector::class,
-    InlineArrayReturnAssignRector::class,
-    PrivatizeFinalClassMethodRector::class,
-    RemoveUselessParamTagRector::class,
-    RemoveUselessReturnTagRector::class,
-    // Its `$x?->prop ?? $d` output fails PHPStan's nullsafe.neverNull.
-    TernaryToNullsafeCoalesceRector::class,
-    // On a nullable enum, its rewrite lets the deadCode set delete reachable code.
-    ExplicitNullableObjectInstanceRector::class,
-])
-```
-
-The phase file lets the agent ask the user whether to keep this list as-is or
-trim it.
-
-The list holds no `@deprecated` rule. Rector 2.8.0 removed every deprecated rule
-from the prepared sets and levels, so a skip for one is a no-op. Traced in
-`rector-src` 2.8.0 (`src/Config/Level/*.php`, `config/set/*.php`) and in the
-installed 2.8.1. `EncapsedStringsToSprintfRector` and `ExplicitBoolCompareRector`
-left the list for that reason, and the `rector/rector` floor is `^2.8`.
-`NullToStrictStringFuncCallArgRector` left too: it is not deprecated, but
-rector-src #8234 removed it from the `php81` set before 2.6.0, so no set runs
-it. Rector 2.8.1 warns "This skipped rule is never registered" for it.
+A project leaves out one detected extension set with `withoutSets: [...]`, for
+example `withoutSets: [HihahoSetList::ALL]` in a project that runs single
+hihaho rules. The other detected sets stay on. The preset throws for a set it
+did not detect. `withoutSets` needs rector-preset 2.8.1 or later: 2.8.0
+fails on the unknown parameter, so a project that uses it requires `~2.8.1`.
 
 ## `withSkip` — laravel-project reference list
 
 Verified 2026-10-28 (both apps on `rector/rector` 2.8.1) as the blanket
 (non-path-scoped) skips present in BOTH `hihaho/rector.php` and
 `mijntp/rector.php`, minus the two exceptions below. This is what a mature Laravel app on
-this toolchain converges on. Offer it to a `laravel-project` target on top of the
-stub defaults; it does not apply to package categories.
+this toolchain converges on. Offer it to a `laravel-project` target on top of
+`Preset::app()`; it does not apply to package categories. `Preset::app()`
+already skips six of these rules (marked below), so add only the rest to the
+project's `withSkip()`.
 
 ```php
 AddMockConsoleOutputFalseToConsoleTestsRector::class,
 AddOverrideAttributeToOverriddenPropertiesRector::class,
 AppToResolveRector::class,
-ApplyDefaultInsteadOfNullCoalesceRector::class,
-ArgumentAdderRector::class,
+ApplyDefaultInsteadOfNullCoalesceRector::class, // in Preset::app()
+ArgumentAdderRector::class, // in Preset::app()
 ArrayExplicitBoolCompareRector::class,
 AssertSeeToAssertSeeHtmlRector::class,
 CarbonToDateFacadeRector::class,
-ClosureToArrowFunctionRector::class,
+ClosureToArrowFunctionRector::class, // in Preset::app()
 CollectedByPropertyToCollectedByAttributeRector::class,
 ContainerBindConcreteWithClosureOnlyRector::class,
 DispatchNonShouldQueueToDispatchSyncRector::class,
@@ -230,11 +126,11 @@ EnvVariableToEnvHelperRector::class,
 InlineIsAInstanceOfRector::class,
 LocallyCalledStaticMethodToNonStaticRector::class,
 MigrateToSimplifiedAttributeRector::class,
-PreferPHPUnitThisCallRector::class,
+PreferPHPUnitThisCallRector::class, // in Preset::app()
 RedirectRouteToToRouteHelperRector::class,
 RenameClassRector::class,
-ReplaceServiceContainerCallArgRector::class,
-RestoreDefaultNullToNullableTypePropertyRector::class,
+ReplaceServiceContainerCallArgRector::class, // in Preset::app()
+RestoreDefaultNullToNullableTypePropertyRector::class, // in Preset::app()
 ScopeNamedClassMethodToScopeAttributedClassMethodRector::class,
 SimplifyIfReturnBoolRector::class,
 ```
@@ -247,7 +143,7 @@ longer runs: `BinaryOpNullableToInstanceofRector`,
 `declare_strict_types` still adds `declare(strict_types=1)`.
 
 `ExplicitNullableObjectInstanceRector` is skipped in both apps but is NOT in
-the list: it is in the stub defaults, so every category skips it.
+the list: both presets skip it, so every category skips it.
 
 `RemoveDefaultAuthorizeTrueFromFormRequestRector` is skipped in both apps but is
 NOT in the list. Up to `driftingly/rector-laravel` 2.7.2 it read only the last
@@ -268,19 +164,11 @@ they carry over as a prompt rather than a default:
 `hihaho/rector-rules` does NOT self-register its rules. Its `composer.json` sets
 `type: rector-extension` and `extra.rector.includes: ["config/config.php"]`, but
 that file is an empty closure by design, and the mechanism needs
-`rector/extension-installer`, which neither reference app installs. The consuming
-`rector.php` must wire the rules itself.
+`rector/extension-installer`, which neither reference app installs.
 
-Minimum wiring — the set list, whose class is
-`Hihaho\RectorRules\Set\HihahoSetList` (note `Set`, singular):
-
-```php
-use Hihaho\RectorRules\Set\HihahoSetList;
-
-->withSets([
-    HihahoSetList::ALL,
-])
-```
+Both presets add `HihahoSetList::ALL` when `hihaho/rector-rules` is installed,
+so `--with-hihaho-rules` only adds the package to `require-dev`. The stub needs
+no set line.
 
 `HihahoSetList::ALL` imports the code-quality, eloquent, imports, migrations,
 naming, routing and testing sets. Three further rules ship in the package but

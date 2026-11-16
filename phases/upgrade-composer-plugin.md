@@ -69,7 +69,7 @@ Why it matters: Pest 5 requires PHP `^8.4` and PHPUnit 13. So the PHP floor bump
 6. If the target carries `orchestra/testbench`, change the constraint to `^11.0`; for a Laravel package category also drop every Laravel 12 / testbench 10 cell from `run-tests.yml` — Pest 5 needs `symfony/process: ^8.1` and testbench 10 pins `^7.2`. Leave the runtime `illuminate/*` range alone.
 7. Run one resolution: `composer update`.
 
-Then fix the files the bump touches:
+Then fix the files the bump touches. Skip both `rector.php` items when `rector.php` already returns `Preset::package(...)`: the preset registers the Pest set and the composer-based sets itself.
 
 - `rector.php` — `use Pest\Rector\Set\PestSetList;` and the single set `PestSetList::CODING_STYLE` (replaces `PEST_CODE_QUALITY` / `PEST_CHAIN` / `PEST_LARAVEL`).
 - `rector.php` — drop `instanceOf:`, `if:` and `earlyReturn:` from `withPreparedSets()` (Rector 2.6 deprecates all three; `codeQuality: true` covers them). Add `->withComposerBased(...)` after that block ONLY with a flag the repo qualifies for: `phpunit: true` on a PHPUnit repo, `laravel: true` on `laravel-project`. A Pest package qualifies for neither and gets no call.
@@ -129,6 +129,12 @@ Single batched `composer require --dev <list>`. Shared (minus exclusions) + cate
 - Test-framework: `pestphp/pest: ^5.0` + `pest-plugin-arch` + `pest-plugin-rector` + `pest-plugin-phpstan` + `pest-plugin-agent`, all `^5.0` (pest), OR `phpunit/phpunit` (phpunit). NEVER `pestphp/pest-plugin-laravel` — framework-agnostic.
 
 On failure, consult `references/composer-failure-modes.md`.
+
+## Migrate `rector.php` to the preset (prompted)
+
+Skip if `rector.php` already returns `Preset::package(...)`. Runs after "Apply MISSING dev deps", so `sandermuller/rector-preset` is installed, and on every test framework.
+
+Offer to migrate a hand-written config to `Preset::package()` (ask first; `rector.php` is notify-only). Keep the project's `withPhpSets()`, configured rules, path skips and rule skips the preset does not already cover. Drop what the preset owns: `withCache()`, `withParallel()`, `withMemoryLimit()`, `withImportNames()`, `withAttributesSets()`, `withFluentCallNewLine()`, `withPreparedSets()` (pass a set the project turns off as a preset parameter), `withPaths()` when the detected paths match, `withComposerBased()`, and the extension sets the preset registers (see `$REPO_INIT_HOME/references/rector-config.md` "The preset"). Keep every other set in `withSets()`, for example `FluentValidationSetList::SCHEMA`, which the preset leaves opt-in. When an extension is installed but the project does not run one of the sets the preset registers for it, pass that set to `withoutSets`, so the switch does not turn it on. For example, a project that runs single hihaho rules passes `withoutSets: [HihahoSetList::ALL]`. When you write it, also raise the constraint to `~2.8.1`, whatever version is installed, so a lowest-version install cannot pick 2.8.0. Then update the package and confirm with `composer show sandermuller/rector-preset` that 2.8.1 or later is installed. Run `vendor/bin/rector process --dry-run` before and after; the diff after the switch shows only the changes the preset defaults bring.
 
 ## Apply OUTDATED files per merge mode
 

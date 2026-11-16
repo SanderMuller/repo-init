@@ -57,7 +57,7 @@ The shipped stubs default to **Pest** for php-package. If the user picked PHPUni
 
 **(b) `.github/workflows/run-tests.yml`**: change the last step's `run:` from `vendor/bin/pest --ci` to `vendor/bin/phpunit`. **Without this edit, CI fails immediately.** On `php=8.5`, the `8.4` cells become `8.5` (see `$REPO_INIT_HOME/references/version-defaults.md` "PHP version in CI workflows").
 
-**(c) `rector.php`**: add `->withComposerBased(phpunit: true)` after the `withPreparedSets()` block. The Pest-flavoured stub ships no such call; the PHPUnit composer-based set rewrites `TestCase` subclasses, which only a PHPUnit suite has. See `references/rector-config.md`.
+**(c) `rector.php`**: no edit. `Preset::package()` turns on the PHPUnit composer-based set when `phpunit/phpunit` is installed and `pestphp/pest` is not. See `references/rector-config.md`.
 
 **(d) Test file**: delete `tests/Pest.php` (copied in step 2); use `phpunit.xml` (also from shared).
 

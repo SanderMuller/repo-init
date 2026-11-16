@@ -90,12 +90,7 @@ Special handling for `tests/`: copy `tests/Pest.php` only when `test-framework=p
 - Change the last step's `run:` from `vendor/bin/pest --ci` (pest default) to `vendor/bin/phpunit` (phpunit) — or vice versa. **Without this edit, CI fails immediately because the workflow runs the wrong test binary.**
 - Pest, or `laravel=^13.0`: remove the `laravel: '12.*'` / `testbench: '10.*'` cells (only the `laravel-package-spatie` stub ships them). Apply this even when the framework is the stub's default, so a spatie + PHPUnit + `^13.0` target runs only this edit. See `$REPO_INIT_HOME/references/version-defaults.md` "Laravel majors in the CI matrix".
 
-**(c) `rector.php`** — the `phpunit:` flag on `withComposerBased()` follows the chosen framework:
-
-- PHPUnit: the config carries `->withComposerBased(phpunit: true)`. The `laravel-package-spatie` stub already ships it; the `laravel-package` stub does not, so add it after the `withPreparedSets()` block.
-- Pest: the config carries no `withComposerBased()` call at all. On the `laravel-package-spatie` stub, delete the shipped one — an argument-less call registers nothing.
-
-The PHPUnit composer-based set rewrites `TestCase` subclasses, which only a PHPUnit suite has. See `references/rector-config.md`.
+**(c) `rector.php`** — no edit. `Preset::package()` turns on the PHPUnit composer-based set when `phpunit/phpunit` is installed and `pestphp/pest` is not. The set rewrites `TestCase` subclasses, which only a PHPUnit suite has. See `references/rector-config.md`.
 
 **(d) Test bootstrap file**:
 

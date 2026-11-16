@@ -12,6 +12,7 @@ phpstan/phpstan-strict-rules
 phpstan/phpstan-deprecation-rules
 phpstan/phpstan-phpunit
 rector/rector
+sandermuller/rector-preset    # ~2.8.0 — its minor follows rector/rector; see rector-config.md
 spaze/phpstan-disallowed-calls
 symplify/phpstan-rules        # ^14.19 — see "Symplify formatter dep" below
 tomasvotruba/cognitive-complexity
@@ -35,6 +36,7 @@ Test-framework split (`test-framework=pest|phpunit`):
 - `phpstan/extension-installer` — auto-includes phpstan extension configs.
 - `phpstan/phpstan-strict-rules`, `-deprecation-rules`, `-phpunit` — common rule packs.
 - `rector/rector` — automated refactoring.
+- `sandermuller/rector-preset` — the shared Rector config. Every stub `rector.php` calls `Preset::app()` or `Preset::package()`; the preset owns the cache, the parallel workers, the prepared sets, the shared skips and the extension sets. Its major and minor follow `rector/rector` (`~2.8.0` for Rector 2.8), so a Rector upgrade is one bump of both. See `rector-config.md`.
 - `spaze/phpstan-disallowed-calls` — bans dangerous/execution/insecure calls.
 - `symplify/phpstan-rules` — adds the symplify error formatter (`phpstan-simplified` script) AND the opt-in rule set the canonical `phpstan.neon.dist` registers by hand. See "Symplify formatter dep" below and `phpstan-config.md` → "Symplify rules".
 - `tomasvotruba/cognitive-complexity` — complexity rules.

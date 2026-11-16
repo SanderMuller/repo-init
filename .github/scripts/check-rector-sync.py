@@ -3,15 +3,15 @@
 Rector-config sync check.
 
 Asserts that every `stubs/<category>/rector.php`, `references/rector-config.md`
-and the matching `phases/*-<category>.md` files agree. A phase file that promises
-a rector.php the stub tree does not ship, or a Pest category whose stub never
-registers the Pest set, fails CI.
+and the matching `phases/*-<category>.md` files agree. Every stub builds on
+`sandermuller/rector-preset`: it calls the preset that the doc table names for
+its category, adds `withPhpSets()`, and calls nothing the preset owns. A phase
+file that promises a rector.php the stub tree does not ship fails CI.
 
-Written after two defects of exactly this shape reached main:
-  - stubs/laravel-project/rector.php shipped no PestSetList while all three of
-    its phase files required pestphp/pest-plugin-rector
-  - phases/audit-composer-plugin.md lists rector.php as an expected file with no
-    stub anywhere to create it from
+Written after a defect of this shape reached main:
+phases/audit-composer-plugin.md listed rector.php as an expected file with no
+stub anywhere to create it from. (An earlier defect, a stub without the Pest
+set, is now the preset's job: it adds the set when the plugin is installed.)
 
 Per SPEC Phase 7. Runs on every push/PR touching phases/, references/ or stubs/.
 """
@@ -45,69 +45,34 @@ VARIANTS = {"laravel-package-spatie": "laravel-package"}
 # phase states the exclusion explicitly.
 EXCLUDED_CATEGORIES = ["skill-bundle"]
 
-# Stubs whose shipped test framework is PHPUnit. Every other stub is
-# Pest-flavoured. The bootstrap "compose test-framework variant" step flips the
-# withComposerBased(phpunit:) flag when the user picks the other framework.
-PHPUNIT_CATEGORIES = [
-    "laravel-project",
-    "laravel-package-spatie",
-    "phpstan-extension",
-    "rector-extension",
-]
+PRESET_IMPORT = "use SanderMuller\\RectorPreset\\Preset;"
+PHP_SETS_CALL = "->withPhpSets(php__PHP_VERSION_NEON__: true);"
 
-LARAVEL_CATEGORIES = [
-    "laravel-project",
-    "laravel-package",
-    "laravel-package-spatie",
-    "filament-plugin",
-    "nova-tool",
-]
-
-REQUIRED_CALLS = [
+# Calls and set lists the preset owns. A stub that repeats one duplicates or
+# overrides it: withPaths() replaces the detected paths, for example.
+PRESET_OWNED = [
+    "RectorConfig::configure(",
     "withCache(",
-    "containerCacheDirectory:",
-    "withPaths([",
     "withPreparedSets(",
-    "withAttributesSets()",
-    "withImportNames()",
-    "withFluentCallNewLine()",
+    "withComposerBased(",
     "withParallel(",
     "withMemoryLimit(",
-    "withPhpSets(",
-    "withSkip([",
+    "withImportNames(",
+    "withAttributesSets(",
+    "withFluentCallNewLine(",
+    "withPaths(",
+    "withSets(",
+    "LaravelSetList",
+    "PestSetList",
+    "HihahoSetList",
 ]
 
-PREPARED_SET_FLAGS = [
-    "deadCode",
-    "codeQuality",
-    "codingStyle",
-    "typeDeclarations",
-    "typeDeclarationDocblocks",
-    "privatization",
-    "carbon",
-    "rectorPreset",
-    "phpunitCodeQuality",
-]
+# Parameters Rector 2.6 marks @deprecated on withPreparedSets(). The preset
+# does not accept them, so a stub that passes one fails at runtime.
+DEPRECATED_PRESET_ARGS = ["instanceOf:", "if:", "earlyReturn:"]
 
-# Parameters Rector 2.6 marks @deprecated on withPreparedSets(): the instanceof
-# and early-return rules moved into codeQuality, the if rules into codeQuality /
-# codingStyle or were dropped. No stub may pass them.
-DEPRECATED_PREPARED_SET_FLAGS = ["instanceOf", "if", "earlyReturn"]
-
-LARAVEL_SETS = [
-    "LARAVEL_CODE_QUALITY",
-    "LARAVEL_ARRAYACCESS_TO_METHOD_CALL",
-    "LARAVEL_COLLECTION",
-    "LARAVEL_CONTAINER_STRING_TO_FULLY_QUALIFIED_NAME",
-    "LARAVEL_FACADE_ALIASES_TO_FULL_NAMES",
-]
-
-# Set names from the superseded mrpunyapal/rector-pest package. The phase files
-# flag these as NON-CANONICAL, so no stub may ship them.
-NON_CANONICAL_PEST = ["RectorPest", "PEST_CODE_QUALITY", "PEST_CHAIN", "PEST_LARAVEL"]
-
-# Imports that are not skip-list entries, so they never appear in withSkip.
-NON_SKIP_IMPORTS = {"FileCacheStorage", "RectorConfig", "LaravelSetList", "PestSetList"}
+DEP_LINE = re.compile(r'^\s+- "sandermuller/rector-preset: ~\d+\.\d+\.0"', re.M)
+DEPS = REPO_ROOT / "references" / "per-category-deps.yml"
 
 exit_code = 0
 
@@ -129,166 +94,43 @@ def phase_files(category: str) -> list[Path]:
     return [p for p in (REPO_ROOT / "phases" / f"{m}-{category}.md" for m in modes) if p.exists()]
 
 
-def skip_block(text: str) -> str:
-    match = re.search(r"withSkip\(\[(.*?)\]\);", text, re.S)
-    return match.group(1) if match else ""
+def normalise(call: str) -> str:
+    return re.sub(r"//[^\n]*", "", call).replace(" ", "").replace("\n", "").replace(",)", ")")
 
 
-def check_required_calls(category: str, text: str) -> None:
-    missing = [c for c in REQUIRED_CALLS if c not in text]
-    if missing:
-        fail(f"stubs/{category}/rector.php missing required call(s): {missing}")
+def stub_preset_call(text: str) -> str | None:
+    match = re.search(r"return (Preset::\w+\(.*?\))\s*->", text, re.S)
+    return normalise(match.group(1)) if match else None
 
 
-def check_prepared_sets(category: str, text: str) -> None:
-    match = re.search(r"withPreparedSets\((.*?)\n    \)", text, re.S)
-    if not match:
-        fail(f"stubs/{category}/rector.php has no parseable withPreparedSets()")
-        return
-    flags = dict(re.findall(r"(\w+):\s*(true|false)", match.group(1)))
-    missing = [f for f in PREPARED_SET_FLAGS if f not in flags]
-    if missing:
-        fail(f"stubs/{category}/rector.php withPreparedSets missing flag(s): {missing}")
-    off = [f for f in PREPARED_SET_FLAGS if flags.get(f) == "false"]
-    if off:
-        fail(f"stubs/{category}/rector.php withPreparedSets has flag(s) set false: {off}")
-    deprecated = [f for f in DEPRECATED_PREPARED_SET_FLAGS if f in flags]
+def check_shape(category: str, text: str) -> None:
+    imports = re.findall(r"^use [\w\\]+;", text, re.M)
+    if imports != [PRESET_IMPORT]:
+        fail(f"stubs/{category}/rector.php must import only the preset, found: {imports}")
+    if PHP_SETS_CALL not in text:
+        fail(f"stubs/{category}/rector.php does not call {PHP_SETS_CALL}")
+    code = re.sub(r"//[^\n]*", "", text)
+    owned = [c for c in PRESET_OWNED if c in code]
+    if owned:
+        fail(f"stubs/{category}/rector.php calls what the preset owns: {owned}")
+    deprecated = [a for a in DEPRECATED_PRESET_ARGS if a in code]
     if deprecated:
-        fail(
-            f"stubs/{category}/rector.php withPreparedSets passes deprecated flag(s): "
-            f"{deprecated} — codeQuality covers them"
-        )
+        fail(f"stubs/{category}/rector.php passes deprecated argument(s): {deprecated}")
 
 
-def check_composer_based(category: str, text: str) -> None:
-    """withComposerBased() is conditional — every flag has its own trigger.
-
-    laravel: true derives upgrade rules from the installed Laravel version. An
-    app pins one version, so that is safe. A package supports a range, so the
-    flag belongs to laravel-project alone.
-
-    phpunit: true registers the PHPUnit upgrade set, whose rules rewrite
-    TestCase subclasses. A Pest suite has none, so the flag belongs to the
-    PHPUnit-flavoured stubs alone.
-    """
-    wants_laravel = category == "laravel-project"
-    wants_phpunit = category in PHPUNIT_CATEGORIES
-    match = re.search(r"withComposerBased\((.*?)\)", text, re.S)
-
-    if not (wants_laravel or wants_phpunit):
-        if match:
-            fail(
-                f"stubs/{category}/rector.php calls withComposerBased() — no flag applies "
-                "to a Pest, non-laravel-project stub, and an empty call registers nothing"
-            )
+def check_preset_matches_doc(category: str, text: str, doc_rows: dict[str, str]) -> None:
+    expected = doc_rows.get(category, doc_rows.get("every other category"))
+    if expected is None:
+        fail(f"references/rector-config.md preset table has no row for '{category}'")
         return
-
-    if not match:
-        fail(f"stubs/{category}/rector.php has no parseable withComposerBased()")
-        return
-
-    flags = dict(re.findall(r"(\w+):\s*(true|false)", match.group(1)))
-    for flag, wanted in (("laravel", wants_laravel), ("phpunit", wants_phpunit)):
-        present = flags.get(flag) == "true"
-        if wanted and not present:
-            fail(f"stubs/{category}/rector.php withComposerBased is missing {flag}: true")
-        if present and not wanted:
-            fail(
-                f"stubs/{category}/rector.php withComposerBased passes {flag}: true — "
-                f"the category does not qualify for it"
-            )
+    actual = stub_preset_call(text)
+    if actual != normalise(expected):
+        fail(f"preset mismatch for {category}: stub={actual} doc={expected} (references/rector-config.md table)")
 
 
-def check_pest_coupling(category: str, text: str) -> None:
-    """A category whose phases require pest-plugin-rector must register the set."""
-    phases = phase_files(category)
-    if not phases:
-        fail(f"{category}: no phase files resolved — category model out of date?")
-        return
-
-    needs_pest = any("pest-plugin-rector" in p.read_text() for p in phases)
-    has_import = "use Pest\\Rector\\Set\\PestSetList;" in text
-    has_set = "PestSetList::CODING_STYLE" in text
-
-    if needs_pest and not (has_import and has_set):
-        names = ", ".join(p.name for p in phases)
-        fail(
-            f"stubs/{category}/rector.php does not register the Pest set, but {names} "
-            f"require pestphp/pest-plugin-rector (import={has_import}, set={has_set})"
-        )
-    if has_set and not has_import:
-        fail(f"stubs/{category}/rector.php uses PestSetList::CODING_STYLE without importing PestSetList")
-
-
-def check_non_canonical_pest(category: str, text: str) -> None:
-    found = [n for n in NON_CANONICAL_PEST if n in text]
-    if found:
-        fail(f"stubs/{category}/rector.php ships superseded mrpunyapal/rector-pest form(s): {found}")
-
-
-def check_laravel_sets(category: str, text: str) -> None:
-    present = [s for s in LARAVEL_SETS if s in text]
-    if category in LARAVEL_CATEGORIES:
-        missing = [s for s in LARAVEL_SETS if s not in present]
-        if missing:
-            fail(f"stubs/{category}/rector.php missing Laravel set(s): {missing}")
-    elif present:
-        fail(f"stubs/{category}/rector.php is not a Laravel category but ships Laravel set(s): {present}")
-
-
-def check_paths_match_doc(category: str, text: str, doc_rows: dict[str, list[str]]) -> None:
-    match = re.search(r"withPaths\(\[(.*?)\]\)", text, re.S)
-    if not match:
-        fail(f"stubs/{category}/rector.php has no parseable withPaths()")
-        return
-    stub_paths = re.findall(r"__DIR__ \. '/([\w/]+)'", match.group(1))
-
-    if category not in doc_rows:
-        fail(f"references/rector-config.md per-category table has no row for '{category}'")
-        return
-    if doc_rows[category] != stub_paths:
-        fail(
-            f"withPaths mismatch for {category}: stub={stub_paths} "
-            f"doc={doc_rows[category]} (references/rector-config.md table)"
-        )
-
-
-def check_skip_imports(category: str, text: str) -> None:
-    imports = {m.split("\\")[-1] for m in re.findall(r"^use ([\w\\]+);", text, re.M)}
-    skips = set(re.findall(r"^\s+(\w+Rector)::class", skip_block(text), re.M))
-
-    unimported = skips - imports
-    if unimported:
-        fail(f"stubs/{category}/rector.php skips un-imported class(es) — fatal at runtime: {sorted(unimported)}")
-
-    unused = imports - skips - NON_SKIP_IMPORTS
-    if unused:
-        fail(f"stubs/{category}/rector.php has unused import(s): {sorted(unused)}")
-
-
-def check_skip_list_matches_doc(category: str, text: str, doc_skips: set[str]) -> None:
-    skips = set(re.findall(r"^\s+(\w+Rector)::class", skip_block(text), re.M))
-    if skips != doc_skips:
-        fail(
-            f"withSkip mismatch for {category}: doc-only={sorted(doc_skips - skips)} "
-            f"stub-only={sorted(skips - doc_skips)} (references/rector-config.md 'stub defaults')"
-        )
-
-
-def check_pest_detector_is_armed() -> None:
-    """Guard against the Pest assertion silently disarming.
-
-    check_pest_coupling() only fires when a phase file names pestphp/pest-plugin-rector.
-    If that string is renamed everywhere, the assertion would pass vacuously and stop
-    protecting anything. Every full category is expected to name it today, so a drop to
-    zero means the marker moved, not that Pest was dropped.
-    """
-    arming = [c for c in FULL_CATEGORIES if any("pest-plugin-rector" in p.read_text() for p in phase_files(c))]
-    if not arming:
-        fail(
-            "no phase file names 'pest-plugin-rector' — the Pest coupling assertion is "
-            "now vacuous. Update the marker in check_pest_coupling() to match the phases."
-        )
+def check_dependency_listed() -> None:
+    if not DEP_LINE.search(DEPS.read_text()):
+        fail("references/per-category-deps.yml does not list sandermuller/rector-preset with a ~X.Y.0 constraint")
 
 
 def expected_categories() -> list[str]:
@@ -327,31 +169,18 @@ def check_every_expected_stub_exists(found: list[str]) -> None:
         )
 
 
-def parse_doc_rows() -> dict[str, list[str]]:
-    """Category → withPaths list, from the per-category table.
-
-    Scoped to that one section: an unscoped scan would also match any future
-    two-column table whose cells happen to be backticked, silently overwriting a row.
-    """
+def parse_doc_rows() -> dict[str, str]:
+    """Rows include the 'every other category' fallback key."""
     doc = DOC.read_text()
-    section = re.search(r"## Per-category `withPaths` and `withSets`\n(.*?)\n## ", doc, re.S)
+    section = re.search(r"## The preset\n(.*?)\n## ", doc, re.S)
     if not section:
-        fail("references/rector-config.md has no '## Per-category `withPaths` and `withSets`' section")
+        fail("references/rector-config.md has no '## The preset' section")
         return {}
 
     rows = {}
-    for category, paths in re.findall(r"^\|\s*`([a-z-]+)`\s*\|\s*`([^`]+)`\s*\|", section.group(1), re.M):
-        rows[category] = [p.strip() for p in paths.split(",")]
+    for category, call in re.findall(r"^\|\s*`?([a-z -]+?)`?\s*\|\s*`(Preset::[^`]+)`\s*\|", section.group(1), re.M):
+        rows[category] = call
     return rows
-
-
-def parse_doc_skips() -> set[str]:
-    doc = DOC.read_text()
-    match = re.search(r"## `withSkip` — stub defaults.*?```php\n(.*?)```", doc, re.S)
-    if not match:
-        fail("references/rector-config.md has no parseable '## `withSkip` — stub defaults' code block")
-        return set()
-    return set(re.findall(r"(\w+Rector)::class", match.group(1)))
 
 
 def main() -> int:
@@ -363,27 +192,17 @@ def main() -> int:
     print(f"[check-rector-sync] checking {len(stubs)} rector.php stub(s) against doc + phases...")
 
     doc_rows = parse_doc_rows()
-    doc_skips = parse_doc_skips()
 
     found = [s.parent.name for s in stubs]
     check_every_expected_stub_exists(found)
+    check_dependency_listed()
 
     for stub in stubs:
         category = stub.parent.name
         text = stub.read_text()
 
-        check_required_calls(category, text)
-        check_prepared_sets(category, text)
-        check_composer_based(category, text)
-        check_pest_coupling(category, text)
-        check_non_canonical_pest(category, text)
-        check_laravel_sets(category, text)
-        check_paths_match_doc(category, text, doc_rows)
-        check_skip_imports(category, text)
-        check_skip_list_matches_doc(category, text, doc_skips)
-
-    check_pest_detector_is_armed()
-
+        check_shape(category, text)
+        check_preset_matches_doc(category, text, doc_rows)
 
     if exit_code == 0:
         print("[check-rector-sync] OK — stubs, references/rector-config.md and phases agree.")
