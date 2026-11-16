@@ -392,7 +392,7 @@ Split into **MANDATORY** (audit flags MISSING if absent) and **OPTIONAL/CONDITIO
 |---|---|---|
 | `laravel-project` | `larastan/larastan`, `laravel/boost`, `laravel/pail`, `laravel/tinker`, `driftingly/rector-laravel` | (the `laravel new` baseline) |
 | `laravel-package` | `larastan/larastan`, `driftingly/rector-laravel` | `illuminate/contracts`, `illuminate/support` at `__LARAVEL_VERSIONS__` |
-| `php-package` | `phpstan/phpstan`, `stolt/lean-package-validator` | (no `illuminate/*`) |
+| `php-package` | `phpstan/phpstan`, `stolt/php-lean` | (no `illuminate/*`) |
 | `phpstan-extension` | (none beyond shared, minus `phpstan/phpstan` per §5.1.1) | `phpstan/phpstan: ^2` |
 | `rector-extension` | (none beyond shared, minus `rector/rector` per §5.1.1) | `rector/rector: ^2` |
 

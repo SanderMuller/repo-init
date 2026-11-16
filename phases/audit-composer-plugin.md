@@ -80,7 +80,7 @@ Plus shared (minus exclusions above):
 - [ ] `nunomaduro/collision`
 - [ ] `sandermuller/package-boost-php`
 - [ ] `sandermuller/boost-skills` — canonical floor `^2.27.0`, the version that ships the voice guideline the always-on `voice` tag needs. A constraint that can resolve below 2.27.0 does NOT count: flag it NON-CANONICAL on its own, even when `'voice'` is already in `withTags([...])` (the tag is a silent no-op there). See the voice-tag finding below.
-- [ ] `stolt/lean-package-validator`
+- [ ] `stolt/php-lean`
 
 Test-framework split:
 
@@ -100,7 +100,7 @@ Baseline minus `sync-ai` + composer-plugin additions (11 keys). The composer-plu
 - [ ] `rector` → `vendor/bin/rector process`
 - [ ] `test` → `vendor/bin/pest` (or `vendor/bin/phpunit` if `test-framework=phpunit`)
 - [ ] `test-coverage` → `vendor/bin/pest --coverage` (or `vendor/bin/phpunit --coverage-html=coverage`)
-- [ ] `validate-gitattributes` → `vendor/bin/lean-package-validator validate`
+- [ ] `validate-gitattributes` → `vendor/bin/php-lean lint`
 - [ ] `qa` → `["@rector", "@format", "@phpstan-simplified", "@validate-gitattributes"]`
 - [ ] `post-install-cmd` → `["SanderMuller\\PackageBoostPhp\\Scripts\\AutoSync::run"]`
 - [ ] `post-update-cmd` → `["SanderMuller\\PackageBoostPhp\\Scripts\\AutoSync::run"]`
@@ -131,7 +131,7 @@ Same logic as audit-php-package.md, with composer-plugin stub paths from `$REPO_
 - [ ] **`rector.php` sets `containerCacheDirectory` to `./.cache/rectorContainer`** (LOW severity, DRIFT): the canon shares PHPStan's `tmpDir`, because Rector writes the same reflection cache. Flag NON-CANONICAL; fix = point the `mkdir` line and `containerCacheDirectory` at `.cache/phpstan`, then delete `.cache/rectorContainer/`.
 - [ ] **`rector.php` missing a `withComposerBased(...)` flag the repo qualifies for** (MEDIUM severity, DRIFT): `withComposerBased()` is the only builder path that pushes `PHPUnitSetList::COMPOSER_BASED` / `LaravelSetList::COMPOSER_BASED` into the set list, and `withSetProviders()` is `@deprecated` in favour of it. Each flag is conditional: `phpunit: true` on a PHPUnit repo ONLY (its rules rewrite `TestCase` subclasses, which a Pest suite does not have), `laravel: true` on `laravel-project` ONLY. Flag NON-CANONICAL when a flag the repo qualifies for is absent, AND when a flag it does not qualify for is present. A repo that qualifies for neither omits the call — an argument-less `withComposerBased()` registers nothing. See `$REPO_INIT_HOME/references/rector-config.md`. Flag NON-CANONICAL; fix = add `->withComposerBased(phpunit: true)`.
 - [ ] **`tests/Pest.php` without `pest()->tia()->locally()`** (LOW severity, applies only when the repo uses Pest): the Tia engine re-runs only the tests a change touched, on developer machines only. Fix = add the call to `tests/Pest.php`. Do NOT add `--tia` to any composer script or CI step. See `$REPO_INIT_HOME/references/pest-vs-phpunit.md` "Tia engine".
-- [ ] **`stolt/lean-package-validator: ^6.0`** (LOW severity, applies only when the repo carries the validator AND uses Pest): 6.0.0 caps `sebastian/diff` at `^7` and cannot install next to PHPUnit 13. Composer backtracks to 6.0.1 on its own, `--prefer-lowest` included, so nothing breaks — but `^6.0.1` states the real floor. Fix = tighten the constraint.
+- [ ] **`stolt/lean-package-validator` in `require-dev`** (MEDIUM severity, applies only when the repo carries it): the package is abandoned, and its successor is `stolt/php-lean`. Flag NON-CANONICAL. Fix = replace it with `stolt/php-lean: ^0.9.3` and set the `validate-gitattributes` script to `vendor/bin/php-lean lint`.
 
 - [ ] **`rector/type-perfect` present alongside a `tomasvotruba/type-coverage` constraint that can resolve to >= 2.3** (HIGH severity, PHPStan does not boot): `tomasvotruba/type-coverage` 2.3.0 absorbed type-perfect and now includes `packages/type-perfect/config/extension.neon` itself. With both installed, `phpstan/extension-installer` includes that file twice and PHPStan aborts at startup on the duplicate `MethodNodeAnalyser` service. Composer resolves against the **runtime** PHP, not `require.php` — so an uncapped `^2.2` (what every repo scaffolded before this rule landed carries) was green on a PHP 8.3 CI cell and is dead on 8.4. Flag NON-CANONICAL: remove `rector/type-perfect` and move to `tomasvotruba/type-coverage: ^2.3`. A repo below the `^8.4` floor cannot take that move — both successors need PHP `^8.4` — so the floor bump is part of the same atomic pass. The fix is ATOMIC — see the matching `upgrade-<category>.md`.
 
@@ -161,7 +161,8 @@ Same logic as audit-php-package.md, with composer-plugin stub paths from `$REPO_
 - [ ] **`phpunit.xml.dist` committed (with `.dist` suffix)**: canonical baseline ships `phpunit.xml` (no `.dist`). Flag NON-CANONICAL.
 - [ ] Missing `validate-gitattributes` script in `composer.json` — composer-plugin should have it (same lean-archive reasoning as php-package).
 - [ ] **POSIX-shell `post-install-cmd` / `post-update-cmd`** (HIGH severity): if either script's value is a shell conditional like `if [ "$COMPOSER_DEV_MODE" = "1" ]; then vendor/bin/boost sync; fi` (or older `vendor/bin/testbench package-boost:sync`), it is Windows-broken and predates boost-core 0.6's PHP callback. Canonical is the array `["SanderMuller\\PackageBoostPhp\\Scripts\\AutoSync::run"]` for BOTH keys. Flag NON-CANONICAL; suggest the merge-keys replace via `phases/upgrade-composer-plugin.md`.
-- [ ] `.lpv` exists but no `vendor/bin/lean-package-validator validate` clean.
+- [ ] **`.lpv` line ends in `/`, or `.lpv` does not list itself** (MEDIUM severity): the validator joins the lines into one glob and appends `*`, so `tests/` becomes `tests/*`. The check then asks for an export-ignore line for every path inside `tests/` and fails, although the archive is lean. Without its own line, `.lpv` ships in the archive. Flag NON-CANONICAL. Fix = remove the trailing slashes, add a `.lpv` line, and add `.lpv export-ignore` to the managed block.
+- [ ] `.lpv` exists but no `vendor/bin/php-lean lint` clean.
 - [ ] **`.gitattributes` package-boost managed block MISSING** (HIGH severity): without it, `composer archive` ships local-only files. Flag NON-CANONICAL.
 - [ ] **README badge row MISSING or incomplete** (HIGH severity): the first 30 lines of `README.md` MUST contain the canonical badge set — Packagist version, run-tests CI status, Total Downloads, License — each on its own line, all using `?style=flat-square` on shields.io URLs. Any missing → flag NON-CANONICAL with the specific badge(s) absent.
 

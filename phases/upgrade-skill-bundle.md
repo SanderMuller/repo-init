@@ -28,9 +28,21 @@ Single `composer require <list>`:
 
 On failure, consult `$REPO_INIT_HOME/references/composer-failure-modes.md`.
 
+## Migrate to `stolt/php-lean` (ATOMIC)
+
+**Skip if:** `composer.json` does not require `stolt/lean-package-validator`, no `.lpv` line ends in `/`, AND `.lpv` lists itself.
+
+`stolt/lean-package-validator` is abandoned. Its successor is `stolt/php-lean`, which has no `validate` command: `lint` runs the same check.
+
+1. Run `composer remove --dev stolt/lean-package-validator`, then `composer require --dev stolt/php-lean:^0.9.3`.
+2. Set the `validate-gitattributes` script to `vendor/bin/php-lean lint`. Keep the script name, because `qa` and `qa-check` call it.
+3. In `.lpv`, remove the trailing `/` from every line, and add a `.lpv` line.
+4. Add `.lpv export-ignore` to the `# >>> package-boost (managed) >>>` block in `.gitattributes`.
+5. Run `composer validate-gitattributes`. It must report `"valid": true`. If it asks for export-ignore lines inside a folder (for example `tests/Unit/`), a `.lpv` line still ends in `/`. See `$REPO_INIT_HOME/references/gitattributes-managed-block.md` "`.lpv` file format".
+
 ## Apply MISSING dev deps
 
-Single batched `composer require --dev <list>`. Category-mandatory: `laravel/pint`, `sandermuller/boost-skills`, `stolt/lean-package-validator`. A skill-bundle ships no PHP source — it carries no test runner, and the PHPStan / Rector shared dev-dep packs are NOT installed; `sandermuller/boost-skills` is the one shared library it still takes (hand-listed because `skill-bundle` opts out of the shared dev-dep block).
+Single batched `composer require --dev <list>`. Category-mandatory: `laravel/pint`, `sandermuller/boost-skills`, `stolt/php-lean`. A skill-bundle ships no PHP source — it carries no test runner, and the PHPStan / Rector shared dev-dep packs are NOT installed; `sandermuller/boost-skills` is the one shared library it still takes (hand-listed because `skill-bundle` opts out of the shared dev-dep block).
 
 On failure, consult `$REPO_INIT_HOME/references/composer-failure-modes.md`.
 
@@ -57,7 +69,7 @@ Per `$REPO_INIT_HOME/references/composer-scripts.md`:
 - **PHP floor below `^8.4`**: prompt bump to `^8.4` (`^8.5` for `laravel-project`).
 - **`.gitattributes` missing `.ai/ export-ignore`**: insert `.ai/ export-ignore` after `.agents/ export-ignore` inside the `# >>> package-boost (managed) >>>` block.
 - **Missing `validate-gitattributes` script**: insert it (via the composer.json scripts merge above).
-- **`.lpv` warnings on `vendor/bin/lean-package-validator validate`**: for each flagged artifact, add the **bare path** (no `export-ignore` suffix) to `.lpv` AND the `<path> export-ignore` line to the `.gitattributes` managed block. `.lpv` is a glob-pattern file, not `.gitattributes` syntax — see `references/gitattributes-managed-block.md` (`.lpv` file format).
+- **`.lpv` warnings on `vendor/bin/php-lean lint`**: for each flagged artifact, add the **bare path** (no `export-ignore` suffix) to `.lpv` AND the `<path> export-ignore` line to the `.gitattributes` managed block. `.lpv` is a glob-pattern file, not `.gitattributes` syntax — see `references/gitattributes-managed-block.md` (`.lpv` file format).
 - **`minimum-stability` / `prefer-stable`**: add `"minimum-stability": "stable"` + `"prefer-stable": true` to `composer.json` if absent or if `prefer-stable` isn't `true`. If `minimum-stability` is looser than `stable`, **default to tightening it to `stable`** — keep `dev` only when the author confirms the package is actively co-developed against unreleased sibling packages (being on `0.x`, or having downstream / production dependents, is a reason to tighten, NOT to keep `dev`; see `references/version-defaults.md`). Never loosen a passing `stable` baseline.
 
 ## Migrate boost config to `.config/` (canonical layout)
@@ -131,4 +143,4 @@ composer validate-gitattributes
 
 ## Common issues
 
-- **`validate-gitattributes` fails with "command not found"**: `vendor/bin/lean-package-validator` needs `composer install` after the dep was added. Run it.
+- **`validate-gitattributes` fails with "command not found"**: `vendor/bin/php-lean` needs `composer install` after the dep was added. Run it.

@@ -172,7 +172,7 @@ Note: `post-autoload-dump` is an array — Composer runs each entry in order. If
 ```json
 {
   "scripts": {
-    "validate-gitattributes": "vendor/bin/lean-package-validator validate"
+    "validate-gitattributes": "vendor/bin/php-lean lint"
   }
 }
 ```
@@ -189,7 +189,7 @@ Add `@validate-gitattributes` to the `qa` chain.
     "post-install-cmd": ["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"],
     "post-update-cmd": ["SanderMuller\\BoostCore\\Scripts\\BoostAutoSync::run"],
     "format": "vendor/bin/pint",
-    "validate-gitattributes": "vendor/bin/lean-package-validator validate",
+    "validate-gitattributes": "vendor/bin/php-lean lint",
     "qa": ["@format", "@validate-gitattributes"],
     "qa-check": ["vendor/bin/pint --test", "@validate-gitattributes"]
   }

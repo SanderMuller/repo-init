@@ -55,7 +55,7 @@ Why it matters: Pest 5 requires PHP `^8.4` and PHPUnit 13. So the PHP floor bump
 1. Raise `require.php` to `^8.4` (or `^8.5`) in `composer.json`.
 2. Raise `pestphp/pest` and every `pestphp/*` plugin to `^5.0`.
 3. Replace `mrpunyapal/rector-pest` with `pestphp/pest-plugin-rector: ^5.0`, and add `pestphp/pest-plugin-phpstan: ^5.0` + `pestphp/pest-plugin-agent: ^5.0`.
-4. If the target carries `stolt/lean-package-validator`, raise it to `^6.0.1` — 6.0.0 caps `sebastian/diff` at `^7` and cannot install next to PHPUnit 13. Composer backtracks to 6.0.1 by itself, so this is a clarity fix, not a blocker.
+4. If the target carries `stolt/lean-package-validator`, leave it to "Migrate to `stolt/php-lean`" below. `stolt/php-lean` installs next to PHPUnit 13.
 5. Apply the PHP >= 8.4 dep set in the same `composer.json` pass: remove `rector/type-perfect`, set `tomasvotruba/type-coverage: ^2.3`, and replace `symplify/phpstan-extensions: ^12.0` with `symplify/phpstan-rules: ^14.19`. In the same pass, add the `parameters.symplify` block from the stub `phpstan.neon.dist` (all ten sets `false`); 14.19 turns every set on without it. A block that lacks only `modern` and `collections` gets those two keys. A repo that already has `symplify/phpstan-rules: ^14.17` and no `phpstan-extensions` still takes the symplify part of this step: raise the constraint to `^14.19` and add the two keys, because 14.19 already resolves and runs `ForbiddenTraitRule` on every trait. See `$REPO_INIT_HOME/references/phpstan-config.md` "Symplify rules".
 6. If the target carries `orchestra/testbench`, change the constraint to `^11.0`; for a Laravel package category also drop every Laravel 12 / testbench 10 cell from `run-tests.yml` — Pest 5 needs `symfony/process: ^8.1` and testbench 10 pins `^7.2`. Leave the runtime `illuminate/*` range alone.
 7. Run one resolution: `composer update`.
@@ -110,12 +110,24 @@ vendor/bin/phpstan analyse --memory-limit=2G
 
 Expect exactly one line: `tomasvotruba/type-coverage` at `2.3.x`, and no `rector/type-perfect`. PHPStan must reach analysis — a boot-time duplicate-service error is the failure this step exists to remove.
 
+## Migrate to `stolt/php-lean` (ATOMIC)
+
+**Skip if:** `composer.json` does not require `stolt/lean-package-validator`, no `.lpv` line ends in `/`, AND `.lpv` lists itself.
+
+`stolt/lean-package-validator` is abandoned. Its successor is `stolt/php-lean`, which has no `validate` command: `lint` runs the same check.
+
+1. Run `composer remove --dev stolt/lean-package-validator`, then `composer require --dev stolt/php-lean:^0.9.3`.
+2. Set the `validate-gitattributes` script to `vendor/bin/php-lean lint`. Keep the script name, because `qa` and `qa-check` call it.
+3. In `.lpv`, remove the trailing `/` from every line, and add a `.lpv` line.
+4. Add `.lpv export-ignore` to the `# >>> package-boost (managed) >>>` block in `.gitattributes`.
+5. Run `composer validate-gitattributes`. It must report `"valid": true`. If it asks for export-ignore lines inside a folder (for example `tests/Unit/`), a `.lpv` line still ends in `/`. See `$REPO_INIT_HOME/references/gitattributes-managed-block.md` "`.lpv` file format".
+
 ## Apply MISSING dev deps
 
 Single batched `composer require --dev <list>`. Shared + category-mandatory:
 
 - Shared list from `references/shared-dev-deps.md`.
-- Mandatory: `phpstan/phpstan` (NEVER `larastan/larastan` — framework-agnostic), `stolt/lean-package-validator`, `sandermuller/package-boost-php` (the framework-agnostic boost umbrella; pulls `sandermuller/boost-core` transitively).
+- Mandatory: `phpstan/phpstan` (NEVER `larastan/larastan` — framework-agnostic), `stolt/php-lean`, `sandermuller/package-boost-php` (the framework-agnostic boost umbrella; pulls `sandermuller/boost-core` transitively).
 
 Test-framework: `pestphp/pest: ^5.0` + `pest-plugin-arch` + `pest-plugin-rector` + `pest-plugin-phpstan` + `pest-plugin-agent`, all `^5.0` (pest), OR `phpunit/phpunit` (phpunit). Never pull `pestphp/pest-plugin-laravel` for php-package — framework-agnostic.
 
@@ -155,7 +167,7 @@ Same logic as upgrade-laravel-package.md — apply each file's mode from `$REPO_
 - **`.gitattributes` missing `.ai/ export-ignore`**: insert `.ai/ export-ignore` line after `.agents/ export-ignore` inside the `# >>> package-boost (managed) >>>` block. Preserves alphabetical ordering.
 - **PHP floor below the category floor**: prompt "bump `require.php` to `^8.4` (`^8.5` for `laravel-project`)?" The bump is ATOMIC with the type-perfect / symplify migration above — both successors need PHP `^8.4`.
 - **Missing `validate-gitattributes` script**: insert it (via composer.json scripts merge above).
-- **`.lpv` warnings on `vendor/bin/lean-package-validator validate`**: each artifact flagged in the audit. Prompt user: add the **bare path** (no `export-ignore` suffix) to `.lpv` AND the `<path> export-ignore` line to `.gitattributes` (inside the package-boost managed block). `.lpv` is a glob-pattern file, not `.gitattributes` syntax — see `references/gitattributes-managed-block.md` (`.lpv` file format).
+- **`.lpv` warnings on `vendor/bin/php-lean lint`**: each artifact flagged in the audit. Prompt user: add the **bare path** (no `export-ignore` suffix) to `.lpv` AND the `<path> export-ignore` line to `.gitattributes` (inside the package-boost managed block). `.lpv` is a glob-pattern file, not `.gitattributes` syntax — see `references/gitattributes-managed-block.md` (`.lpv` file format).
 - **`minimum-stability` / `prefer-stable`**: add `"minimum-stability": "stable"` + `"prefer-stable": true` to `composer.json` if absent or if `prefer-stable` isn't `true`. If `minimum-stability` is looser than `stable`, **default to tightening it to `stable`** — keep `dev` only when the author confirms the package is actively co-developed against unreleased sibling packages (being on `0.x`, or having downstream / production dependents, is a reason to tighten, NOT to keep `dev`; see `references/version-defaults.md`). Never loosen a passing `stable` baseline.
 
 ## Migrate boost config to `.config/` (canonical layout)
@@ -231,6 +243,6 @@ If it warns, the `.gitattributes` block is still incomplete — surface the rema
 
 ## Common issues
 
-- **`stolt/lean-package-validator` already installed but `.lpv` missing**: install added the package but the user didn't commit `.lpv`. Re-run upgrade or manually copy from `$REPO_INIT_HOME/stubs/php-package/.lpv`.
-- **`validate-gitattributes` script fails after install with "command not found"**: `vendor/bin/lean-package-validator` needs `composer install` to be run since the dep was added. Run it.
+- **`stolt/php-lean` already installed but `.lpv` missing**: install added the package but the user didn't commit `.lpv`. Re-run upgrade or manually copy from `$REPO_INIT_HOME/stubs/php-package/.lpv`.
+- **`validate-gitattributes` script fails after install with "command not found"**: `vendor/bin/php-lean` needs `composer install` to be run since the dep was added. Run it.
 - **PHP floor bump breaks `composer install`**: a transitive dep caps PHP below the floor. Surface conflict; may need to skip the floor bump on this repo.
