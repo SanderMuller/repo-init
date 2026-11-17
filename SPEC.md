@@ -487,9 +487,10 @@ Per-category `paths:` and extra `includes:`:
 
 | Category | `paths:` | Extra `includes:` |
 |---|---|---|
-| `laravel-project` | `[app, routes, config, database, tests]` | `vendor/hihaho/phpstan-rules/extension.neon` when `--with-hihaho-rules` |
+| `laravel-project` | `[app, routes, config, database, tests]` | (none: `phpstan/extension-installer` loads `hihaho/phpstan-rules` through its `extra.phpstan.includes`, so an explicit include loads it twice and PHPStan stops) |
 | `laravel-package` | `[src, tests, workbench]` | (Larastan auto-included via `phpstan/extension-installer`) |
 | `php-package` | `[src, tests]` | (no Laravel-specific includes) |
+| `composer-plugin` | `[src, tests]` | (none) |
 | `phpstan-extension` | `[src, tests]` | the package's own `extension.neon` (already in `extra.phpstan.includes`) |
 | `rector-extension` | `[src, tests]` | (none) |
 

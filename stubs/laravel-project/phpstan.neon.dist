@@ -4,8 +4,6 @@ includes:
     - vendor/spaze/phpstan-disallowed-calls/disallowed-dangerous-calls.neon
     - vendor/spaze/phpstan-disallowed-calls/disallowed-execution-calls.neon
     - vendor/spaze/phpstan-disallowed-calls/disallowed-insecure-calls.neon
-    # When --with-hihaho-rules is opted in, also include:
-    # - vendor/hihaho/phpstan-rules/extension.neon
 
 rules:
     # Hand-picked symplify/phpstan-rules rules (its rule sets are off, see
@@ -103,6 +101,13 @@ parameters:
         # helpers use. hihaho/phpstan.neon scopes the same identifier out of tests/.
         -
             identifier: symplify.noDynamicName
+            paths:
+                - tests/*
+            reportUnmatched: false
+        # A test may assert a value PHPStan already knows, such as the skeleton's
+        # assertTrue(true). hihaho/phpstan.neon scopes the same identifier out of tests/.
+        -
+            identifier: staticMethod.alreadyNarrowedType
             paths:
                 - tests/*
             reportUnmatched: false

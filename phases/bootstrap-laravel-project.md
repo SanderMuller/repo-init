@@ -225,7 +225,21 @@ From here on, sync with `php artisan project-boost:sync`. Never run `php artisan
 
 If repo-init is also installed in this project locally (escape hatch, rare), its skill propagates here too via the global user-scope sync.
 
-### 10. Run post-bootstrap verification
+### 10. Bring the Laravel skeleton up to the canonical checks
+
+**Skip if:** `vendor/bin/rector process --dry-run` and `vendor/bin/pint --test` report no changes, and `vendor/bin/phpstan analyse` reports no errors.
+
+The skeleton that `laravel new` writes does not pass the canonical `rector.php`, `pint.json` and `phpstan.neon.dist`. Fix these lines first. Leave a line alone when it does not match, because a newer skeleton can already be different.
+
+1. `app/Models/User.php`: split `use HasFactory, Notifiable;` into `use HasFactory;` and `use Notifiable;`. Keep the `/** @use HasFactory<UserFactory> */` docblock above `use HasFactory;`. Rector splits the line too, but it drops the docblock and then the `UserFactory` import.
+2. `config/app.php`, `previous_keys`: give `array_filter()` the callback `static fn (string $key): bool => $key !== ''`.
+3. `config/database.php`, the `mysql` and `mariadb` `options`: give `array_filter()` the callback `static fn (mixed $value): bool => $value !== null && $value !== ''`.
+4. `config/filesystems.php`: cast the `rtrim()` argument, `rtrim((string) env('APP_URL', 'http://localhost'), '/')`.
+5. `database/factories/UserFactory.php`: change the `definition()` docblock to `@return array<model-property<User>, mixed>`.
+
+Then run `vendor/bin/rector process` and `vendor/bin/pint`, in that order. The stub `phpstan.neon.dist` ignores `staticMethod.alreadyNarrowedType` in `tests/`, so the skeleton's `assertTrue(true)` needs no edit.
+
+### 11. Run post-bootstrap verification
 
 Open `$REPO_INIT_HOME/checklists/post-bootstrap-verification.md`.
 
@@ -237,7 +251,7 @@ php artisan test               # smoke-test the default test suite
 composer phpstan-simplified    # PHPStan baseline pass
 ```
 
-### 11. Print next steps
+### 12. Print next steps
 
 ```
 ✓ Bootstrap done for {vendor}/{name} (laravel-project).
@@ -248,7 +262,7 @@ Next:
 - Run `composer dev` to start the dev server (or `php artisan serve` for just the web app).
 - Set up the GitHub remote — ask the user whether `--public` or `--private` first (Laravel apps are commonly private but not always): `gh repo create {vendor}/{name} --public|--private --source=. --remote=origin --push`.
 - Run `composer qa` to confirm baseline passes.
-{when --with-hihaho-rules: - Hihaho rules are active; check phpstan.neon.dist for the include.}
+{when --with-hihaho-rules: - Hihaho rules are active: phpstan/extension-installer loads hihaho/phpstan-rules, and Preset::app() adds the hihaho Rector sets.}
 
 Want to run an audit next (`phases/audit-laravel-project.md`), or are you done with repo-init for now?
 ```

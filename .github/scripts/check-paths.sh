@@ -74,6 +74,14 @@ for pair in "${PHASE_STUB_PAIRS[@]}"; do
         # Skip dist/ paths — these are build outputs the user generates, never shipped in stubs.
         [[ "$relpath" == dist/* ]] && continue
 
+        # Skip Laravel skeleton files that bootstrap-laravel-project.md edits in place.
+        # `laravel new` writes them; no stub ships them.
+        if [[ "$phase_file" == "phases/bootstrap-laravel-project.md" ]]; then
+            case "$relpath" in
+                config/app.php|config/database.php|config/filesystems.php) continue ;;
+            esac
+        fi
+
         # Skip example-filled paths (StudlyCase names that aren't placeholder strings).
         # Heuristic: if the path contains uppercase letters BUT NOT the literal placeholder
         # string `__PACKAGE_STUDLY__`, it's likely an illustrative example.

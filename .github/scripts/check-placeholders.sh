@@ -109,6 +109,16 @@ for ph in "${CANONICAL_PLACEHOLDERS[@]}"; do
     fi
 done
 
+# __NAMESPACE_ESCAPED__ doubles each backslash for JSON. In a PHP file it
+# substitutes to `namespace Vendor\\Package;`, which is a syntax error.
+echo "[check-placeholders] verifying __NAMESPACE_ESCAPED__ is used only in JSON stubs..."
+MISPLACED=$(grep -rlF "__NAMESPACE_ESCAPED__" stubs/ 2>/dev/null | grep -v '\.json$' || true)
+if [[ -n "$MISPLACED" ]]; then
+    echo "FAIL: __NAMESPACE_ESCAPED__ is for JSON only; use __NAMESPACE__ in:"
+    echo "$MISPLACED"
+    EXIT_CODE=1
+fi
+
 if [[ "$EXIT_CODE" -eq 0 ]]; then
     echo "[check-placeholders] OK — placeholders consistent both directions."
 fi

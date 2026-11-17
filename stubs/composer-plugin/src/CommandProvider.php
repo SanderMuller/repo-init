@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace __NAMESPACE_ESCAPED__;
+namespace __NAMESPACE__;
 
 use Composer\Command\BaseCommand;
 use Composer\Plugin\Capability\CommandProvider as ComposerCommandProvider;

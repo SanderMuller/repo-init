@@ -1,0 +1,91 @@
+includes:
+    - phpstan-baseline.neon
+    - phar://phpstan.phar/conf/bleedingEdge.neon
+    - vendor/spaze/phpstan-disallowed-calls/disallowed-dangerous-calls.neon
+    - vendor/spaze/phpstan-disallowed-calls/disallowed-execution-calls.neon
+    - vendor/spaze/phpstan-disallowed-calls/disallowed-insecure-calls.neon
+
+rules:
+    # Hand-picked symplify/phpstan-rules rules (its rule sets are off, see
+    # parameters.symplify). The list is hihaho/phpstan.neon's.
+    - Symplify\PHPStanRules\Rules\StringFileAbsolutePathExistsRule
+    - Symplify\PHPStanRules\Rules\Complexity\NoArrayMapWithArrayCallableRule
+    - Symplify\PHPStanRules\Rules\Complexity\ForbiddenArrayMethodCallRule
+    - Symplify\PHPStanRules\Rules\ForbiddenMultipleClassLikeInOneFileRule
+    - Symplify\PHPStanRules\Rules\NoDynamicNameRule
+    - Symplify\PHPStanRules\Rules\NoGlobalConstRule
+    - Symplify\PHPStanRules\Rules\PreventParentMethodVisibilityOverrideRule
+    - Symplify\PHPStanRules\Rules\Enum\RequireUniqueEnumConstantRule
+    - Symplify\PHPStanRules\Rules\UppercaseConstantRule
+    - Symplify\PHPStanRules\Rules\PHPUnit\PublicStaticDataProviderRule
+    - Symplify\PHPStanRules\Rules\Explicit\NoMissingVariableDimFetchRule
+
+parameters:
+    tmpDir: .cache/phpstan
+
+    # symplify/phpstan-rules turns these rule sets on by default.
+    symplify:
+        naming: false
+        complexity: false
+        configurable: false
+        static: false
+        modern: false
+        symfony: false
+        symfonyConfig: false
+        doctrine: false
+        collections: false
+        phpunit: false
+
+    paths:
+        - src
+        - tests
+
+    level: max
+
+    strictRules:
+        allRules: true
+
+    editorUrl: 'phpstorm://open?file=%%file%%&line=%%line%%'
+
+    type_coverage:
+        return: 100
+        param: 100
+        property: 100
+        constant: 100
+
+    type_perfect:
+        null_over_false: true
+        narrow_return: true
+        narrow_param: true
+
+    cognitive_complexity:
+        class: 80
+        function: 20
+
+    # Off at every level, and phpstan-strict-rules does not set them.
+    checkTooWideReturnTypesInProtectedAndPublicMethods: true
+    checkTooWideParameterOutInProtectedAndPublicMethods: true
+    checkTooWideThrowTypesInProtectedAndPublicMethods: true
+    reportAlwaysTrueInLastCondition: true
+    reportAnyTypeWideningInVarTag: true
+
+    treatPhpDocTypesAsCertain: false
+
+    ignoreErrors:
+        -
+            identifier: trait.unused
+            reportUnmatched: false
+        # Pest's expectation API is marked @internal but is the intended public
+        # surface for tests. Allow calling it from our tests/.
+        -
+            identifier: method.internalClass
+            paths:
+                - tests/*
+            reportUnmatched: false
+        # NoDynamicNameRule (registered above) fires on the dynamic dispatch test
+        # helpers use. hihaho/phpstan.neon scopes the same identifier out of tests/.
+        -
+            identifier: symplify.noDynamicName
+            paths:
+                - tests/*
+            reportUnmatched: false

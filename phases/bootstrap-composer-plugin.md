@@ -42,6 +42,7 @@ For each file under `$REPO_INIT_HOME/stubs/composer-plugin/` (excluding `src/Plu
 - `composer.json` — substitute placeholders. Note: `type: composer-plugin`, `require: composer-plugin-api: ^2.6`, `require-dev: composer/composer: ^2.6`, `extra.class: __NAMESPACE_ESCAPED__\\Plugin`, `config.allow-plugins` includes self-allow entry. The stub ships the canonical dep set: `pestphp/*: ^5.0`, `symplify/phpstan-rules: ^14.19`, `tomasvotruba/type-coverage: ^2.3`, and NO `rector/type-perfect` (keeping type-perfect alongside type-coverage >= 2.3 double-registers `MethodNodeAnalyser` and PHPStan aborts at boot). The set is unconditional — the `^8.4` floor is what every package category now takes. If `php=8.5`, replace every `8.4` PHP version in `.github/workflows/` with `8.5` (see `$REPO_INIT_HOME/references/version-defaults.md` "PHP version in CI workflows"). See `references/shared-dev-deps.md` "Symplify formatter dep" and "Type-perfect dep".
 - `.github/workflows/run-tests.yml` — copy (framework-agnostic, 2-cell PHP-only matrix on PHP 8.4, no Laravel axis; defaults to Pest — the test-framework swap in step 5 retargets it to `vendor/bin/phpunit` if PHPUnit was chosen).
 - `.lpv` — copy (php-lean glob-pattern file; bare globs, no `export-ignore` suffix — see `references/gitattributes-managed-block.md`).
+- `phpstan.neon.dist` — copy. The same config as `php-package`: paths `src` and `tests`. See `references/phpstan-config.md`.
 - `rector.php` — copy. Substitute `__PHP_VERSION_NEON__` per `--php=`. The stub calls `Preset::package()`, which scans the folders that exist and adds the Pest set when `pestphp/pest-plugin-rector` is installed. See `references/rector-config.md`.
 
 ### 4. Copy `src/Plugin.php` variant per `plugin-shape`
@@ -57,7 +58,7 @@ Deterministic file selection from `$REPO_INIT_HOME/stubs/composer-plugin/src/Plu
 | `event-subscriber` | `Plugin.event-subscriber.php` | — |
 | `both` | `Plugin.both.php` | `CommandProvider.php` |
 
-Rename `Plugin.{shape}.php` → `src/Plugin.php` at write time. For shapes that include `CommandProvider.php`, also copy `$REPO_INIT_HOME/stubs/composer-plugin/src/CommandProvider.php` → `src/CommandProvider.php`. Both get the standard `__NAMESPACE_ESCAPED__` substitution.
+Rename `Plugin.{shape}.php` → `src/Plugin.php` at write time. For shapes that include `CommandProvider.php`, also copy `$REPO_INIT_HOME/stubs/composer-plugin/src/CommandProvider.php` → `src/CommandProvider.php`. Both get the standard `__NAMESPACE__` substitution. `__NAMESPACE_ESCAPED__` doubles each backslash for JSON, so in PHP it writes a namespace that does not parse.
 
 For `event-subscriber` and `both` shapes: `getSubscribedEvents()` ships empty with a commented-out POST_AUTOLOAD_DUMP example. Handler methods live as private methods on the Plugin class itself (mirroring `sandermuller/boost-core`'s `BoostCorePlugin` pattern). User wires the first event hook + handler method manually.
 

@@ -42,7 +42,7 @@ For each MISSING file:
 
 If `extra.class` is missing from composer.json: insert `"extra": { "class": "<derived-FQCN>\\Plugin" }` block, where the FQCN is derived from the PSR-4 mapping in `autoload`.
 
-If `src/Plugin.php` is missing: copy from `$REPO_INIT_HOME/stubs/composer-plugin/src/Plugin.php`, substitute `__NAMESPACE_ESCAPED__`.
+If `src/Plugin.php` is missing: copy from `$REPO_INIT_HOME/stubs/composer-plugin/src/Plugin.{shape}.php` as `src/Plugin.php`, substitute `__NAMESPACE__` (not `__NAMESPACE_ESCAPED__`, which is for JSON only).
 
 ## Apply MISSING runtime deps
 

@@ -207,6 +207,7 @@ Don't touch `extra.laravel.providers` for laravel-project — Laravel uses `extr
 - **CI path filter drift — `phpstan.yml` missing `composer.json` / `composer.lock`**: insert both lines under the `push.paths` and `pull_request.paths` blocks in `.github/workflows/phpstan.yml`.
 - **`.gitattributes` missing `.ai/ export-ignore`**: insert `.ai/ export-ignore` line after `.agents/ export-ignore` inside the `# >>> package-boost (managed) >>>` block.
 - **PHP floor below the category floor**: prompt "bump `require.php` to `^8.4` (`^8.5` for `laravel-project`)?" The bump is ATOMIC with the type-perfect / symplify migration above — both successors need PHP `^8.4`.
+- **`phpstan.neon.dist` includes `vendor/hihaho/phpstan-rules/extension.neon`**: prompt "delete the include line?" `phpstan/extension-installer` already loads the file through the package's `extra.phpstan.includes`, and with both PHPStan does not run.
 - **Both larastan + bare phpstan**: prompt to remove `phpstan/phpstan`.
 - **`composer.lock` NOT committed** (rare — Laravel convention is to commit it for apps): prompt to add to git.
 - **Two managed blocks in `.gitattributes`**: same as upgrade-laravel-package.md.
