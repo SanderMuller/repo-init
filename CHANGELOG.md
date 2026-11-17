@@ -9,7 +9,7 @@ Pre-`1.0.0` releases (0.x.x — historical) introduced breaking changes in MINOR
 
 ## [1.23.1](https://github.com/sandermuller/repo-init/compare/1.23.0...1.23.1) - 2026-11-17
 
-<!-- verified-sha: 03e55ac5fbe5adcd01165e14b167d60790b5cc5e -->
+<!-- verified-sha: fd2c095ddb1d0943d55265809bc0d1ced5bf79a9 -->
 ### Changed
 
 - Audit flags an explicit `hihaho/phpstan-rules` include in `laravel-project`; upgrade offers to delete it.
