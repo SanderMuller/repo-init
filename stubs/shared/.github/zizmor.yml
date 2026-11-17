@@ -1,7 +1,8 @@
 # Tag-pinned (not SHA-pinned) GitHub Actions is this project's deliberate,
 # repo-wide convention — every workflow under .github/workflows/ pins a
-# major-version tag. Disable rather than list per-file ignores, since every
-# workflow follows the same pattern.
+# release tag: the major-version tag where the action publishes one, and the
+# full version where it does not (zizmor-action has no v0 tag). Disable rather
+# than list per-file ignores, since every workflow follows the same pattern.
 rules:
   unpinned-uses:
     disable: true
