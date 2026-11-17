@@ -74,7 +74,7 @@ pest()->tia()->locally();
 
 `locally()` enables Tia and switches it off for any run carrying `--ci` — that flag is the mechanism, not CI-environment detection. The stub `run-tests.yml` runs `vendor/bin/pest --ci`, so CI keeps the full suite. Tia records the test-to-file graph on its first run, which needs PCOV or Xdebug, and stores it in `~/.pest/tia/<project-key>/` — outside the repo, so `.gitignore` stays as it is.
 
-Tia needs the repository to have **at least one commit**. A freshly scaffolded repo has none, and `vendor/bin/pest` then aborts with `The feature "Tia mode" requires "git"` instead of running the suite (verified against Pest 5). Run the suite after the initial commit, or pass `--no-tia` for that one run. A remote is not required.
+Tia needs the repository to have **at least one commit**. A freshly scaffolded repo has none, and `vendor/bin/pest` then aborts with `Tia mode requires at least one commit.` instead of running the suite (verified against Pest 5.3.7). `repo new` makes that commit only with `--commit`, and otherwise prints a note. Run the suite after the initial commit, or pass `--no-tia` for that one run. A remote is not required.
 
 Alternatives the phases do NOT scaffold: `always()` (Tia in CI too), `baselined()` plus a baseline workflow (built for very large suites), and a `--tia` composer script.
 
