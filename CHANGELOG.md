@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Pre-`1.0.0` releases (0.x.x — historical) introduced breaking changes in MINOR bumps; from 1.0.0 onward repo-init follows standard SemVer (breaking changes ship as MAJOR only). The pre-1.0 entries below remain for reference.
 
+## [1.23.2](https://github.com/sandermuller/repo-init/compare/1.23.1...1.23.2) - 2026-11-18
+
+<!-- verified-sha: 63a2432d8459fc4b64c925604111c20027f83134 -->
+### Fixed
+
+- Fixed the post-bootstrap checklist and Pest reference quoting an outdated Tia error for a repo with no commit.
+
+**Full changelog:** <https://github.com/SanderMuller/repo-init/compare/1.23.1...1.23.2>
+
 ## [1.23.1](https://github.com/sandermuller/repo-init/compare/1.23.0...1.23.1) - 2026-11-17
 
 <!-- verified-sha: fd2c095ddb1d0943d55265809bc0d1ced5bf79a9 -->
@@ -21,7 +30,7 @@ Pre-`1.0.0` releases (0.x.x — historical) introduced breaking changes in MINOR
 - Fixed PHPStan not starting on `laravel-project` with `hihaho/phpstan-rules`: the stub no longer suggests a duplicate include.
 - Fixed a fresh `laravel-project` failing the canonical PHPStan config: bootstrap now fixes five skeleton lines, then runs Rector and Pint.
 
-**Full changelog:** <https://github.com/SanderMuller/repo-init/compare/1.23.0...1.23.1>
+**Full changelog:** [https://github.com/SanderMuller/repo-init/compare/1.23.0...1.23.1](https://github.com/SanderMuller/repo-init/compare/1.23.0...1.23.1)
 
 ## [1.23.0](https://github.com/sandermuller/repo-init/compare/1.22.0...1.23.0) - 2026-11-16
 
@@ -189,6 +198,7 @@ composer require --dev tomasvotruba/type-coverage:^2.3 symplify/phpstan-rules:^1
 
 
 
+
 ```
 
 `UPGRADING.md` carries the full migration.
@@ -299,6 +309,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 **Full Changelog**: [https://github.com/SanderMuller/repo-init/compare/1.12.0...1.13.0](https://github.com/SanderMuller/repo-init/compare/1.12.0...1.13.0)
@@ -334,6 +345,7 @@ Additive for repo-init itself. Re-running `audit` on an already-scaffolded repo 
 ```bash
 composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
+
 
 
 
@@ -392,6 +404,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 **Full Changelog**: [https://github.com/SanderMuller/repo-init/compare/1.10.0...1.11.0](https://github.com/SanderMuller/repo-init/compare/1.10.0...1.11.0)
@@ -409,6 +422,7 @@ The tag left the interactive skill-tag picker. The stub hard-codes it:
 
 ```php
 ->withTags(['voice'__SKILL_TAGS__])
+
 
 
 
@@ -490,6 +504,7 @@ Audit phases gained a HIGH-severity rule for the duplicate registration. Upgrade
 ```bash
 composer remove --dev rector/type-perfect --no-update
 composer require --dev tomasvotruba/type-coverage:^2.3
+
 
 
 
@@ -920,6 +935,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 For existing scaffolded packages, the next audit walk will surface the `sandermuller/package-boost-php: true` entry as MEDIUM-stale. The upgrade phase handles removal correctly — bump first, then drop the entry.
@@ -1033,6 +1049,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 No further steps. Scaffold output, the `repo-init` skill, audit/upgrade phases, stubs — all identical to 0.8.1.
@@ -1070,6 +1087,7 @@ If you installed 0.8.0:
 ```bash
 composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
+
 
 
 
@@ -1154,6 +1172,7 @@ composer global exec -- boost sync --scope=user --all
 
 
 
+
 ```
 
 The `composer global exec --` form runs `boost` from Composer's global `vendor/bin/` regardless of the user's current directory; the literal `--` stops Composer from interpreting boost's flags as its own. `--scope=user --all` publishes every globally-installed package's `resources/boost/skills/` into `~/.{agent}/skills/<vendor>__<package>/`. See `references/boost-core-user-scope.md` for the full contract.
@@ -1170,6 +1189,7 @@ repo-init now uses the shared `sandermuller/boost-skills` library (code-review, 
 
 ```bash
 gh release create X.Y.Z --notes-file internal/release-notes-X.Y.Z.md
+
 
 
 
@@ -1280,6 +1300,7 @@ composer global exec -- boost sync --scope=user --all   # new: global skill refr
 
 
 
+
 ```
 
 `stubs/shared/boost.php` + repo-init's own `boost.php` docblocks updated accordingly.
@@ -1309,6 +1330,7 @@ Upgrade repo-init itself:
 ```bash
 composer global update sandermuller/repo-init
 composer global exec -- boost sync --scope=user --all
+
 
 
 
