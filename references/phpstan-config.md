@@ -141,7 +141,7 @@ package category.
 
 | Category | `paths:` | Extra `includes:` |
 |---|---|---|
-| `laravel-project` | `[app, routes, config, database, tests]` | (none: `phpstan/extension-installer` loads `hihaho/phpstan-rules` through its `extra.phpstan.includes`, so an explicit include loads it twice and PHPStan stops) |
+| `laravel-project` | `[app, routes, config, database, tests]` | `vendor/hihaho/phpstan-rules/named-argument-manifest.neon` only. Never `extension.neon`: `phpstan/extension-installer` loads it through the package's `extra.phpstan.includes`, so an explicit include loads it twice and PHPStan stops |
 | `laravel-package` | `[src, tests, workbench]` | (Larastan auto-included via `phpstan/extension-installer`) |
 | `php-package` | `[src, tests]` | (no Laravel-specific includes) |
 | `composer-plugin` | `[src, tests]` | (none) |
@@ -165,6 +165,38 @@ example `(int) (env('X') ?: 60)`. The type is the literal value in the file, so 
 `config()->set()` in a test does not change it: keep a guard on a value that
 tests override, even when PHPStan calls it unnecessary. Package categories do not set it: how
 larastan reads a Testbench package's config is not traced.
+
+## `hihaho/phpstan-rules` (laravel-project)
+
+`laravel-project` always carries `hihaho/phpstan-rules` and
+`sandermuller/laravel-fluent-validation-phpstan`. `phpstan/extension-installer`
+loads both. The fluent-validation extension needs no configuration. The hihaho
+rules below do nothing until a project names its namespaces or files, so the stub
+sets them the way `mijntp/phpstan.neon` does:
+
+| Parameter | Stub value | What it turns on |
+|---|---|---|
+| `unescapedHtml.namespaces` | `[App]` | A value that reaches a raw-HTML sink (a `spatie/laravel-html` content argument, a Nova `->asHtml()` closure) must be escaped or `Htmlable` |
+| `swallowedException.namespaces` | `[App]` | A catch of `Throwable` or `Exception` must rethrow, report or read what it caught |
+| `routeBindingProviders` | `[App\Providers\AppServiceProvider]` | Types `$this->route('x')` from `Route::model()` / `Route::bind()` in these providers |
+| `routeFiles` | `[routes/web.php]` | Types `$this->route('x')` from controller type-hints in these route files. Add each route file the app loads |
+| `namedArgumentManifest` | namespaces `App`, `Database\Factories`, `Tests`; `outputPath: .config/named-arguments-manifest.json` | Writes the manifest that `NamedArgumentFromManifestRector` reads. Needs the `named-argument-manifest.neon` include. See `rector-config.md` "The named-argument manifest" |
+
+`mijntp` lists its own provider (`RouteServiceProvider`) and 21 route files. A
+new app keeps its bindings in `AppServiceProvider` and has one web route file.
+The paths in `routeFiles` are relative to the directory PHPStan runs in; a path
+that is not a file is skipped.
+
+Rules that are on with the package defaults: `noUnsafeRequestData` (namespace
+`App`, minus `App\Providers` and `App\Http\Responses`),
+`unvalidatedFormRequestField`, `positionalFlagArgument` and the Eloquent `$with`
+rule. `stubbedMethods`, `traitRequiresInterface`, `outlierTables`,
+`unlockedLivewireIdProperty` and `inheritableSettings` are project-specific and
+stay empty in the stub. `mijntp` sets `stubbedMethods` for its Faker provider.
+
+When the rules are turned on in an existing app, put the findings in a separate
+baseline file (`mijntp` uses `phpstan-baseline-hihaho-rules.neon`), per "Baseline"
+below.
 
 ## `larastan` vs `phpstan/phpstan` exclusivity
 

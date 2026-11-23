@@ -63,6 +63,10 @@ The user owns their application's `require` block. The security canon is the one
 - `zae/strict-transport-security` — `composer require zae/strict-transport-security`. Skip when a reverse proxy already sets `Strict-Transport-Security`; say so rather than installing a second source for the same header.
 - `spatie/security-advisories-health-check` — only when the app carries `spatie/laravel-health`. Register `SecurityAdvisoriesCheck::new()` in the health-check list in the same pass; the package is a no-op unregistered.
 
+One more runtime dep is canon. It is not part of the security canon:
+
+- `sandermuller/laravel-fluent-validation` (`^1.47`) — `composer require "sandermuller/laravel-fluent-validation:^1.47"`. When it is in `require-dev`, move it to `require` (`composer remove --dev` with `--no-update`, then `composer require`). It is safe to add to an app that does not use it yet: nothing changes until code calls `FluentRule`. The Rector sets below then convert the app's array rules, so review that diff on its own.
+
 ## Migrate Pest 4 → 5 (ATOMIC)
 
 Trigger: the target uses Pest and `pestphp/pest` can resolve below `5.0`. Skip the whole section for a PHPUnit target.
@@ -155,9 +159,7 @@ Per-category mandatory `require-dev` for `laravel-project`:
 
 Plus shared dev deps from `$REPO_INIT_HOME/references/shared-dev-deps.md` minus what Laravel installer typically already ships (read freshly-generated composer.json to confirm): `laravel/pao`, `laravel/pint` (already), `phpstan/extension-installer`, `phpstan/phpstan-strict-rules`, `phpstan/phpstan-deprecation-rules`, `phpstan/phpstan-phpunit`, `rector/rector`, `sandermuller/rector-preset` (`~2.8.0`), `spaze/phpstan-disallowed-calls`, `symplify/phpstan-rules` (`^14.19` — see shared-dev-deps.md "Symplify formatter dep"), `tomasvotruba/cognitive-complexity`, `tomasvotruba/type-coverage` (`^2.3` — it bundles the abandoned `rector/type-perfect`, which must NOT be installed alongside it; see shared-dev-deps.md "Type-perfect dep"), `nunomaduro/collision` (Laravel ships), `orchestra/testbench` (typically NOT in laravel-project — skip). `laravel-project` does NOT take `sandermuller/package-boost-php` — `sandermuller/project-boost-laravel` (above) is its boost-family member.
 
-Plus confirmed opt-ins:
-
-- `--with-hihaho-rules`: `hihaho/phpstan-rules`, `hihaho/rector-rules`, `symplify/phpstan-rules`
+Plus the rule packs (see `$REPO_INIT_HOME/references/per-category-deps.md` "`laravel-project` rule packs"): `hihaho/phpstan-rules` (`^4.0.1`), `hihaho/rector-rules` (`^1.7`), `sandermuller/laravel-fluent-validation-phpstan` (`^0.5.1`), `sandermuller/laravel-fluent-validation-rector` (`^1.16`). Raise a constraint that can resolve below its floor. On an app that did not carry the hihaho packs, tell the user first: they turn on new PHPStan rules and Rector sets, and "Wire the rule packs" below handles the findings.
 
 Then the single batched `composer require --dev <list>` call.
 
@@ -172,6 +174,17 @@ On failure, consult `references/composer-failure-modes.md`.
 Skip if `rector.php` already returns `Preset::app(...)`. Runs after "Apply MISSING dev deps", so `sandermuller/rector-preset` is installed, and on every test framework.
 
 Offer to migrate a hand-written config to `Preset::app()` (pass `codingStyle`, `privatization` or `typeDeclarationDocblocks: true` only when the existing config turns them on) (ask first; `rector.php` is notify-only). Keep the project's `withPhpSets()`, configured rules, path skips and rule skips the preset does not already cover. Drop what the preset owns: `withCache()`, `withParallel()`, `withMemoryLimit()`, `withImportNames()`, `withAttributesSets()`, `withFluentCallNewLine()`, `withPreparedSets()` (pass a set the project turns off as a preset parameter), `withPaths()` when the detected paths match, `withComposerBased()`, and the extension sets the preset registers (see `$REPO_INIT_HOME/references/rector-config.md` "The preset"). Keep every other set in `withSets()`, for example `FluentValidationSetList::SCHEMA`, which the preset leaves opt-in. When an extension is installed but the project does not run one of the sets the preset registers for it, pass that set to `withoutSets`, so the switch does not turn it on. For example, a project that runs single hihaho rules passes `withoutSets: [HihahoSetList::ALL]`. When you write it, also raise the constraint to `~2.8.1`, whatever version is installed, so a lowest-version install cannot pick 2.8.0. Then update the package and confirm with `composer show sandermuller/rector-preset` that 2.8.1 or later is installed. Run `vendor/bin/rector process --dry-run` before and after; the diff after the switch shows only the changes the preset defaults bring.
+
+## Wire the rule packs (prompted)
+
+Runs after "Migrate `rector.php` to the preset". `phpstan.neon.dist` and `rector.php` are notify-only, so ask before each edit and show the diff. Canonical shape: `stubs/laravel-project/phpstan.neon.dist` and `stubs/laravel-project/rector.php`. Background: `$REPO_INIT_HOME/references/phpstan-config.md` "`hihaho/phpstan-rules`" and `$REPO_INIT_HOME/references/rector-config.md` "`hihaho/rector-rules` wiring".
+
+1. **PHPStan parameters.** Add `unescapedHtml`, `swallowedException`, `routeBindingProviders` and `routeFiles` from the stub. Set `routeBindingProviders` to the providers that call `Route::model()` or `Route::bind()`, and `routeFiles` to every route file the app loads. Then run PHPStan. When the new rules report findings, put them in a separate baseline: `vendor/bin/phpstan analyse --generate-baseline=phpstan-baseline-hihaho-rules.neon`, include that file in `phpstan.neon.dist` with a one-line comment, and tell the user how many findings it holds. Never fix those findings in this pass: each one is a code change to review.
+2. **Named-argument manifest.** Add the `vendor/hihaho/phpstan-rules/named-argument-manifest.neon` include and `parameters.namedArgumentManifest` from the stub, and the `NamedArgumentFromManifestRector` rule to `rector.php`. Both point at `.config/named-arguments-manifest.json`. Run PHPStan once to write the file, and commit it. Delete a `singleton()` / `tag()` binding of `ManifestCacheMetaExtension`, or the separate config file that holds it: `hihaho/rector-rules` 1.0.0 removed the class.
+3. **Rector rules.** Compare `rector.php` with the stub, and add each of its six `withConfiguredRule()` calls that is missing. Do not rely on the audit for this list: it skips the rule checks while `hihaho/rector-rules` is not installed, and the earlier step installed it. Before you copy `MiddlewareStringToClassRector`, read `bootstrap/app.php` (or `app/Http/Kernel.php`): when it calls `throttleWithRedis()` or maps `throttle` to its own class, set `THROTTLE_CLASS` to that class. Before you copy `TestFieldStringToConstantRector`, grep `routes/` for the middleware that guards internal routes and list every form in `INTERNAL_MIDDLEWARE`, for example `'auth:sanctum'` next to `'auth'`.
+4. **Fluent-validation sets.** Add `FluentValidationSetList::SCHEMA` and `FluentValidationSetList::VALIDATED_INPUT` to `withSets()`.
+
+Then run `vendor/bin/rector process --dry-run --clear-cache` and show the user the size of the diff. On an existing app the sets can touch many files. Offer to apply it as its own commit, or to add a path skip per set and burn it down later.
 
 ## Apply OUTDATED files per merge mode
 
@@ -304,4 +317,4 @@ composer phpstan-simplified
 
 - **`composer dev` script conflicts with existing dev runner**: user may have their own `dev` workflow (Sail, Herd, custom). Ask before inserting our concurrent runner.
 - **Laravel installer ships file we want to keep, audit flagged it as OUTDATED**: tell the user — drift from our stub may be intentional Laravel updates. `notify-only` mode catches most of these. If it's a `replace`-mode file, defer to the user.
-- **`hihaho/phpstan-rules` not installable** (private repo or auth-required): if user opted in but install fails, surface the auth.json / Packagist credentials guidance; don't strip the opt-in.
+- **`hihaho/phpstan-rules` reports many findings at once**: expected on an existing app. Baseline them in `phpstan-baseline-hihaho-rules.neon` (see "Wire the rule packs"), never in the main baseline, so the file shrinks as the findings are fixed.

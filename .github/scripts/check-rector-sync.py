@@ -46,6 +46,31 @@ VARIANTS = {"laravel-package-spatie": "laravel-package"}
 EXCLUDED_CATEGORIES = ["skill-bundle"]
 
 PRESET_IMPORT = "use SanderMuller\\RectorPreset\\Preset;"
+
+# The laravel-project stub configures hihaho/rector-rules rules the preset leaves
+# unconfigured or does not register, and adds the opt-in fluent-validation sets.
+# Each category may import only the preset plus the names listed here.
+EXTRA_IMPORTS = {
+    "laravel-project": [
+        "use Hihaho\\RectorRules\\Rector\\CodeQuality\\FirstPartyFlagArgumentToNamedRector;",
+        "use Hihaho\\RectorRules\\Rector\\CodeQuality\\NamedArgumentFromManifestRector;",
+        "use Hihaho\\RectorRules\\Rector\\CodeQuality\\NativeFunctionFlagArgumentToNamedRector;",
+        "use Hihaho\\RectorRules\\Rector\\CodeQuality\\RemoveDefaultValuedArgumentRector;",
+        "use Hihaho\\RectorRules\\Rector\\Routing\\MiddlewareStringToClassRector;",
+        "use Hihaho\\RectorRules\\Rector\\Testing\\TestFieldStringToConstantRector;",
+        "use Illuminate\\Auth\\Middleware\\Authenticate;",
+        "use Illuminate\\Routing\\Middleware\\ThrottleRequests;",
+        "use SanderMuller\\FluentValidationRector\\Set\\FluentValidationSetList;",
+    ],
+}
+
+# Sets a category may add with withSets(): the ones the preset leaves opt-in.
+ALLOWED_SETS = {
+    "laravel-project": [
+        "FluentValidationSetList::SCHEMA",
+        "FluentValidationSetList::VALIDATED_INPUT",
+    ],
+}
 PHP_SETS_CALL = "->withPhpSets(php__PHP_VERSION_NEON__: true);"
 
 # Calls and set lists the preset owns. A stub that repeats one duplicates or
@@ -99,17 +124,27 @@ def normalise(call: str) -> str:
 
 
 def stub_preset_call(text: str) -> str | None:
-    match = re.search(r"return (Preset::\w+\(.*?\))\s*->", text, re.S)
+    code = re.sub(r"//[^\n]*", "", text)
+    match = re.search(r"return (Preset::\w+\(.*?\))\s*->", code, re.S)
     return normalise(match.group(1)) if match else None
 
 
 def check_shape(category: str, text: str) -> None:
     imports = re.findall(r"^use [\w\\]+;", text, re.M)
-    if imports != [PRESET_IMPORT]:
-        fail(f"stubs/{category}/rector.php must import only the preset, found: {imports}")
+    expected_imports = sorted([PRESET_IMPORT, *EXTRA_IMPORTS.get(category, [])])
+    if sorted(imports) != expected_imports:
+        fail(f"stubs/{category}/rector.php must import {expected_imports}, found: {imports}")
     if PHP_SETS_CALL not in text:
         fail(f"stubs/{category}/rector.php does not call {PHP_SETS_CALL}")
     code = re.sub(r"//[^\n]*", "", text)
+    allowed_sets = ALLOWED_SETS.get(category, [])
+    for sets_call in re.findall(r"withSets\(\[(.*?)\]\)", code, re.S):
+        sets = [x.strip() for x in sets_call.split(",") if x.strip()]
+        extra = [x for x in sets if x not in allowed_sets]
+        if extra:
+            fail(f"stubs/{category}/rector.php adds set(s) the preset owns or that are not allowed: {extra}")
+    if allowed_sets:
+        code = re.sub(r"withSets\(\[.*?\]\)", "", code, flags=re.S)
     owned = [c for c in PRESET_OWNED if c in code]
     if owned:
         fail(f"stubs/{category}/rector.php calls what the preset owns: {owned}")

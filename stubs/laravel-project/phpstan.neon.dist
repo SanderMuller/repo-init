@@ -4,6 +4,9 @@ includes:
     - vendor/spaze/phpstan-disallowed-calls/disallowed-dangerous-calls.neon
     - vendor/spaze/phpstan-disallowed-calls/disallowed-execution-calls.neon
     - vendor/spaze/phpstan-disallowed-calls/disallowed-insecure-calls.neon
+    # Writes the named-argument manifest (namedArgumentManifest below).
+    # phpstan/extension-installer does not load this file.
+    - vendor/hihaho/phpstan-rules/named-argument-manifest.neon
 
 rules:
     # Hand-picked symplify/phpstan-rules rules (its rule sets are off, see
@@ -77,6 +80,39 @@ parameters:
     # config()->set() in a test does not change the type.
     checkConfigTypes: true
 
+    # hihaho/phpstan-rules (phpstan/extension-installer loads it). These rules do
+    # nothing until a project names its namespaces, providers and route files.
+    # A value that reaches a raw-HTML sink must be escaped, Htmlable, or ignored
+    # with a reason.
+    unescapedHtml:
+        namespaces:
+            - App
+
+    # A broad catch that neither rethrows, reports nor reads what it caught hides
+    # every failure.
+    swallowedException:
+        namespaces:
+            - App
+
+    # Types $this->route('x') from the Route::model() and Route::bind() calls in
+    # these providers.
+    routeBindingProviders:
+        - App\Providers\AppServiceProvider
+
+    # Types $this->route('x') from the controller type-hints in these route files
+    # (implicit bindings). Add each route file the app loads.
+    routeFiles:
+        - routes/web.php
+
+    # Writes the manifest that hihaho/rector-rules' NamedArgumentFromManifestRector
+    # reads (see rector.php). Run PHPStan before Rector to refresh it, and commit it.
+    namedArgumentManifest:
+        firstPartyNamespaces:
+            - App
+            - Database\Factories
+            - Tests
+        outputPath: .config/named-arguments-manifest.json
+
     # Off at every level, and phpstan-strict-rules does not set them.
     checkTooWideReturnTypesInProtectedAndPublicMethods: true
     checkTooWideParameterOutInProtectedAndPublicMethods: true
@@ -105,9 +141,16 @@ parameters:
                 - tests/*
             reportUnmatched: false
         # A test may assert a value PHPStan already knows, such as the skeleton's
-        # assertTrue(true). hihaho/phpstan.neon scopes the same identifier out of tests/.
+        # assertTrue(true). hihaho/phpstan.neon scopes the static-call identifier out
+        # of tests/. The Laravel 13 skeleton calls $this->assertTrue(), so the
+        # instance-call identifier needs the same scope.
         -
             identifier: staticMethod.alreadyNarrowedType
+            paths:
+                - tests/*
+            reportUnmatched: false
+        -
+            identifier: method.alreadyNarrowedType
             paths:
                 - tests/*
             reportUnmatched: false

@@ -19,8 +19,11 @@ records what repo-init relies on.
 | `laravel-project` | `Preset::app(codingStyle: true, privatization: true, typeDeclarationDocblocks: true)` |
 | every other category | `Preset::package()` |
 
-Each stub then adds `->withPhpSets(php__PHP_VERSION_NEON__: true)` and nothing
-else. A project adds its configured rules and its own skips to the result.
+Each stub then adds `->withPhpSets(php__PHP_VERSION_NEON__: true)`. The
+`laravel-project` stub also configures six `hihaho/rector-rules` rules and adds
+two laravel-fluent-validation sets (see "hihaho/rector-rules wiring" and
+"laravel-fluent-validation sets" below). The package stubs add nothing else. A
+project adds its configured rules and its own skips to the result.
 
 The preset sets up, in both presets:
 
@@ -159,36 +162,91 @@ they carry over as a prompt rather than a default:
 `ArrayToFirstClassCallableRector`, `ReadOnlyClassRector`, `ReadOnlyPropertyRector`,
 `RemoveNullPropertyInitializationRector`, `RequestVariablesToRequestFacadeRector`.
 
-## `--with-hihaho-rules` wiring (laravel-project)
+## `hihaho/rector-rules` wiring (laravel-project)
 
-`hihaho/rector-rules` does NOT self-register its rules. Its `composer.json` sets
-`type: rector-extension` and `extra.rector.includes: ["config/config.php"]`, but
-that file is an empty closure by design, and the mechanism needs
-`rector/extension-installer`, which neither reference app installs.
+`laravel-project` always carries `hihaho/rector-rules`. The package does NOT
+self-register its rules. Its `composer.json` sets `type: rector-extension` and
+`extra.rector.includes: ["config/config.php"]`, but that file is an empty closure
+by design, and the mechanism needs `rector/extension-installer`, which neither
+reference app installs.
 
 Both presets add `HihahoSetList::ALL` when `hihaho/rector-rules` is installed,
-so `--with-hihaho-rules` only adds the package to `require-dev`. The stub needs
-no set line.
+so the stub needs no set line.
 
 `HihahoSetList::ALL` imports the code-quality, eloquent, imports, migrations,
-naming, routing and testing sets. Three further rules ship in the package but
-belong to no set, so `ALL` does not reach them. Both reference apps configure
-them by hand:
+naming, routing and testing sets. It registers
+`FirstPartyFlagArgumentToNamedRector`, `NativeFunctionFlagArgumentToNamedRector`
+and `RemoveDefaultValuedArgumentRector` unconfigured. Three more rules belong to
+no set. The stub configures all six the way `mijntp/rector.php` does:
 
-- `MiddlewareStringToClassRector`
-- `NamedArgumentFromManifestRector` (needs a PHPStan-produced manifest; see below)
-- `TestFieldStringToConstantRector`
+| Rule | Configuration |
+|---|---|
+| `FirstPartyFlagArgumentToNamedRector` | first-party namespaces `App\`, `Database\Factories\`, `Tests\`; `CASCADE_TRAILING_ARGS` on |
+| `RemoveDefaultValuedArgumentRector` | the same namespaces; `CASCADE_DROP` on; `EXCLUDE_CALLS` keeps `ThrottleRequests::with()`, because it turns its arguments into the `throttle:60,1` string |
+| `NativeFunctionFlagArgumentToNamedRector` | `in_array` and `array_search` → `strict:`, `json_decode` → `associative:` |
+| `MiddlewareStringToClassRector` | `CONVERT_BARE_ALIASES` on; `throttle` converts to `ThrottleRequests` |
+| `NamedArgumentFromManifestRector` | reads `.config/named-arguments-manifest.json`, which PHPStan writes |
+| `TestFieldStringToConstantRector` | every PHP file under `routes/`; internal middleware `'auth'` and `Authenticate::class`; prefix `App\` |
 
-`ALL` also registers `FirstPartyFlagArgumentToNamedRector`,
-`NativeFunctionFlagArgumentToNamedRector` and `RemoveDefaultValuedArgumentRector`
-unconfigured; both apps re-declare them through `withConfiguredRule()` to supply
-first-party namespaces and call exclusions.
+Two values depend on the app. Check them when the stub goes into an existing app:
 
-NOT YET CANONICAL: `NamedArgumentFromManifestRector` needs a PHPStan producer
-(`namedArgumentManifest` in the PHPStan config) run before Rector, plus a
-`ManifestCacheMetaExtension` binding that the fluent builder cannot express. The
-two reference apps implement this incompatibly and `hihaho` omits the cache
-extension. Do not scaffold it until that is settled.
+- **The throttle class.** `MiddlewareStringToClassRector` cannot see which class
+  the `throttle` alias resolves to. An app whose `bootstrap/app.php` calls
+  `throttleWithRedis()`, or that maps the alias to its own class, sets
+  `THROTTLE_CLASS` to that class. `mijntp` uses `ThrottleRequestsWithRedis`. A
+  wrong class silently moves the app to another rate limiter.
+- **The internal middleware.** `TestFieldStringToConstantRector` matches each
+  token as written in the route files, so `'auth:sanctum'` is a different token
+  from `'auth'`. List every form that marks an internal route. A form left out
+  reads as public, and the rule then turns constants back into literals. `mijntp`
+  lists `App\Http\Middleware\Authenticate`.
+
+An older app can skip `RemoveUnnecessaryNullsafeOperatorRector`, with a comment
+that the fix for a removed load-bearing `?->` (hihaho/rector-rules `7d22dc8d`) is
+not released. Every tag from 1.1.0 contains that commit, so the canon does not
+carry the skip. Remove it from an app on 1.1.0 or later.
+
+### The named-argument manifest
+
+`NamedArgumentFromManifestRector` names arguments that only a larastan-equipped
+PHPStan run can resolve. The stub `phpstan.neon.dist` includes
+`vendor/hihaho/phpstan-rules/named-argument-manifest.neon` and sets
+`namedArgumentManifest.outputPath: .config/named-arguments-manifest.json`, so
+every PHPStan run writes the manifest. `rector.php` reads the same path. Run
+PHPStan before Rector (`composer qa` runs Rector first, so run `composer phpstan`
+once after a change that adds a call). Commit the manifest: the Rector check in
+CI reads it, and CI does not run PHPStan first. A missing manifest is a no-op.
+
+Rector caches each file on its content and the rule configuration, not on the
+manifest. A new manifest over unchanged source is not applied until the cache is
+cleared: run `vendor/bin/rector process --clear-cache` after the manifest
+changes. The same holds for `TestFieldStringToConstantRector` after a route
+file changes.
+
+An older app can also keep a separate `rector-named-args.php` that binds
+`ManifestCacheMetaExtension`. `hihaho/rector-rules` 1.0.0 removed that class,
+because Rector 2.6 retired the interface it implemented. The canon does not ship
+that file. Delete it, with the PHPStan config and the composer scripts that only
+it uses.
+
+## laravel-fluent-validation sets (laravel-project)
+
+`laravel-project` always carries `sandermuller/laravel-fluent-validation-rector`.
+The presets add `FluentValidationSetList::ALL`, `POLISH` and `SIMPLIFY` when it is
+installed. The stub adds the two opt-in sets that `mijntp` runs:
+
+```php
+->withSets([
+    FluentValidationSetList::SCHEMA,
+    FluentValidationSetList::VALIDATED_INPUT,
+])
+```
+
+`SCHEMA` turns a FormRequest `rules()` array into a `schema(FluentSchema $rules)`
+builder method. `VALIDATED_INPUT` (from 1.12.0) rewrites reads of the validated
+input to the typed `ValidatedInput` accessors. On Laravel 12 it skips reads
+through `$request->safe()` unless the request uses `HasFluentRules` from
+laravel-fluent-validation 1.40.0 or later.
 
 ## PHP set name derivation
 

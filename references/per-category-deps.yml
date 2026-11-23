@@ -65,6 +65,7 @@ categories:
     mandatory:
       require:
         - zae/strict-transport-security  # HSTS middleware for the security canon — see references/laravel-security-canon.md. The rest of `require` is the laravel new baseline + the user's app deps; not enumerated here.
+        - "sandermuller/laravel-fluent-validation: ^1.47"  # fluent validation rules; its PHPStan and Rector siblings below are require-dev
       # IMPORTANT: CLI implementations MUST filter the require-dev list by
       # what `laravel new` already installed. Laravel 13+ ships some of these
       # in `require` (laravel/tinker moved from require-dev → require). The
@@ -78,14 +79,11 @@ categories:
         - laravel/tinker
         - driftingly/rector-laravel
         - "sandermuller/project-boost-laravel: ^1.5"  # Laravel-application boost-family member; pulls boost-core transitively. Takes over the agent-file fan-out from laravel/boost and reads .config/boost.php (remote skills — see references/remote-skills.md)
+        - "hihaho/phpstan-rules: ^4.0.1"  # phpstan/extension-installer loads extension.neon; the stub includes named-argument-manifest.neon by hand and sets the rule parameters (see phpstan-config.md "hihaho/phpstan-rules")
+        - "hihaho/rector-rules: ^1.7"  # Preset::app() adds HihahoSetList::ALL; the stub configures six rules by hand (see rector-config.md "hihaho/rector-rules wiring")
+        - "sandermuller/laravel-fluent-validation-phpstan: ^0.5.1"  # phpstan/extension-installer loads it
+        - "sandermuller/laravel-fluent-validation-rector: ^1.16"  # Preset::app() adds ALL, POLISH and SIMPLIFY; the stub adds SCHEMA and VALIDATED_INPUT
     optional:
-      with-hihaho-rules:
-        default-inference: vendor==hihaho OR hihaho/phpstan-rules in require-dev
-        require: []
-        require-dev:
-          - hihaho/phpstan-rules
-          - hihaho/rector-rules
-          - symplify/phpstan-rules
       with-health-checks:
         default-inference: spatie/laravel-health in require
         require:

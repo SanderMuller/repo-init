@@ -12,7 +12,7 @@ Verify detection per `$REPO_INIT_HOME/references/detection-rules.md`: target has
 
 Ask the user (with auto-inferred defaults):
 
-- **`--with-hihaho-rules`?** Default `y` if vendor is `hihaho` OR `hihaho/phpstan-rules` already in `require-dev`. Otherwise default `N`. If `y`: audit also flags `hihaho/phpstan-rules`, `hihaho/rector-rules`, `symplify/phpstan-rules` as MISSING when absent.
+- **`with-health-checks`?** Default `y` if `spatie/laravel-health` is in `require`. If `y`: audit also flags `spatie/security-advisories-health-check` as MISSING when absent (see "MISSING runtime deps").
 - **`test-framework`** — detect from existing deps (presence of `pestphp/pest` vs `phpunit/phpunit`). Don't push to migrate; record the current state.
 
 ## MISSING files
@@ -56,6 +56,7 @@ For laravel-project, runtime deps are the user's Laravel app deps (Filament, Hor
 
 - [ ] `zae/strict-transport-security` in `require` (all three reference apps carry it). MISSING when the app has no other HSTS mechanism — check for a `Strict-Transport-Security` header set by a reverse proxy first, and report it as informational when the proxy already sets it.
 - [ ] `spatie/security-advisories-health-check` in `require` — only when the app carries `spatie/laravel-health`. Also confirm `SecurityAdvisoriesCheck::new()` is registered in the health-check list; an installed-but-unregistered check is a silent no-op.
+- [ ] `sandermuller/laravel-fluent-validation` in `require` — canonical floor `^1.47`. In `require-dev` is NON-CANONICAL: application code calls `FluentRule`, so `composer install --no-dev` must install it. MISSING (MEDIUM, DRIFT) on an app scaffolded before repo-init added it.
 
 ## MISSING dev deps (must be in `require-dev`)
 
@@ -69,6 +70,10 @@ From `$REPO_INIT_HOME/references/per-category-deps.md#laravel-project` MANDATORY
 - [ ] `laravel/tinker` (Laravel may ship this already)
 - [ ] `driftingly/rector-laravel`
 - [ ] `sandermuller/project-boost-laravel` — canonical floor `^1.5` (1.3.0 archives `boost.json`, 1.5.0 swaps `CLAUDE.md` for an `@AGENTS.md` import in reconcile); a constraint that can resolve lower is NON-CANONICAL. The boost-family member that delivers tag filtering and the canonical remote skills (`$REPO_INIT_HOME/references/remote-skills.md`). MISSING (MEDIUM, DRIFT) on an app scaffolded before repo-init added it. Confirm with the user before the upgrade adds it: it takes over the agent-file fan-out from `laravel/boost` and archives `boost.json`.
+- [ ] `hihaho/phpstan-rules` — canonical floor `^4.0.1`. MISSING (MEDIUM, DRIFT) on an app scaffolded before repo-init made it mandatory. Its configuration is a separate finding below.
+- [ ] `hihaho/rector-rules` — canonical floor `^1.7`. MISSING (MEDIUM, DRIFT), as above.
+- [ ] `sandermuller/laravel-fluent-validation-phpstan` — canonical floor `^0.5.1`. MISSING (MEDIUM, DRIFT), as above.
+- [ ] `sandermuller/laravel-fluent-validation-rector` — canonical floor `^1.16`. MISSING (MEDIUM, DRIFT), as above.
 - [ ] `sandermuller/boost-skills` — canonical floor `^2.27.0`, the version that ships the voice guideline the always-on `voice` tag needs. A constraint that can resolve below 2.27.0 does NOT count. MISSING (MEDIUM, DRIFT) on an app scaffolded before repo-init adopted it; it only syncs through `sandermuller/project-boost-laravel`, so report the two together.
 
 Plus shared (`$REPO_INIT_HOME/references/shared-dev-deps.md`) minus what Laravel already includes:
@@ -89,10 +94,6 @@ Plus shared (`$REPO_INIT_HOME/references/shared-dev-deps.md`) minus what Laravel
 - [ ] `orchestra/testbench` — typically NOT in laravel-project (it's a package-dev tool). Skip flagging.
 
 `laravel-project` carries `sandermuller/project-boost-laravel` (above) as its boost-family member, next to `laravel/boost` — NOT `sandermuller/package-boost-php`. `laravel/boost` keeps the MCP server and its bundled Laravel skills; the wrapper owns the agent-file fan-out. The `sandermuller/package-boost-*` umbrellas are for distributable packages, not apps.
-
-OPTIONAL (only when opt-in confirmed):
-
-- [ ] `--with-hihaho-rules`: `hihaho/phpstan-rules`, `hihaho/rector-rules`, `symplify/phpstan-rules`.
 
 Test-framework:
 
@@ -148,6 +149,11 @@ Same logic as `audit-laravel-package.md` §OUTDATED — apply each file's mode f
 - [ ] **`mrpunyapal/rector-pest` in `require-dev`** (MEDIUM severity): replaced by the first-party `pestphp/pest-plugin-rector: ^5.0`. Companion finding: `rector.php` importing `RectorPest\Set\PestSetList` or using `PestSetList::PEST_CODE_QUALITY` / `PEST_CHAIN` / `PEST_LARAVEL`. Canonical is `use Pest\Rector\Set\PestSetList;` with the single set `PestSetList::CODING_STYLE`.
 - [ ] **`phpstan.neon.dist` registers no Symplify rule** (MEDIUM severity, DRIFT): the canonical config turns the `symplify/phpstan-rules` rule sets off (`parameters.symplify`) and registers a hand-picked list instead. Flag NON-CANONICAL when the `rules:` block is missing or short of the canonical list. Fix = add the block from `$REPO_INIT_HOME/references/phpstan-config.md` → "Symplify rules".
 - [ ] **`phpstan.neon.dist` includes `vendor/hihaho/phpstan-rules/extension.neon`** (HIGH severity, DRIFT): `hihaho/phpstan-rules` ^4.0 declares the file in its `extra.phpstan.includes`, so `phpstan/extension-installer` already loads it. The explicit include loads it a second time, and PHPStan stops with "This file is included multiple times" before it analyses anything. Flag NON-CANONICAL when the repo also has `phpstan/extension-installer` and `hihaho/phpstan-rules` ^4.0; fix = delete the include line. See `$REPO_INIT_HOME/references/phpstan-config.md` → "Per-category overrides".
+- [ ] **hihaho rule parameters not set** (MEDIUM severity, DRIFT; only when `hihaho/phpstan-rules` is installed): `phpstan.neon.dist` lacks `unescapedHtml.namespaces`, `swallowedException.namespaces`, `routeBindingProviders` or `routeFiles`. Without them those rules do nothing. Flag each missing key. Also flag a `routeFiles` list that leaves out a route file the app loads (compare with `ls routes/`, and with the files `bootstrap/app.php` or a route service provider registers). Canonical values: `$REPO_INIT_HOME/references/phpstan-config.md` "`hihaho/phpstan-rules`".
+- [ ] **Named-argument manifest not wired** (MEDIUM severity, DRIFT; only when both hihaho packs are installed): any of these is missing — the `vendor/hihaho/phpstan-rules/named-argument-manifest.neon` include, `parameters.namedArgumentManifest`, the `NamedArgumentFromManifestRector` rule in `rector.php`, or a committed manifest file. Also flag a PHPStan `outputPath` that differs from the rector `MANIFEST` path: the rule then reads nothing. A manifest under `.cache/` is NON-CANONICAL too, because `.cache/` is gitignored and the Rector check in CI then reads nothing. See `$REPO_INIT_HOME/references/rector-config.md` "The named-argument manifest".
+- [ ] **hihaho Rector rules not configured** (MEDIUM severity, DRIFT; only when `hihaho/rector-rules` is installed): `rector.php` lacks a `withConfiguredRule()` for any of `FirstPartyFlagArgumentToNamedRector`, `RemoveDefaultValuedArgumentRector`, `NativeFunctionFlagArgumentToNamedRector`, `MiddlewareStringToClassRector`, `TestFieldStringToConstantRector`. Flag each one. Do not report the `THROTTLE_CLASS` or `INTERNAL_MIDDLEWARE` values as drift when they differ from the stub — they depend on the app. Report a mismatch with the app instead: `THROTTLE_CLASS` is `ThrottleRequests` while `bootstrap/app.php` calls `throttleWithRedis()` (HIGH), or a route guard in `routes/` that `INTERNAL_MIDDLEWARE` does not list (MEDIUM). See `$REPO_INIT_HOME/references/rector-config.md` "`hihaho/rector-rules` wiring".
+- [ ] **`rector.php` binds `ManifestCacheMetaExtension`** (HIGH severity, Rector does not boot): `hihaho/rector-rules` 1.0.0 removed the class. Fix = delete the `singleton()` and `tag()` lines, or the whole separate config file that holds them.
+- [ ] **Fluent-validation opt-in sets missing** (LOW severity, DRIFT; only when `sandermuller/laravel-fluent-validation-rector` is installed): `rector.php` does not add `FluentValidationSetList::SCHEMA` or `FluentValidationSetList::VALIDATED_INPUT` through `withSets()`. Flag each one. See `$REPO_INIT_HOME/references/rector-config.md` "laravel-fluent-validation sets".
 - [ ] **`type_coverage.constant` below 100** (LOW severity, DRIFT): the canonical `phpstan.neon.dist` runs every `type_coverage` dial at 100, constants included. Both reference apps do too. Flag NON-CANONICAL; fix = `constant: 100`, then baseline what the repo cannot reach yet.
 - [ ] **`type_perfect` missing `narrow_param: true`** (LOW severity, DRIFT): the canonical block is `null_over_false`, `narrow_return` and `narrow_param`, all `true`. `no_mixed` stays absent on purpose — it rejects `mixed` a framework or PSR interface forces on an implementer. Flag NON-CANONICAL; fix = add the one line.
 - [ ] **`phpstan.neon.dist` declares `phpVersion:`** (LOW severity, DRIFT): PHPStan 2 derives the analysed version range from `composer.json` `require.php` whenever `phpVersion` is null, so a declared value only adds a second source that can drift. Flag NON-CANONICAL; fix = delete the key and let `require.php` decide. See `$REPO_INIT_HOME/references/phpstan-config.md` → "PHP version".

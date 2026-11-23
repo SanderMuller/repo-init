@@ -1,10 +1,13 @@
 
 ## Code-quality tooling
 
-This project uses the hihaho rule packs for PHPStan and Rector:
+This project uses the hihaho rule packs and laravel-fluent-validation:
 
-- `hihaho/phpstan-rules` — Hihaho-flavoured PHPStan rules. Auto-loaded via `phpstan/extension-installer`.
-- `hihaho/rector-rules` — Hihaho-flavoured Rector rules. Applied via `withSets([HihahoSetList::ALL])` in `rector.php`. Three of its rules belong to no set and need `withConfiguredRule()` — see `references/rector-config.md`.
+- `hihaho/phpstan-rules` — Hihaho-flavoured PHPStan rules. Auto-loaded via `phpstan/extension-installer`; `phpstan.neon.dist` sets the namespaces, providers and route files they check.
+- `hihaho/rector-rules` — Hihaho-flavoured Rector rules. `rector.php` gets their set from `sandermuller/rector-preset` and configures six rules by hand.
+- `sandermuller/laravel-fluent-validation` — fluent validation rules. Its PHPStan extension loads automatically, and its Rector sets convert array rules to `FluentRule` and FormRequests to `schema()`.
+
+PHPStan writes `.config/named-arguments-manifest.json`, and Rector reads it to name flag arguments. Run `composer phpstan` before `composer rector` after a change, and commit the manifest.
 
 Plus the universal sander baseline:
 

@@ -8,7 +8,7 @@ What each category adds on top of the shared list (`shared-dev-deps.md`). Split 
 
 | Category | Adds to `require-dev` | Adds to `require` |
 |---|---|---|
-| `laravel-project` | `larastan/larastan`, `laravel/boost`, `laravel/pail`, `laravel/tinker`, `driftingly/rector-laravel`, `sandermuller/project-boost-laravel` | `zae/strict-transport-security` (security canon), plus the `laravel new` baseline |
+| `laravel-project` | `larastan/larastan`, `laravel/boost`, `laravel/pail`, `laravel/tinker`, `driftingly/rector-laravel`, `sandermuller/project-boost-laravel`, `hihaho/phpstan-rules: ^4.0.1`, `hihaho/rector-rules: ^1.7`, `sandermuller/laravel-fluent-validation-phpstan: ^0.5.1`, `sandermuller/laravel-fluent-validation-rector: ^1.16` | `zae/strict-transport-security` (security canon), `sandermuller/laravel-fluent-validation: ^1.47`, plus the `laravel new` baseline |
 | `laravel-package` | `larastan/larastan`, `laravel/boost`, `driftingly/rector-laravel`, `sandermuller/package-boost-laravel` | `illuminate/contracts`, `illuminate/support` at `__LARAVEL_VERSIONS__` |
 | `php-package` | `phpstan/phpstan`, `stolt/php-lean: ^0.9.3`, `sandermuller/package-boost-php` | (no `illuminate/*`) |
 | `phpstan-extension` | `sandermuller/package-boost-php` (minus `phpstan/phpstan` per shared exclusion) | `phpstan/phpstan: ^2` |
@@ -22,7 +22,6 @@ What each category adds on top of the shared list (`shared-dev-deps.md`). Split 
 
 | Category | Opt-in flag / sub-flag | Adds to `require-dev` | Adds to `require` |
 |---|---|---|---|
-| `laravel-project` | `--with-hihaho-rules` (default `y` for vendor=hihaho) | `hihaho/phpstan-rules`, `hihaho/rector-rules`, `symplify/phpstan-rules` | — |
 | `laravel-project` | app carries `spatie/laravel-health` | — | `spatie/security-advisories-health-check` |
 | `laravel-package` | suggest (not mandatory) | `livewire/livewire` (suggested only — not auto-installed, not audited) | — |
 | `laravel-package` | sub-flag `hihaho-package-tools-flavoured` (or `--variant=spatie`) | — | `spatie/laravel-package-tools` |
@@ -33,7 +32,6 @@ What each category adds on top of the shared list (`shared-dev-deps.md`). Split 
 
 Before walking deps, the audit phase confirms opt-ins. Where possible, infer the default from existing `composer.json` content:
 
-- `--with-hihaho-rules` → `y` if vendor is `hihaho` OR `hihaho/phpstan-rules` already in `require-dev`.
 - Laravel-aware phpstan-extension → `y` if `illuminate/*` already in `require`.
 - Laravel-aware rector-extension → `y` if `driftingly/rector-laravel` already in `require` OR `require-dev`.
 - Spatie-flavoured laravel-package → `y` if `spatie/laravel-package-tools` already in `require`.
@@ -91,9 +89,17 @@ When this opt-in fires:
 
 - `driftingly/rector-laravel` is added to `require` (not `require-dev`) so the extension can use the Laravel rector sets in its own `config/config.php`.
 
-### `--with-hihaho-rules`
+### `laravel-project` rule packs
 
-Adds three packages to `require-dev`. `symplify/phpstan-rules` is bundled here because hihaho/phpstan-rules has it as a peer dep in practice (see `vendor/hihaho/phpstan-rules/extension.neon`).
+`laravel-project` always carries the hihaho rule packs and laravel-fluent-validation with its two siblings. All five are public on Packagist. The stubs set them up the way `mijntp` does:
+
+- `hihaho/phpstan-rules` — `phpstan/extension-installer` loads its `extension.neon`. The stub `phpstan.neon.dist` includes `named-argument-manifest.neon` by hand and sets `unescapedHtml`, `swallowedException`, `routeBindingProviders`, `routeFiles` and `namedArgumentManifest`. See `phpstan-config.md` "hihaho/phpstan-rules".
+- `hihaho/rector-rules` — `Preset::app()` adds `HihahoSetList::ALL`. The stub `rector.php` configures six rules. See `rector-config.md` "hihaho/rector-rules wiring".
+- `sandermuller/laravel-fluent-validation` — a runtime dependency (`require`), because application code calls `FluentRule`.
+- `sandermuller/laravel-fluent-validation-phpstan` — `phpstan/extension-installer` loads it. No configuration.
+- `sandermuller/laravel-fluent-validation-rector` — `Preset::app()` adds `ALL`, `POLISH` and `SIMPLIFY`. The stub `rector.php` adds the opt-in `SCHEMA` and `VALIDATED_INPUT` sets.
+
+Up to repo-init 1.23, the hihaho packs were the `--with-hihaho-rules` opt-in. The opt-in also listed `symplify/phpstan-rules`, which the shared list already carries.
 
 ### `laravel-package` runtime range
 

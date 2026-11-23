@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Audit-scoping check: for every audit phase, assert that OPTIONAL/CONDITIONAL
-# deps are gated behind opt-in confirmation. A phase that flags `hihaho/phpstan-rules`
-# MISSING without first asking "did you opt into hihaho rules?" fails CI.
+# deps are gated behind opt-in confirmation. A phase that flags
+# `spatie/security-advisories-health-check` MISSING without first asking whether
+# the app runs health checks fails CI.
 #
 # Per SPEC Phase 7 "Audit-scoping check" (codex v4 #3 protection).
 
@@ -18,7 +19,7 @@ EXIT_CODE=0
 # Map: category → list of (opt-in marker, optional dep that gates on it)
 # Format: "category|opt-in-keyword|dep-to-check"
 CHECKS=(
-    "laravel-project|with-hihaho-rules|hihaho/phpstan-rules"
+    "laravel-project|with-health-checks|spatie/security-advisories-health-check"
     "laravel-package|hihaho-package-tools-flavoured|spatie/laravel-package-tools"
     "phpstan-extension|Laravel-aware|larastan/larastan"
     "rector-extension|Laravel-aware|driftingly/rector-laravel"

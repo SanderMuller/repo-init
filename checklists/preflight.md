@@ -28,7 +28,7 @@ Run before any phase. If anything is red, stop and ask the user before proceedin
 ## Network reachability (bootstrap + upgrade modes)
 
 - [ ] Can we reach packagist? (`composer search laravel/framework 2>&1 | head -3` returns rows, not a network error.)
-- [ ] If `--with-hihaho-rules` opt-in: can we reach packagist's `hihaho/*` packages?
+- [ ] For `laravel-project`: can we reach packagist's `hihaho/*` packages? (`composer show -a hihaho/phpstan-rules 2>&1 | head -3`)
 
 ## Stop conditions
 

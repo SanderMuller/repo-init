@@ -54,7 +54,7 @@ grep -r '__VENDOR__\|__PACKAGE__\|__NAMESPACE__\|__AUTHOR_\|__PHP_VERSION\|__LAR
 - [ ] For `test-framework=pest`: `tests/Pest.php` contains `pest()->tia()->locally();`, and no composer script or CI step passes `--tia`.
 - [ ] For `test-framework=pest`: run the suite AFTER the initial commit. Tia needs a git repository with at least one commit; in a repo with none, `vendor/bin/pest` aborts with `Tia mode requires at least one commit.` (verified against Pest 5.3.7). Use `vendor/bin/pest --no-tia` if the suite must run before the first commit.
 - [ ] For `test-framework=pest`: `require-dev` has `pestphp/pest-plugin-rector`, `pestphp/pest-plugin-phpstan`, and `pestphp/pest-plugin-agent` — and NO `mrpunyapal/rector-pest`.
-- [ ] `rector.php` returns `Preset::package()` (`Preset::app()` for `laravel-project`) and imports no set list. With `test-framework=pest`, the preset adds `PestSetList::CODING_STYLE` because `pestphp/pest-plugin-rector` is installed.
+- [ ] `rector.php` returns `Preset::package()` (`Preset::app()` for `laravel-project`) and imports no set list. The exception is `laravel-project`: it imports `FluentValidationSetList` for `SCHEMA` and `VALIDATED_INPUT`. With `test-framework=pest`, the preset adds `PestSetList::CODING_STYLE` because `pestphp/pest-plugin-rector` is installed.
 - [ ] For `test-framework=phpunit`: `vendor/bin/phpunit --version` returns a PHPUnit 11+ version.
 
 ## AI tooling sync

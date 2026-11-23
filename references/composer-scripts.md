@@ -198,17 +198,23 @@ Add `@validate-gitattributes` to the `qa` chain.
 
 ## Conditional additions
 
-### When opt-in `--with-hihaho-rules` (laravel-project)
+### The rule packs (laravel-project)
 
-No script additions.
+No script additions. `laravel-project` always carries `hihaho/phpstan-rules`,
+`hihaho/rector-rules` and the laravel-fluent-validation trio.
 
 `hihaho/phpstan-rules` does auto-register, via `phpstan/extension-installer`.
 
 `hihaho/rector-rules` does NOT. Rector has no set discovery, and the package's
 `extra.rector.includes` entry points at an empty `config/config.php` and needs
-`rector/extension-installer`, which neither reference app installs. Its sets and
-rules must be written into `rector.php` by hand — see
-`references/rector-config.md`, "`--with-hihaho-rules` wiring".
+`rector/extension-installer`, which neither reference app installs. The preset
+adds its set, and the stub `rector.php` configures the rest — see
+`references/rector-config.md`, "`hihaho/rector-rules` wiring".
+
+`qa` runs Rector before PHPStan, so Rector reads the named-argument manifest
+that the previous PHPStan run wrote. The order stays: Rector output must still
+pass PHPStan. Run `composer phpstan` once more after a change that adds calls,
+then `composer rector`.
 
 ## Merge semantics
 

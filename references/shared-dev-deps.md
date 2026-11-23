@@ -55,7 +55,7 @@ Canonical dep: **`symplify/phpstan-rules: ^14.19`**, unconditionally. It require
 
 `symplify/phpstan-extensions` in `require-dev` is NON-CANONICAL on any repo. Upgrade: `composer remove --dev symplify/phpstan-extensions && composer require --dev symplify/phpstan-rules:^14.19`. The formatter needs no config change (`phpstan-simplified` keeps `--error-format symplify`). The rule sets do: add the `parameters.symplify` block to `phpstan.neon.dist` in the same pass — see `upgrade-merge-modes.md` (`notify-only` exception) and `phpstan-config.md` "Symplify rules".
 
-For `laravel-project` with `--with-hihaho-rules`: that bundle already adds `symplify/phpstan-rules`; pin it `^14.19` and it satisfies this line on its own.
+`laravel-project` gets `symplify/phpstan-rules` from this line too. Up to repo-init 1.23, its `--with-hihaho-rules` opt-in also listed the package.
 
 ## Type-perfect dep (single source of truth)
 

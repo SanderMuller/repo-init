@@ -25,7 +25,6 @@ If not installed, ask the user:
 - `description` — required.
 - `php` — `8.5` only for this category. Reject `8.4` and below. `laravel-project` is an application, so it floors at the newest stable PHP, one minor above the package floor. The Laravel skeleton ships `"php": "^8.3"` — raise `require.php` in the same pass. See `$REPO_INIT_HOME/references/version-defaults.md` "PHP".
 - `author-name` / `author-email` — defaults from git config.
-- `with-hihaho-rules` — default `y` for vendor=hihaho, `N` otherwise.
 - `skill-tags` — the `sandermuller/boost-skills` tags for `.config/boost.php`; pre-select `php`. Same picker as the package categories (see the repo-init `SKILL.md` "Knobs to collect"); `voice` and `laravel` are hard-coded in the stub and never offered.
 - `--boost` flag — `laravel new --boost` installs `laravel/boost` (MCP wiring, AGENTS.md / CLAUDE.md scaffolding, `boost.json`). Default ON. Use `--no-boost` only if the user explicitly opts out (then `composer require laravel/boost` runs as a separate step). The installer also auto-detects agent context via env for JSON output — no flag needed for that.
 
@@ -86,11 +85,8 @@ Build the list from `$REPO_INIT_HOME/references/per-category-deps.md#laravel-pro
 - `driftingly/rector-laravel`
 - `sandermuller/boost-skills` (`^2.27.0`) — the shared skill library from the shared list below; `laravel new` never installs it. The floor ships the guideline the always-on `voice` tag needs.
 - `sandermuller/project-boost-laravel` (`^1.5`) — the Laravel-application member of the boost family. It sits next to `laravel/boost`, takes over the agent-file fan-out, and reads `.config/boost.php`. That config carries repo-init's canonical remote skills (`$REPO_INIT_HOME/references/remote-skills.md`).
+- `hihaho/phpstan-rules` (`^4.0.1`), `hihaho/rector-rules` (`^1.7`), `sandermuller/laravel-fluent-validation-phpstan` (`^0.5.1`), `sandermuller/laravel-fluent-validation-rector` (`^1.16`) — the rule packs. The stubs in step 7 configure them. See `$REPO_INIT_HOME/references/per-category-deps.md` "`laravel-project` rule packs".
 - All shared deps from `$REPO_INIT_HOME/references/shared-dev-deps.md` minus anything Laravel installer already pulled. Read the freshly-generated `composer.json` to determine what's already there. Common already-installed by `laravel new`: `laravel/pint`, `nunomaduro/collision`, `phpunit/phpunit` (when test-framework=phpunit). Anything else from the shared list needs explicit `composer require --dev`: `laravel/pao`, `phpstan/extension-installer`, `phpstan/phpstan-strict-rules`, `phpstan/phpstan-deprecation-rules`, `phpstan/phpstan-phpunit`, `rector/rector`, `sandermuller/rector-preset` (`~2.8.0`), `spaze/phpstan-disallowed-calls`, `symplify/phpstan-rules` (`^14.19`), `tomasvotruba/cognitive-complexity`, `tomasvotruba/type-coverage` (`^2.3` — it bundles the abandoned `rector/type-perfect`, which must NOT be installed alongside it; see shared-dev-deps.md "Type-perfect dep"). (`laravel-project` does NOT take `sandermuller/package-boost-php` — `sandermuller/project-boost-laravel`, above, is its boost-family member.)
-
-**OPTIONAL (only when opted in):**
-
-- `with-hihaho-rules` (default `y` for vendor=hihaho): `hihaho/phpstan-rules`, `hihaho/rector-rules`, `symplify/phpstan-rules` (pin `^14.19` — below 14.11 there is no error formatter and `phpstan-simplified` breaks; the shared list requires the same constraint, so one entry satisfies both).
 
 **Test framework** (default `phpunit` for laravel-project — Laravel ships PHPUnit by default; switching to Pest is a user opt-in):
 
@@ -119,13 +115,13 @@ composer require --dev <pkg1> <pkg2> <pkg3> ...
 
 Skip packages already in `composer.json`. On failure, consult `$REPO_INIT_HOME/references/composer-failure-modes.md`.
 
-**Runtime dep for the security canon** (`require`, not `require-dev`):
+**Runtime deps** (`require`, not `require-dev`):
 
 ```bash
-composer require zae/strict-transport-security
+composer require zae/strict-transport-security "sandermuller/laravel-fluent-validation:^1.47"
 ```
 
-It carries the HSTS middleware the canon appends in step 7. When the app also
+`zae/strict-transport-security` carries the HSTS middleware the security canon appends in step 7. `sandermuller/laravel-fluent-validation` is the runtime half of the fluent-validation trio; application code calls `FluentRule`. When the app also
 carries `spatie/laravel-health`, add
 `spatie/security-advisories-health-check` and register
 `SecurityAdvisoriesCheck::new()` in the health-check list. See
@@ -159,8 +155,8 @@ For each file in `$REPO_INIT_HOME/stubs/laravel-project/`:
 
 - `boost.json` — handle it BEFORE `.config/boost.php` below. `laravel/boost` writes this on install. Copy ours only when `boost.json`, `.config/boost.php`, and `.config/boost/boost.json.retired` are ALL absent (the user opted out of Boost on a first run). Once the wrapper config exists, the wrapper owns the sync: a missing `boost.json` is the archived state — a clean checkout lacks the gitignored archive too — so never copy the file back. The first successful `project-boost:sync` (step 9) archives it to `.config/boost/boost.json.retired`. That is intended: it stops `php artisan boost:update` (which `herd link` runs on its own) from re-seeding files that `project-boost-laravel` now owns.
 - `.config/boost.php` — copy. **Skip if EITHER `.config/boost.php` OR a root `boost.php` already exists — never create both.** When one exists, apply the upgrade step in `$REPO_INIT_HOME/references/remote-skills.md` instead. Before the first sync, add to `withAgents()` every agent that `boost.json` lists and boost-core supports: the sync archives `boost.json` only when they are all adopted. Substitute `__SKILL_TAGS__` from the `skill-tags` knob per `$REPO_INIT_HOME/references/placeholder-rules.md`. When the app uses Pest, add `'pest'` to `withTags()`. `withAllowedVendors()` is explicit, where `laravel/boost` alone picked up every package that ships its own boost skills: add each such installed package (`ls -d vendor/*/*/resources/boost`) except `laravel/boost`, which the wrapper injects.
-- `phpstan.neon.dist` — copy. Project uses paths `[app, routes, config, database, tests]` (NOT `src tests` — see RQ7).
-- `rector.php` — copy + substitute `__PHP_VERSION_NEON__`. The stub calls `Preset::app(codingStyle: true, privatization: true, typeDeclarationDocblocks: true)`. The preset scans the folders that exist (never `database/migrations`) and adds `HihahoSetList::ALL` when `hihaho/rector-rules` is installed, so `with-hihaho-rules` needs no `rector.php` edit. See `references/rector-config.md`.
+- `phpstan.neon.dist` — copy. Project uses paths `[app, routes, config, database, tests]` (NOT `src tests` — see RQ7). It includes `vendor/hihaho/phpstan-rules/named-argument-manifest.neon` and sets the hihaho rule parameters; see `$REPO_INIT_HOME/references/phpstan-config.md` "`hihaho/phpstan-rules`". `routeFiles` lists only the web route file. When the app has more route files (for example the API routes from `php artisan install:api`), add each one.
+- `rector.php` — copy + substitute `__PHP_VERSION_NEON__`. The stub calls `Preset::app(codingStyle: true, privatization: true, typeDeclarationDocblocks: true)`. The preset scans the folders that exist (never `database/migrations`) and adds `HihahoSetList::ALL` and the fluent-validation `ALL`, `POLISH` and `SIMPLIFY` sets. The stub configures six `hihaho/rector-rules` rules and adds `FluentValidationSetList::SCHEMA` and `VALIDATED_INPUT`. See `references/rector-config.md` "`hihaho/rector-rules` wiring".
 - `README.append.md` — append its content to the existing `README.md` (Laravel ships a README); never overwrite.
 - `config/hsts.php` — copy. Byte-identical in all three reference apps; no substitution.
 - `app/Http/Middleware/SecurityHeaders.php` — copy. The baseline header set.
@@ -237,7 +233,7 @@ The skeleton that `laravel new` writes does not pass the canonical `rector.php`,
 4. `config/filesystems.php`: cast the `rtrim()` argument, `rtrim((string) env('APP_URL', 'http://localhost'), '/')`.
 5. `database/factories/UserFactory.php`: change the `definition()` docblock to `@return array<model-property<User>, mixed>`.
 
-Then run `vendor/bin/rector process` and `vendor/bin/pint`, in that order. The stub `phpstan.neon.dist` ignores `staticMethod.alreadyNarrowedType` in `tests/`, so the skeleton's `assertTrue(true)` needs no edit.
+Then run `vendor/bin/phpstan analyse` once, so it writes `.config/named-arguments-manifest.json`. Then run `vendor/bin/rector process` and `vendor/bin/pint`, in that order. Commit the manifest with the rest of the scaffold. The stub `phpstan.neon.dist` ignores `staticMethod.alreadyNarrowedType` and `method.alreadyNarrowedType` in `tests/`, so the skeleton's `assertTrue(true)` needs no edit.
 
 ### 11. Run post-bootstrap verification
 
@@ -262,7 +258,7 @@ Next:
 - Run `composer dev` to start the dev server (or `php artisan serve` for just the web app).
 - Set up the GitHub remote — ask the user whether `--public` or `--private` first (Laravel apps are commonly private but not always): `gh repo create {vendor}/{name} --public|--private --source=. --remote=origin --push`.
 - Run `composer qa` to confirm baseline passes.
-{when --with-hihaho-rules: - Hihaho rules are active: phpstan/extension-installer loads hihaho/phpstan-rules, and Preset::app() adds the hihaho Rector sets.}
+- Run `composer phpstan` before `composer rector` after a change: PHPStan writes the named-argument manifest that Rector reads. Commit `.config/named-arguments-manifest.json`.
 
 Want to run an audit next (`phases/audit-laravel-project.md`), or are you done with repo-init for now?
 ```
@@ -281,6 +277,5 @@ Tested in CI via `check-bootstrap-idempotency.sh`.
 ## Common issues
 
 - **`laravel new --boost` flag not recognized**: installer version too old (pre-5.x). `composer global update laravel/installer`, then retry. As a last resort, omit `--boost` and let §5 install `laravel/boost` via `composer require` after the skeleton lands.
-- **`hihaho/phpstan-rules` not found on Packagist**: it's a private/internal package; user needs auth.json or to be on the hihaho composer auth. Document this in the failure mode, then escalate.
 - **PHPUnit + Pest both installed by accident**: pick one. Remove the other with `composer remove --dev <the wrong one>`. Pest is the harder one to remove (also touches `tests/Pest.php`).
 - **`composer dev` fails**: this depends on the `dev` script in composer.json (concurrent server + queue + pail + vite). If Vite isn't set up, edit the script or run pieces individually.

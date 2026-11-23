@@ -117,7 +117,7 @@ sandermuller/repo-init/
     ├── laravel-project/
     │   ├── boost.json
     │   ├── phpstan.neon.dist                     # paths: [app, routes, config, database, tests]
-    │   ├── rector.php                            # With hihaho/rector-rules sets when --with-hihaho-rules
+    │   ├── rector.php                            # Preset::app() + configured hihaho/rector-rules rules + fluent-validation SCHEMA/VALIDATED_INPUT
     │   └── README.append.md                      # Hihaho rule-pack onboarding paragraph
     ├── laravel-package/                          # Default sander-style (manual ServiceProvider)
     │   ├── composer.json
@@ -244,7 +244,6 @@ The skill also lists the seven user-facing knobs the agent must collect or infer
 - `php` (package category: default 8.4, may opt up to 8.5; `laravel-project`: 8.5 only; 8.3 and below rejected, see §5.7)
 - `laravel` (only for laravel-package — `^11||^12||^13`, `^12||^13`, `^13`)
 - `test-framework` (pest / phpunit — vendor-driven default per `references/pest-vs-phpunit.md`)
-- `with-hihaho-rules` (y/N — default y for vendor=hihaho)
 
 ### 3.2 Skill flow ends each phase with "what next"
 
@@ -390,7 +389,7 @@ Split into **MANDATORY** (audit flags MISSING if absent) and **OPTIONAL/CONDITIO
 
 | Category | Adds to `require-dev` | Adds to `require` |
 |---|---|---|
-| `laravel-project` | `larastan/larastan`, `laravel/boost`, `laravel/pail`, `laravel/tinker`, `driftingly/rector-laravel` | (the `laravel new` baseline) |
+| `laravel-project` | `larastan/larastan`, `laravel/boost`, `laravel/pail`, `laravel/tinker`, `driftingly/rector-laravel`, `hihaho/phpstan-rules`, `hihaho/rector-rules`, `sandermuller/laravel-fluent-validation-phpstan`, `sandermuller/laravel-fluent-validation-rector` | `sandermuller/laravel-fluent-validation` (plus the `laravel new` baseline) |
 | `laravel-package` | `larastan/larastan`, `driftingly/rector-laravel` | `illuminate/contracts`, `illuminate/support` at `__LARAVEL_VERSIONS__` |
 | `php-package` | `phpstan/phpstan`, `stolt/php-lean` | (no `illuminate/*`) |
 | `phpstan-extension` | (none beyond shared, minus `phpstan/phpstan` per §5.1.1) | `phpstan/phpstan: ^2` |
@@ -400,7 +399,6 @@ Split into **MANDATORY** (audit flags MISSING if absent) and **OPTIONAL/CONDITIO
 
 | Category | Opt-in flag / sub-flag | Adds to `require-dev` | Adds to `require` |
 |---|---|---|---|
-| `laravel-project` | `--with-hihaho-rules` (default `y` for vendor=hihaho) | `hihaho/phpstan-rules`, `hihaho/rector-rules`, `symplify/phpstan-rules` | — |
 | `laravel-package` | suggest (not mandatory) | `livewire/livewire` (suggested only — not auto-installed, not audited) | — |
 | `laravel-package` | sub-flag `hihaho-package-tools-flavoured` (or `--variant=spatie`) | — | `spatie/laravel-package-tools` |
 | `phpstan-extension` | Laravel-aware (has `illuminate/*` in `require`) | `larastan/larastan` (replaces shared `phpstan/phpstan` — see §5.3) | `illuminate/support` |
@@ -487,7 +485,7 @@ Per-category `paths:` and extra `includes:`:
 
 | Category | `paths:` | Extra `includes:` |
 |---|---|---|
-| `laravel-project` | `[app, routes, config, database, tests]` | (none: `phpstan/extension-installer` loads `hihaho/phpstan-rules` through its `extra.phpstan.includes`, so an explicit include loads it twice and PHPStan stops) |
+| `laravel-project` | `[app, routes, config, database, tests]` | `vendor/hihaho/phpstan-rules/named-argument-manifest.neon` only (`phpstan/extension-installer` loads `extension.neon`; an explicit include loads it twice and PHPStan stops) |
 | `laravel-package` | `[src, tests, workbench]` | (Larastan auto-included via `phpstan/extension-installer`) |
 | `php-package` | `[src, tests]` | (no Laravel-specific includes) |
 | `composer-plugin` | `[src, tests]` | (none) |
@@ -523,7 +521,7 @@ Per-category `withPaths` and `withSets`:
 
 | Category | `withPaths` | Extra `withSets` |
 |---|---|---|
-| `laravel-project` | `app, routes, config, database, tests` | `LaravelSetList::LARAVEL_*`, `Hihaho\RectorRules\Set\HihahoSetList::ALL` when `--with-hihaho-rules` |
+| `laravel-project` | `app, routes, config, database, tests` | `LaravelSetList::LARAVEL_*`, `Hihaho\RectorRules\Set\HihahoSetList::ALL`, `FluentValidationSetList::SCHEMA` and `VALIDATED_INPUT` |
 | `laravel-package` | `src, tests, workbench` | `LaravelSetList::LARAVEL_*`, `Pest\Rector\Set\PestSetList::CODING_STYLE` when pest |
 | `php-package` | `src, tests` | `Pest\Rector\Set\PestSetList::CODING_STYLE` when pest |
 | `phpstan-extension` | `src, tests` | (none) |
@@ -689,7 +687,6 @@ Check each path; if absent, mark MISSING and add to the audit report.
 
 ## Opt-in confirmation (audit-scoping)
 Before walking deps, ask the user once per OPTIONAL/CONDITIONAL dep block in §5.2:
-- Did this repo opt into hihaho rules? (auto-infer `y` if vendor is hihaho or `hihaho/phpstan-rules` is already in require-dev)
 - Is this package Laravel-aware? (only for phpstan-extension/rector-extension; auto-infer `y` if `illuminate/*` in require)
 - Is this a spatie-flavoured L-package? (only for laravel-package; auto-infer `y` if `spatie/laravel-package-tools` is in require)
 Record each answer; only flag the deps in opt-in-confirmed rows as MISSING below.

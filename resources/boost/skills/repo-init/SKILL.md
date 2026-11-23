@@ -82,7 +82,6 @@ Before opening a bootstrap phase, gather these. Skill prompts the user for any y
 - `php` — packages default `8.4`, accepted `8.4`, `8.5`. `laravel-project` takes `8.5` only. `8.3` and below rejected. See `$REPO_INIT_HOME/references/version-defaults.md` "PHP".
 - `laravel` (laravel-package only) — default `^12.0||^13.0`. (Laravel 11 is not supported: `laravel/pao` 1.0.5+ conflicts with `laravel/framework` below 12.)
 - `test-framework` — default `pest` for vendor `sandermuller`, `phpunit` for vendor `hihaho`. `phpstan-extension` always `phpunit`. `laravel-project` defaults to `phpunit` for every vendor; Pest is a user opt-in.
-- `with-hihaho-rules` — default `y` for vendor `hihaho`, `N` otherwise.
 - `skill-tags` — the `sandermuller/boost-skills` tags to activate in the scaffolded `.config/boost.php`. **Walk the user through this interactively** — present `php`, `frontend`, `github`, `jira` as a checklist and let them confirm/adjust; do not silently auto-config. Pre-select sensible defaults by category: php-package / laravel-package / phpstan-extension / rector-extension / composer-plugin / skill-bundle / laravel-project pre-select `php`; add `frontend` for a frontend-facing package; `github` / `jira` are opt-in. Picking none is valid. The chosen tags fill the `__SKILL_TAGS__` placeholder inside the array argument of `->withTags(['voice'__SKILL_TAGS__])` in `.config/boost.php`, each rendered with a leading comma (e.g. `, 'php', 'jira'` → `->withTags(['voice', 'php', 'jira'])`); none → the placeholder is empty and the line reads `->withTags(['voice'])` (the universal boost-skills skills still sync). **`voice` is not part of this picker** — the stub hard-codes it, every scaffolded repo keeps it, and it never appears in the checklist (see `references/placeholder-rules.md`). `withTags()` takes an array, not variadic arguments. `laravel-project` uses the same knob for its own `stubs/laravel-project/.config/boost.php`, whose line reads `->withTags(['voice', Tag::Laravel__SKILL_TAGS__])` — `laravel` is hard-coded there, so never offer it.
 
 ## Fast path: the `repo new` CLI
@@ -105,7 +104,8 @@ repo new <name> --type=<category> --vendor=<vendor> --description="<one line>" \
 | `name` | positional `<name>` |
 | `php`, `laravel`, `test-framework`, `skill-tags` | `--php`, `--laravel`, `--test-framework`, `--skill-tags` (comma-separated, never `voice`) |
 | laravel-package stub variant (sander / spatie) | `--variant=sander\|spatie` |
-| `with-hihaho-rules` (laravel-project) | `--with-hihaho-rules` / `--no-with-hihaho-rules`; health checks: `--with-health-checks` |
+| health checks (laravel-project) | `--with-health-checks` |
+| hihaho rule packs (laravel-project) | no flag. The packs are mandatory, so `repo new` installs them from `per-category-deps.yml` for every vendor. `--with-hihaho-rules` is deprecated. repo-new before 1.3.3 is the exception: pass `--no-with-hihaho-rules` there, because it looks for config hints the stubs no longer carry. |
 | Laravel-aware (phpstan / rector extension) | `--laravel-aware` |
 | composer-plugin shape | `--plugin-shape=command-provider\|event-subscriber\|both\|none` |
 

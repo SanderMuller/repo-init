@@ -20,6 +20,19 @@ The `post-update-cmd` hook re-syncs the skill into `~/.claude/skills/sandermulle
 
 ---
 
+## 1.23.x → 1.24.0 (laravel-project rule packs)
+
+Additive for repo-init itself — `composer global update sandermuller/repo-init`. Re-run `audit` on a `laravel-project`; the upgrade phase adds the packages and asks before each config edit.
+
+- **The hihaho rule packs are mandatory for `laravel-project`.** `hihaho/phpstan-rules: ^4.0.1` and `hihaho/rector-rules: ^1.7` were the `--with-hihaho-rules` opt-in. The opt-in is gone, and `repo new` installs the packages for every vendor. Its `--with-hihaho-rules` flag is deprecated. With repo-new before 1.3.3, pass `--no-with-hihaho-rules`, because those versions look for config hints the stubs no longer carry.
+- **laravel-fluent-validation is mandatory for `laravel-project`.** `sandermuller/laravel-fluent-validation: ^1.47` goes in `require`, and `sandermuller/laravel-fluent-validation-phpstan: ^0.5.1` and `sandermuller/laravel-fluent-validation-rector: ^1.16` in `require-dev`.
+- **The stub `phpstan.neon.dist` configures the hihaho rules** the way `mijntp` does: `unescapedHtml` and `swallowedException` on `App`, `routeBindingProviders`, `routeFiles`, and the `named-argument-manifest.neon` include, which writes `.config/named-arguments-manifest.json`. Commit that file. See `references/phpstan-config.md` "`hihaho/phpstan-rules`".
+- **The stub `phpstan.neon.dist` also ignores `method.alreadyNarrowedType` in `tests/`.** The Laravel 13 skeleton calls `$this->assertTrue(true)`, which reports that identifier, not `staticMethod.alreadyNarrowedType`. Add the same `tests/*` entry to an existing project that keeps the example test.
+- **`rector-check.yml` keys its cache on the named-argument manifest and the route files.** Rector caches a file on its own content, so a cache built before the manifest or a route file changed hides the rewrites that change causes. The key now hashes `.config/named-arguments-manifest.json` and `routes/**/*.php`, and the bare `rector-cache-` restore key is gone. Copy the new key into every repo; after a `composer.lock` change, the first run is a cold run.
+- **The stub `rector.php` configures six hihaho rules** and adds `FluentValidationSetList::SCHEMA` and `VALIDATED_INPUT`. Two values depend on the app: the `throttle` class and the middleware that marks a route internal. See `references/rector-config.md` "`hihaho/rector-rules` wiring".
+
+---
+
 ## 1.22.x → 1.23.0 (php-lean)
 
 Additive for repo-init itself — `composer global update sandermuller/repo-init`. Re-run `audit` on a repo that ships a `.lpv`; the upgrade phase applies the migration.
