@@ -6,6 +6,7 @@ on:
       - '**.php'
       - 'rector.php'
       - 'composer.lock'
+      - '.config/named-arguments-manifest.json'
       - '.github/workflows/rector-check.yml'
   # A push to main saves the cache that pull requests restore.
   push:
@@ -15,6 +16,7 @@ on:
       - '**.php'
       - 'rector.php'
       - 'composer.lock'
+      - '.config/named-arguments-manifest.json'
       - '.github/workflows/rector-check.yml'
 
 permissions:
@@ -50,6 +52,10 @@ jobs:
       # cache-prune.yml deletes superseded entries.
       # Rector writes PHPStan's reflection cache into .cache/phpstan (see rector.php).
       # cache/nette.configurator is left out, as in phpstan.yml.
+      # Rector caches a file on its own content, so a rule that reads another file
+      # (the named-argument manifest, the route files) gets a stale result from a
+      # cache built before that file changed. Those files are in the key, and no
+      # restore key falls back to a cache built from other inputs.
       - name: Restore Rector cache
         id: rector_cache
         uses: actions/cache/restore@v6
@@ -57,10 +63,9 @@ jobs:
           path: |
             .cache/rector/
             .cache/phpstan/cache/PHPStan
-          key: rector-cache-${{ hashFiles('composer.lock', 'rector.php') }}-${{ github.sha }}
+          key: rector-cache-${{ hashFiles('composer.lock', 'rector.php', '.config/named-arguments-manifest.json', 'routes/**/*.php') }}-${{ github.sha }}
           restore-keys: |
-            rector-cache-${{ hashFiles('composer.lock', 'rector.php') }}-
-            rector-cache-
+            rector-cache-${{ hashFiles('composer.lock', 'rector.php', '.config/named-arguments-manifest.json', 'routes/**/*.php') }}-
 
       - name: Ensure Rector cache directories exist
         run: mkdir -p .cache/rector .cache/phpstan
@@ -83,4 +88,4 @@ jobs:
           path: |
             .cache/rector/
             .cache/phpstan/cache/PHPStan
-          key: rector-cache-${{ hashFiles('composer.lock', 'rector.php') }}-${{ github.sha }}
+          key: rector-cache-${{ hashFiles('composer.lock', 'rector.php', '.config/named-arguments-manifest.json', 'routes/**/*.php') }}-${{ github.sha }}
